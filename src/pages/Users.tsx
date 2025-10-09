@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Download, MoreVertical, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,8 +20,10 @@ import {
 } from '@/components/ui/select';
 import { mockUsers, User } from '@/lib/mock-data';
 import { Progress } from '@/components/ui/progress';
+import { exportService } from '@/lib/services';
 
 export default function Users() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAgence, setFilterAgence] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
@@ -89,7 +92,11 @@ export default function Users() {
             </SelectContent>
           </Select>
 
-          <Button variant="outline" size="icon">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => exportService.exportUsersToCSV(filteredUsers)}
+          >
             <Download className="h-4 w-4" />
           </Button>
         </div>
@@ -105,10 +112,14 @@ export default function Users() {
 }
 
 function UserCard({ user }: { user: User }) {
+  const navigate = useNavigate();
   const storagePercent = (user.stockage.utiliseGo / user.stockage.quotaGo) * 100;
 
   return (
-    <Card className="p-6 shadow-card hover:shadow-card-hover transition-smooth">
+    <Card
+      className="p-6 shadow-card hover:shadow-card-hover transition-smooth cursor-pointer"
+      onClick={() => navigate(`/utilisateurs/${user.id}`)}
+    >
       <div className="flex items-start gap-4">
         <img
           src={user.avatarUrl}
@@ -163,12 +174,18 @@ function UserCard({ user }: { user: User }) {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem>Voir la fiche</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate(`/utilisateurs/${user.id}`)}>
+                  Voir la fiche
+                </DropdownMenuItem>
                 <DropdownMenuItem>Modifier</DropdownMenuItem>
                 <DropdownMenuItem>Changer licence</DropdownMenuItem>
                 <DropdownMenuItem className="text-destructive">

@@ -9,6 +9,9 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
+import UserDetail from "./pages/UserDetail";
+import Licenses from "./pages/Licenses";
+import Requests from "./pages/Requests";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,9 +32,10 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/utilisateurs" element={<Users />} />
-                    <Route path="/licences" element={<div>Licences (à venir)</div>} />
-                    <Route path="/demandes" element={<div>Demandes (à venir)</div>} />
-                    <Route path="/parametres" element={<div>Paramètres (à venir)</div>} />
+                    <Route path="/utilisateurs/:id" element={<UserDetail />} />
+                    <Route path="/licences" element={<Licenses />} />
+                    <Route path="/demandes" element={<Requests />} />
+                    <Route path="/parametres" element={<div className="p-8 text-center text-muted-foreground">Paramètres (à venir)</div>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
