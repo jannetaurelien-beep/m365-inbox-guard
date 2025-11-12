@@ -10,6 +10,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import UserDetail from "./pages/UserDetail";
+import CreateUser from "./pages/CreateUser";
 import Licenses from "./pages/Licenses";
 import Requests from "./pages/Requests";
 import NotFound from "./pages/NotFound";
@@ -32,6 +33,7 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/utilisateurs" element={<Users />} />
+                    <Route path="/utilisateurs/nouveau" element={<CreateUser />} />
                     <Route path="/utilisateurs/:id" element={<UserDetail />} />
                     <Route path="/licences" element={<Licenses />} />
                     <Route path="/demandes" element={<Requests />} />

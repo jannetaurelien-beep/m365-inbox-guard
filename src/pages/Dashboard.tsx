@@ -1,10 +1,12 @@
-import { Users, Mail, HardDrive, CreditCard, TrendingUp, TrendingDown } from 'lucide-react';
+import { Users, Mail, HardDrive, CreditCard, TrendingUp, TrendingDown, UserPlus } from 'lucide-react';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { mockUsers } from '@/lib/mock-data';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const generateChartData = (days: number) => {
   const data = [];
@@ -21,6 +23,7 @@ const generateChartData = (days: number) => {
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [chartPeriod, setChartPeriod] = useState<'7j' | '30j' | '90j'>('30j');
   
   const totalUsers = mockUsers.length;
@@ -32,9 +35,15 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Tableau de bord</h1>
-        <p className="text-muted-foreground mt-1">Vue d'ensemble de votre tenant Microsoft 365</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Tableau de bord</h1>
+          <p className="text-muted-foreground mt-1">Vue d'ensemble de votre tenant Microsoft 365</p>
+        </div>
+        <Button onClick={() => navigate('/utilisateurs/nouveau')} className="gap-2">
+          <UserPlus className="h-4 w-4" />
+          Créer un utilisateur
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

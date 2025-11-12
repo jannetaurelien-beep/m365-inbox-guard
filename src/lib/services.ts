@@ -3,6 +3,23 @@ import { mockUsers, mockLicenses, mockRequests, User, MemberRole } from './mock-
 import { toast } from 'sonner';
 
 export const userService = {
+  async createUser(data: {
+    prenom: string;
+    nom: string;
+    email: string;
+    telephone: string;
+    metier: string;
+    agence: string;
+    password: string;
+    typeBoite: 'nominative' | 'partagee';
+    licenceSkuId: string;
+  }): Promise<{ success: boolean; userId?: string }> {
+    await new Promise(resolve => setTimeout(resolve, 800));
+    const userId = `usr_${Date.now()}`;
+    console.log(`[AUDIT] User created: ${userId}`, { ...data, password: '***MASKED***' });
+    return { success: true, userId };
+  },
+
   async getUser(id: string): Promise<User | undefined> {
     await new Promise(resolve => setTimeout(resolve, 300));
     return mockUsers.find(u => u.id === id);
