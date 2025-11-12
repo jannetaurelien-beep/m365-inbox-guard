@@ -40,9 +40,9 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold">Tableau de bord</h1>
           <p className="text-muted-foreground mt-1">Vue d'ensemble de votre tenant Microsoft 365</p>
         </div>
-        <Button onClick={() => navigate('/utilisateurs/nouveau')} className="gap-2">
+        <Button onClick={() => navigate('/actions')} className="gap-2">
           <UserPlus className="h-4 w-4" />
-          Créer un utilisateur
+          Voir toutes les actions
         </Button>
       </div>
 
