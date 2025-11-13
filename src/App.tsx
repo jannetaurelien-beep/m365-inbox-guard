@@ -13,6 +13,7 @@ import UserDetail from "./pages/UserDetail";
 import CreateUser from "./pages/CreateUser";
 import Actions from "./pages/Actions";
 import AppointmentBooking from "./pages/AppointmentBooking";
+import ServerFiles from "./pages/ServerFiles";
 import Licenses from "./pages/Licenses";
 import Requests from "./pages/Requests";
 import NotFound from "./pages/NotFound";
@@ -40,6 +41,7 @@ const App = () => (
                     <Route path="/actions/creer-utilisateur" element={<CreateUser />} />
                     <Route path="/actions/rendez-vous" element={<AppointmentBooking />} />
                     <Route path="/actions/*" element={<div className="p-8 text-center"><p className="text-muted-foreground">Formulaire à venir</p></div>} />
+                    <Route path="/fichiers-serveur" element={<ServerFiles />} />
                     <Route path="/licences" element={<Licenses />} />
                     <Route path="/demandes" element={<Requests />} />
                     <Route path="/parametres" element={<div className="p-8 text-center text-muted-foreground">Paramètres (à venir)</div>} />
