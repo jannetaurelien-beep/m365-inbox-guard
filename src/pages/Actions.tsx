@@ -11,7 +11,8 @@ import {
   UserMinus,
   Trash2,
   Mail,
-  Users
+  Users,
+  Calendar
 } from 'lucide-react';
 
 interface ActionCardProps {
@@ -62,6 +63,13 @@ export default function Actions() {
       icon: Trash2,
       color: 'bg-destructive',
       path: '/actions/supprimer-utilisateur'
+    },
+    {
+      title: 'Prise de rendez-vous technicien',
+      description: 'Planifier une intervention technique',
+      icon: Calendar,
+      color: 'bg-accent',
+      path: '/actions/rendez-vous'
     },
   ];
 

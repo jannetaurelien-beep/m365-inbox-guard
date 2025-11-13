@@ -133,3 +133,18 @@ export const exportService = {
     toast.success('Export CSV réussi');
   },
 };
+
+export const appointmentService = {
+  async createAppointment(data: {
+    problemType: string;
+    agence: string;
+    personName: string;
+    description: string;
+    appointmentDate: string;
+  }): Promise<{ success: boolean; appointmentId?: string }> {
+    await new Promise(resolve => setTimeout(resolve, 800));
+    const appointmentId = `apt_${Date.now()}`;
+    console.log('[AUDIT] Rendez-vous créé:', { appointmentId, ...data });
+    return { success: true, appointmentId };
+  },
+};
