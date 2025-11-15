@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   UserPlus, 
   Archive, 
@@ -25,14 +26,15 @@ interface ActionCardProps {
 
 function ActionCard({ title, description, icon: Icon, color, onClick }: ActionCardProps) {
   return (
-    <Card className="p-6 shadow-card hover:shadow-lg transition-all cursor-pointer group" onClick={onClick}>
-      <div className="flex items-start gap-4">
-        <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-smooth`}>
-          <Icon className="h-6 w-6 text-white" />
+    <Card className="p-6 border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:border-primary/50 transition-all cursor-pointer group relative overflow-hidden" onClick={onClick}>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="relative flex items-start gap-4">
+        <div className={`w-14 h-14 rounded-xl ${color} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-smooth shadow-lg group-hover:shadow-xl`}>
+          <Icon className="h-7 w-7 text-white" />
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-semibold mb-1 group-hover:text-primary transition-smooth">{title}</h3>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <h3 className="text-lg font-semibold mb-1.5 group-hover:text-primary transition-smooth">{title}</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
         </div>
       </div>
     </Card>
@@ -125,67 +127,76 @@ export default function Actions() {
   ];
 
   return (
-    <div className="space-y-6 max-w-6xl">
-      <div>
-        <h1 className="text-3xl font-bold">Actions</h1>
-        <p className="text-muted-foreground mt-1">Gérez les utilisateurs et les boîtes mail</p>
+    <div className="space-y-6 max-w-7xl">
+      <div className="space-y-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Actions</h1>
+        <p className="text-muted-foreground text-lg">Gérez les utilisateurs et les boîtes mail Microsoft 365</p>
       </div>
 
-      {/* Gestion des utilisateurs */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Gestion des utilisateurs</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {userActions.map((action) => (
-            <ActionCard
-              key={action.title}
-              {...action}
-              onClick={() => navigate(action.path)}
-            />
-          ))}
-        </div>
-      </div>
+      <Tabs defaultValue="users" className="space-y-6">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4 h-12 bg-muted/50 backdrop-blur-sm">
+          <TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Utilisateurs
+          </TabsTrigger>
+          <TabsTrigger value="mailboxes" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Boîtes mail
+          </TabsTrigger>
+          <TabsTrigger value="licenses" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Licences
+          </TabsTrigger>
+          <TabsTrigger value="security" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Sécurité
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Gestion des boîtes mail */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Gestion des boîtes mail</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mailboxActions.map((action) => (
-            <ActionCard
-              key={action.title}
-              {...action}
-              onClick={() => navigate(action.path)}
-            />
-          ))}
-        </div>
-      </div>
+        <TabsContent value="users" className="space-y-4 animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {userActions.map((action) => (
+              <ActionCard
+                key={action.title}
+                {...action}
+                onClick={() => navigate(action.path)}
+              />
+            ))}
+          </div>
+        </TabsContent>
 
-      {/* Licences */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Licences</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {licenseActions.map((action) => (
-            <ActionCard
-              key={action.title}
-              {...action}
-              onClick={() => navigate(action.path)}
-            />
-          ))}
-        </div>
-      </div>
+        <TabsContent value="mailboxes" className="space-y-4 animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {mailboxActions.map((action) => (
+              <ActionCard
+                key={action.title}
+                {...action}
+                onClick={() => navigate(action.path)}
+              />
+            ))}
+          </div>
+        </TabsContent>
 
-      {/* Sécurité */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Sécurité</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {securityActions.map((action) => (
-            <ActionCard
-              key={action.title}
-              {...action}
-              onClick={() => navigate(action.path)}
-            />
-          ))}
-        </div>
-      </div>
+        <TabsContent value="licenses" className="space-y-4 animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {licenseActions.map((action) => (
+              <ActionCard
+                key={action.title}
+                {...action}
+                onClick={() => navigate(action.path)}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-4 animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {securityActions.map((action) => (
+              <ActionCard
+                key={action.title}
+                {...action}
+                onClick={() => navigate(action.path)}
+              />
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
