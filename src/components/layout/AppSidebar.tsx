@@ -1,4 +1,4 @@
-import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree } from 'lucide-react';
+import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
@@ -16,6 +16,7 @@ const menuItems = [
   { title: 'Utilisateurs', url: '/utilisateurs', icon: Users },
   { title: 'Actions', url: '/actions', icon: Zap },
   { title: 'Fichiers Serveur', url: '/fichiers-serveur', icon: FolderTree },
+  { title: "Messages d'absence", url: '/messages-absence', icon: Mail },
   { title: 'Licences', url: '/licences', icon: CreditCard },
   { title: 'Demandes', url: '/demandes', icon: ClipboardList },
   { title: 'Paramètres', url: '/parametres', icon: Settings },
