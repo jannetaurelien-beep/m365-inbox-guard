@@ -17,6 +17,7 @@ import ServerFiles from "./pages/ServerFiles";
 import VacationMessages from "./pages/VacationMessages";
 import Licenses from "./pages/Licenses";
 import Requests from "./pages/Requests";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
                 <main className="flex-1 p-6">
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
+                    <Route path="/login" element={<Login />} />
                     <Route path="/utilisateurs" element={<Users />} />
                     <Route path="/utilisateurs/:id" element={<UserDetail />} />
                     <Route path="/actions" element={<Actions />} />
