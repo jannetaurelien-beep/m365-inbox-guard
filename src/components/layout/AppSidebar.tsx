@@ -1,8 +1,9 @@
-import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -23,6 +24,8 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
+  const navigate = useNavigate();
+
   return (
     <Sidebar className="border-r border-sidebar-border">
       <SidebarContent>
@@ -64,6 +67,20 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      <SidebarFooter className="border-t border-sidebar-border p-4">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={() => navigate('/login')}
+              className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Déconnexion</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
