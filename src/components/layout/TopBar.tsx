@@ -4,9 +4,11 @@ import { Input } from '@/components/ui/input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/hooks/use-theme';
+import { useNavigate } from 'react-router-dom';
 
 export function TopBar() {
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
 
   return (
     <header className="h-16 border-b border-border bg-card sticky top-0 z-40 shadow-sm">
@@ -47,7 +49,12 @@ export function TopBar() {
             <DropdownMenuContent align="end" className="w-56 bg-popover">
               <DropdownMenuItem>Mon profil</DropdownMenuItem>
               <DropdownMenuItem>Paramètres</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">Déconnexion</DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-destructive"
+                onClick={() => navigate('/login')}
+              >
+                Déconnexion
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
