@@ -17,6 +17,7 @@ import ServerFiles from "./pages/ServerFiles";
 import VacationMessages from "./pages/VacationMessages";
 import Licenses from "./pages/Licenses";
 import Requests from "./pages/Requests";
+import RequestDetail from "./pages/RequestDetail";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -48,6 +49,7 @@ const App = () => (
                     <Route path="/messages-absence" element={<VacationMessages />} />
                     <Route path="/licences" element={<Licenses />} />
                     <Route path="/demandes" element={<Requests />} />
+                    <Route path="/demandes/:id" element={<RequestDetail />} />
                     <Route path="/parametres" element={<div className="p-8 text-center text-muted-foreground">Paramètres (à venir)</div>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

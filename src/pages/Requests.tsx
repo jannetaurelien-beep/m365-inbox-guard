@@ -1,4 +1,5 @@
 import { Archive, TrendingUp, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { mockRequests } from '@/lib/mock-data';
@@ -52,6 +53,8 @@ const getTypeLabel = (type: string) => {
 };
 
 export default function Requests() {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6">
       <div>
@@ -82,7 +85,8 @@ export default function Requests() {
           {mockRequests.map((request) => (
             <div
               key={request.id}
-              className="flex items-start gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-smooth"
+              onClick={() => navigate(`/demandes/${request.id}`)}
+              className="flex items-start gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-smooth cursor-pointer"
             >
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                 {getTypeIcon(request.type)}
