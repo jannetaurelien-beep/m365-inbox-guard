@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, UserPlus, Pencil, Trash2, Shield, Folder } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 type PermissionLevel = 'lecture' | 'ecriture' | 'acces_complet';
 
@@ -64,6 +65,7 @@ const permissionLabels: Record<PermissionLevel, { label: string; variant: 'defau
 };
 
 export default function SharePointPermissions() {
+  const { addNotification } = useNotifications();
   const [folders, setFolders] = useState<SharePointFolder[]>(mockFolders);
   const [activeFolder, setActiveFolder] = useState<string>(mockFolders[0].id);
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,6 +100,12 @@ export default function SharePointPermissions() {
         title: 'Permissions mises à jour',
         description: `Les droits de ${selectedUser.displayName} ont été modifiés pour ${currentFolder.name}.`,
       });
+      addNotification({
+        type: 'success',
+        title: 'Permissions modifiées',
+        message: `Droits de ${selectedUser.displayName} mis à jour sur ${currentFolder.name}`,
+        actionUrl: '/sharepoint'
+      });
       setIsEditDialogOpen(false);
       setSelectedUser(null);
     }
@@ -114,6 +122,12 @@ export default function SharePointPermissions() {
       toast({
         title: 'Utilisateur retiré',
         description: `${user?.displayName} n'a plus accès à ${currentFolder.name}.`,
+      });
+      addNotification({
+        type: 'warning',
+        title: 'Accès révoqué',
+        message: `${user?.displayName} retiré de ${currentFolder.name}`,
+        actionUrl: '/sharepoint'
       });
     }
   };
@@ -145,6 +159,12 @@ export default function SharePointPermissions() {
     toast({
       title: 'Utilisateur ajouté',
       description: `${newUser.email} a été ajouté à ${currentFolder.name} avec les droits ${permissionLabels[newUserPermission].label}.`,
+    });
+    addNotification({
+      type: 'success',
+      title: 'Utilisateur ajouté',
+      message: `${newUser.email} ajouté à ${currentFolder.name}`,
+      actionUrl: '/sharepoint'
     });
     setIsAddDialogOpen(false);
     setNewUserEmail('');

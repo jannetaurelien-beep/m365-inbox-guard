@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
 import { appointmentService } from "@/lib/services";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 const formSchema = z.object({
   problemType: z.enum(["informatique", "telephonique"], {
@@ -62,6 +63,7 @@ const agencies = [
 
 export default function AppointmentBooking() {
   const navigate = useNavigate();
+  const { addNotification } = useNotifications();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
@@ -89,6 +91,12 @@ export default function AppointmentBooking() {
           title: "Rendez-vous créé",
           description: `Votre demande de rendez-vous a été enregistrée avec succès. ID: ${result.appointmentId}`,
         });
+        addNotification({
+          type: 'success',
+          title: 'Rendez-vous créé',
+          message: `Rendez-vous ${data.problemType} pour ${data.personName} le ${format(data.appointmentDate, 'dd MMMM yyyy', { locale: fr })}`,
+          actionUrl: '/demandes'
+        });
         navigate("/demandes");
       }
     } catch (error) {
@@ -96,6 +104,11 @@ export default function AppointmentBooking() {
         title: "Erreur",
         description: "Impossible de créer le rendez-vous. Veuillez réessayer.",
         variant: "destructive",
+      });
+      addNotification({
+        type: 'error',
+        title: 'Erreur de rendez-vous',
+        message: 'Impossible de créer le rendez-vous',
       });
     } finally {
       setIsSubmitting(false);

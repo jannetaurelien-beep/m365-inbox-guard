@@ -7,6 +7,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { TopBar } from "@/components/layout/TopBar";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import UserDetail from "./pages/UserDetail";
@@ -27,17 +28,18 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <SidebarProvider>
-            <div className="min-h-screen flex w-full">
-              <AppSidebar />
-              <div className="flex-1 flex flex-col">
-                <TopBar />
-                <main className="flex-1 p-6">
-                  <Routes>
+      <NotificationProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <SidebarProvider>
+              <div className="min-h-screen flex w-full">
+                <AppSidebar />
+                <div className="flex-1 flex flex-col">
+                  <TopBar />
+                  <main className="flex-1 p-6">
+                    <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/utilisateurs" element={<Users />} />
@@ -58,9 +60,10 @@ const App = () => (
                 </main>
               </div>
             </div>
-          </SidebarProvider>
-        </BrowserRouter>
-      </TooltipProvider>
+            </SidebarProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </NotificationProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

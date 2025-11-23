@@ -29,10 +29,12 @@ import { PasswordSection } from '@/components/user-detail/PasswordSection';
 import { AliasSection } from '@/components/user-detail/AliasSection';
 import { MembersSection } from '@/components/user-detail/MembersSection';
 import { toast } from 'sonner';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 export default function UserDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { addNotification } = useNotifications();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [chartPeriod, setChartPeriod] = useState<'7j' | '30j' | '90j'>('30j');
@@ -62,9 +64,20 @@ export default function UserDetail() {
     try {
       await licenseService.upgradeLicense(user.id, selectedLicense);
       toast.success('Demande d\'upgrade envoyée');
+      addNotification({
+        type: 'info',
+        title: 'Demande d\'upgrade de licence',
+        message: `Demande d'upgrade de licence pour ${user.prenom} ${user.nom}`,
+        actionUrl: '/licences'
+      });
       setShowUpgradeDialog(false);
     } catch (error) {
       toast.error('Erreur lors de l\'upgrade');
+      addNotification({
+        type: 'error',
+        title: 'Erreur d\'upgrade',
+        message: 'Impossible d\'upgrader la licence',
+      });
     }
   };
 
@@ -73,9 +86,20 @@ export default function UserDetail() {
     try {
       await mailboxService.requestArchive(user.id, '2020-01-01', '2023-12-31');
       toast.success('Demande d\'archivage créée');
+      addNotification({
+        type: 'info',
+        title: 'Demande d\'archivage',
+        message: `Demande d'archivage créée pour ${user.prenom} ${user.nom}`,
+        actionUrl: '/demandes'
+      });
       setShowArchiveDialog(false);
     } catch (error) {
       toast.error('Erreur lors de la demande');
+      addNotification({
+        type: 'error',
+        title: 'Erreur d\'archivage',
+        message: 'Impossible de créer la demande d\'archivage',
+      });
     }
   };
 

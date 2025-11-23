@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { mockRequests } from '@/lib/mock-data';
 import { toast } from '@/hooks/use-toast';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 const getStatusIcon = (status: string) => {
   switch (status) {
@@ -74,6 +75,7 @@ interface Attachment {
 export default function RequestDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addNotification } = useNotifications();
   const request = mockRequests.find(r => r.id === id);
 
   const [comment, setComment] = useState('');
@@ -124,6 +126,12 @@ export default function RequestDetail() {
       title: 'Succès',
       description: 'Commentaire ajouté',
     });
+    addNotification({
+      type: 'info',
+      title: 'Nouveau commentaire',
+      message: `Commentaire ajouté à la demande ${request?.type}`,
+      actionUrl: `/demandes/${id}`
+    });
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,6 +149,12 @@ export default function RequestDetail() {
     toast({
       title: 'Succès',
       description: `${newAttachments.length} fichier(s) ajouté(s)`,
+    });
+    addNotification({
+      type: 'success',
+      title: 'Fichier(s) ajouté(s)',
+      message: `${newAttachments.length} fichier(s) ajouté(s) à la demande ${request?.type}`,
+      actionUrl: `/demandes/${id}`
     });
   };
 

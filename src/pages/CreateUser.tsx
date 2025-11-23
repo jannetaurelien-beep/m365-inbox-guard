@@ -9,9 +9,11 @@ import { toast } from 'sonner';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import { userService } from '@/lib/services';
 import { mockLicenses } from '@/lib/mock-data';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 export default function CreateUser() {
   const navigate = useNavigate();
+  const { addNotification } = useNotifications();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     prenom: '',
@@ -84,10 +86,21 @@ export default function CreateUser() {
 
       if (result.success) {
         toast.success('Utilisateur créé avec succès');
+        addNotification({
+          type: 'success',
+          title: 'Utilisateur créé',
+          message: `${formData.prenom} ${formData.nom} a été créé avec succès`,
+          actionUrl: '/utilisateurs'
+        });
         navigate('/utilisateurs');
       }
     } catch (error) {
       toast.error('Erreur lors de la création de l\'utilisateur');
+      addNotification({
+        type: 'error',
+        title: 'Erreur de création',
+        message: 'Impossible de créer l\'utilisateur',
+      });
     } finally {
       setIsSubmitting(false);
     }
