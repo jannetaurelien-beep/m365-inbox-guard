@@ -1,10 +1,11 @@
-import { Search, Moon, Sun, Bell, User } from 'lucide-react';
+import { Search, Moon, Sun, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/hooks/use-theme';
 import { useNavigate } from 'react-router-dom';
+import { NotificationPanel } from './NotificationPanel';
 
 export function TopBar() {
   const { theme, setTheme } = useTheme();
@@ -35,10 +36,7 @@ export function TopBar() {
             {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
 
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-destructive rounded-full" />
-          </Button>
+          <NotificationPanel />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
