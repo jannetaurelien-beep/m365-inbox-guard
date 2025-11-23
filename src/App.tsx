@@ -20,6 +20,7 @@ import Licenses from "./pages/Licenses";
 import Requests from "./pages/Requests";
 import RequestDetail from "./pages/RequestDetail";
 import SharePointPermissions from "./pages/SharePointPermissions";
+import NotificationCenter from "./pages/NotificationCenter";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -54,6 +55,7 @@ const App = () => (
                     <Route path="/demandes" element={<Requests />} />
                     <Route path="/demandes/:id" element={<RequestDetail />} />
                     <Route path="/sharepoint" element={<SharePointPermissions />} />
+                    <Route path="/notifications" element={<NotificationCenter />} />
                     <Route path="/parametres" element={<div className="p-8 text-center text-muted-foreground">Paramètres (à venir)</div>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
