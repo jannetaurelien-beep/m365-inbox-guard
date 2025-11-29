@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw, X, TrendingUp } from 'lucide-react';
+import { RefreshCw, X, TrendingUp, Mail } from 'lucide-react';
 import { KPIFilters } from '@/components/kpi/KPIFilters';
 import { TenantOverview } from '@/components/kpi/TenantOverview';
 import { UsersList } from '@/components/kpi/UsersList';
@@ -183,22 +183,31 @@ export default function PerformanceKPI() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-[1800px] mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <TrendingUp className="h-8 w-8 text-primary" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="max-w-[2000px] mx-auto p-8 space-y-8">
+        {/* Header avec effet glassmorphism */}
+        <div className="flex items-center justify-between p-8 rounded-3xl bg-card/50 backdrop-blur-xl border border-border/50 shadow-2xl">
+          <div className="space-y-2">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <TrendingUp className="h-8 w-8 text-primary-foreground" />
+              </div>
               Indice de Performance
             </h1>
-            <p className="text-muted-foreground">
-              Pilotage KPI e-mail Microsoft 365 - Tenant et boîtes
+            <p className="text-lg text-muted-foreground ml-[72px]">
+              Pilotage KPI e-mail Microsoft 365 - Analyse temps réel
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={loadTenantOverview} disabled={loadingTenant}>
-              <RefreshCw className={`h-4 w-4 ${loadingTenant ? 'animate-spin' : ''}`} />
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              size="lg"
+              onClick={loadTenantOverview} 
+              disabled={loadingTenant}
+              className="rounded-xl hover:shadow-lg transition-all"
+            >
+              <RefreshCw className={`h-5 w-5 ${loadingTenant ? 'animate-spin' : ''}`} />
+              Actualiser
             </Button>
           </div>
         </div>
@@ -220,10 +229,10 @@ export default function PerformanceKPI() {
         )}
 
         {/* Layout principal : Filtres | Liste | Détail */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
           {/* Filtres (sidebar gauche) */}
-          <Card className="lg:col-span-3">
-            <CardContent className="pt-6">
+          <Card className="xl:col-span-3 rounded-3xl border-2 shadow-xl">
+            <CardContent className="pt-8 px-6">
               <KPIFilters
                 periodDays={periodDays}
                 onPeriodChange={setPeriodDays}
@@ -244,22 +253,31 @@ export default function PerformanceKPI() {
           </Card>
 
           {/* Liste des utilisateurs */}
-          <div className={selectedUserId ? 'lg:col-span-4' : 'lg:col-span-9'}>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-foreground">
+          <div className={selectedUserId ? 'xl:col-span-5' : 'xl:col-span-9'}>
+            <Card className="rounded-3xl border-2 shadow-xl">
+              <CardContent className="pt-8 px-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Mail className="h-5 w-5 text-primary" />
+                    </div>
                     Boîtes mail ({filteredUsers.length})
                   </h2>
-                  <Button variant="ghost" size="sm" onClick={loadUsersList} disabled={loadingUsers}>
-                    <RefreshCw className={`h-4 w-4 ${loadingUsers ? 'animate-spin' : ''}`} />
+                  <Button 
+                    variant="ghost" 
+                    size="lg"
+                    onClick={loadUsersList} 
+                    disabled={loadingUsers}
+                    className="rounded-xl"
+                  >
+                    <RefreshCw className={`h-5 w-5 ${loadingUsers ? 'animate-spin' : ''}`} />
                   </Button>
                 </div>
 
                 {loadingUsers && (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-24 w-full" />
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <Skeleton key={i} className="h-32 w-full rounded-2xl" />
                     ))}
                   </div>
                 )}
@@ -271,13 +289,16 @@ export default function PerformanceKPI() {
                 )}
 
                 {!loadingUsers && !usersError && filteredUsers.length === 0 && (
-                  <div className="text-center py-12 text-muted-foreground">
-                    Aucune boîte mail trouvée
+                  <div className="text-center py-20">
+                    <div className="w-20 h-20 mx-auto rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                      <Mail className="h-10 w-10 text-muted-foreground" />
+                    </div>
+                    <p className="text-lg text-muted-foreground">Aucune boîte mail trouvée</p>
                   </div>
                 )}
 
                 {!loadingUsers && !usersError && filteredUsers.length > 0 && (
-                  <div className="max-h-[800px] overflow-y-auto pr-2">
+                  <div className="max-h-[1000px] overflow-y-auto pr-2 space-y-3">
                     <UsersList
                       users={filteredUsers}
                       selectedUserId={selectedUserId}
@@ -291,21 +312,31 @@ export default function PerformanceKPI() {
 
           {/* Détail utilisateur (panel droit) */}
           {selectedUserId && (
-            <div className="lg:col-span-5">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-foreground">Détail utilisateur</h2>
-                    <Button variant="ghost" size="sm" onClick={handleClearUser}>
-                      <X className="h-4 w-4" />
+            <div className="xl:col-span-4">
+              <Card className="rounded-3xl border-2 shadow-xl">
+                <CardContent className="pt-8 px-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <TrendingUp className="h-5 w-5 text-primary" />
+                      </div>
+                      Détail utilisateur
+                    </h2>
+                    <Button 
+                      variant="ghost" 
+                      size="lg"
+                      onClick={handleClearUser}
+                      className="rounded-xl hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <X className="h-5 w-5" />
                     </Button>
                   </div>
 
                   {loadingUserDetail && (
-                    <div className="space-y-4">
-                      <Skeleton className="h-32 w-full" />
-                      <Skeleton className="h-64 w-full" />
-                      <Skeleton className="h-64 w-full" />
+                    <div className="space-y-6">
+                      <Skeleton className="h-40 w-full rounded-2xl" />
+                      <Skeleton className="h-80 w-full rounded-2xl" />
+                      <Skeleton className="h-80 w-full rounded-2xl" />
                     </div>
                   )}
 
@@ -316,7 +347,7 @@ export default function PerformanceKPI() {
                   )}
 
                   {!loadingUserDetail && !userDetailError && userDetailData && (
-                    <div className="max-h-[800px] overflow-y-auto pr-2">
+                    <div className="max-h-[1000px] overflow-y-auto pr-2">
                       <UserDetail
                         data={userDetailData}
                         groupBy={groupBy}

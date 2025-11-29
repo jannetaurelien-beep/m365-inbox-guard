@@ -39,19 +39,21 @@ export function KPIFilters({
 }: KPIFiltersProps) {
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
-        <Filter className="h-5 w-5 text-primary" />
+      <div className="flex items-center gap-3 text-xl font-bold text-foreground">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Filter className="h-5 w-5 text-primary" />
+        </div>
         Filtres
       </div>
 
       {/* Période */}
       <div className="space-y-2">
-        <Label className="flex items-center gap-2">
+        <Label className="flex items-center gap-2 font-medium text-sm">
           <Calendar className="h-4 w-4 text-muted-foreground" />
           Période
         </Label>
         <Select value={String(periodDays)} onValueChange={(v) => onPeriodChange(Number(v))}>
-          <SelectTrigger>
+          <SelectTrigger className="h-11 rounded-xl">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -65,9 +67,9 @@ export function KPIFilters({
 
       {/* Type de compte */}
       <div className="space-y-2">
-        <Label>Type de compte</Label>
+        <Label className="font-medium text-sm">Type de compte</Label>
         <Select value={accountFilter} onValueChange={(v) => onAccountFilterChange(v as AccountFilterType)}>
-          <SelectTrigger>
+          <SelectTrigger className="h-11 rounded-xl">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -81,9 +83,9 @@ export function KPIFilters({
       {/* Domaine */}
       {domains.length > 0 && (
         <div className="space-y-2">
-          <Label>Domaine</Label>
+          <Label className="font-medium text-sm">Domaine</Label>
           <Select value={domainFilter || "all"} onValueChange={(v) => onDomainFilterChange(v === "all" ? null : v)}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 rounded-xl">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -98,12 +100,12 @@ export function KPIFilters({
         </div>
       )}
 
-      <div className="border-t pt-4 space-y-4">
-        <div className="text-sm font-medium text-muted-foreground">Filtres de liste</div>
+      <div className="border-t pt-6 space-y-4">
+        <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Filtres de liste</div>
 
         {/* Recherche */}
         <div className="space-y-2">
-          <Label className="flex items-center gap-2">
+          <Label className="flex items-center gap-2 font-medium text-sm">
             <Search className="h-4 w-4 text-muted-foreground" />
             Recherche
           </Label>
@@ -111,15 +113,16 @@ export function KPIFilters({
             placeholder="Nom ou email..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
+            className="h-11 rounded-xl"
           />
         </div>
 
         {/* Département */}
         {departments.length > 0 && (
           <div className="space-y-2">
-            <Label>Département</Label>
+            <Label className="font-medium text-sm">Département</Label>
             <Select value={departmentFilter || "all"} onValueChange={(v) => onDepartmentFilterChange(v === "all" ? null : v)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 rounded-xl">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -136,9 +139,9 @@ export function KPIFilters({
 
         {/* Focus */}
         <div className="space-y-2">
-          <Label>Focus</Label>
+          <Label className="font-medium text-sm">Focus</Label>
           <Select value={focusFilter} onValueChange={(v) => onFocusFilterChange(v as FocusFilterType)}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 rounded-xl">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
