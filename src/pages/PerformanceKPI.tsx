@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw, X, TrendingUp, Mail, BarChart3, Users } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RefreshCw, X, Settings, Download, Filter as FilterIcon, Grid3x3, List } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { KPIFilters } from '@/components/kpi/KPIFilters';
 import { TenantOverview } from '@/components/kpi/TenantOverview';
 import { UsersList } from '@/components/kpi/UsersList';
@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function PerformanceKPI() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // État des filtres
   const [periodDays, setPeriodDays] = useState(30);
@@ -64,7 +65,7 @@ export default function PerformanceKPI() {
       setTenantError(message);
       toast({
         title: 'Erreur',
-        description: `Impossible de charger les données tenant: ${message}`,
+        description: `Impossible de charger les données: ${message}`,
         variant: 'destructive',
       });
     } finally {
@@ -84,7 +85,7 @@ export default function PerformanceKPI() {
       setUsersError(message);
       toast({
         title: 'Erreur',
-        description: `Impossible de charger la liste des utilisateurs: ${message}`,
+        description: `Impossible de charger les utilisateurs: ${message}`,
         variant: 'destructive',
       });
     } finally {
@@ -104,7 +105,7 @@ export default function PerformanceKPI() {
       setUserDetailError(message);
       toast({
         title: 'Erreur',
-        description: `Impossible de charger les détails utilisateur: ${message}`,
+        description: `Impossible de charger les détails: ${message}`,
         variant: 'destructive',
       });
     } finally {
@@ -127,7 +128,7 @@ export default function PerformanceKPI() {
     }
   }, [selectedUserId, periodDays, groupBy]);
 
-  // Extraire les départements uniques pour le filtre
+  // Extraire les départements uniques
   const departments = useMemo(() => {
     if (!usersData) return [];
     const depts = new Set<string>();
@@ -143,7 +144,6 @@ export default function PerformanceKPI() {
     
     let filtered = [...usersData.users];
 
-    // Recherche
     if (search) {
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(
@@ -153,12 +153,10 @@ export default function PerformanceKPI() {
       );
     }
 
-    // Département
     if (departmentFilter) {
       filtered = filtered.filter((u) => u.department === departmentFilter);
     }
 
-    // Focus
     if (focusFilter !== 'all') {
       filtered = filtered.filter((u) => {
         const backlog = u.metrics.external.backlog_total || 0;
@@ -184,195 +182,195 @@ export default function PerformanceKPI() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-[2400px] mx-auto">
-        {/* Header minimaliste */}
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
-          <div className="px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-                  <BarChart3 className="h-6 w-6 text-primary-foreground" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">Performance KPI</h1>
-                  <p className="text-sm text-muted-foreground">Analyse des boîtes mail Microsoft 365</p>
-                </div>
+    <div className="min-h-screen bg-muted/30">
+      {/* Header global fixe */}
+      <div className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <h1 className="text-2xl font-bold tracking-tight">Performance Dashboard</h1>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                Données en temps réel
               </div>
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline"
-                  onClick={loadTenantOverview} 
-                  disabled={loadingTenant}
-                  className="gap-2"
+            </div>
+            <div className="flex items-center gap-2">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <FilterIcon className="h-4 w-4 mr-2" />
+                    Filtres
+                  </Button>
+                </SheetTrigger>
+                <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle>Filtres</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <KPIFilters
+                      periodDays={periodDays}
+                      onPeriodChange={setPeriodDays}
+                      accountFilter={accountFilter}
+                      onAccountFilterChange={setAccountFilter}
+                      domains={tenantData?.tenant.domains || []}
+                      domainFilter={domainFilter}
+                      onDomainFilterChange={setDomainFilter}
+                      search={search}
+                      onSearchChange={setSearch}
+                      departments={departments}
+                      departmentFilter={departmentFilter}
+                      onDepartmentFilterChange={setDepartmentFilter}
+                      focusFilter={focusFilter}
+                      onFocusFilterChange={setFocusFilter}
+                    />
+                  </div>
+                </SheetContent>
+              </Sheet>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+              <div className="flex items-center border rounded-md">
+                <Button
+                  variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="rounded-r-none"
                 >
-                  <RefreshCw className={`h-4 w-4 ${loadingTenant ? 'animate-spin' : ''}`} />
-                  Actualiser
+                  <Grid3x3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="rounded-l-none"
+                >
+                  <List className="h-4 w-4" />
                 </Button>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={loadTenantOverview}
+                disabled={loadingTenant}
+              >
+                <RefreshCw className={`h-4 w-4 ${loadingTenant ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button variant="ghost" size="sm">
+                <Settings className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Contenu principal avec tabs */}
-        <div className="p-8">
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2 h-12">
-              <TabsTrigger value="overview" className="gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Vue d'ensemble
-              </TabsTrigger>
-              <TabsTrigger value="analysis" className="gap-2">
-                <Users className="h-4 w-4" />
-                Analyse détaillée
-              </TabsTrigger>
-            </TabsList>
+      {/* Contenu principal */}
+      <div className="container mx-auto px-6 py-6 space-y-6">
+        {/* Vue d'ensemble */}
+        {loadingTenant && (
+          <div className="grid gap-6">
+            <Skeleton className="h-48 w-full" />
+          </div>
+        )}
+        {tenantError && (
+          <Alert variant="destructive">
+            <AlertDescription>{tenantError}</AlertDescription>
+          </Alert>
+        )}
+        {!loadingTenant && !tenantError && tenantData && (
+          <TenantOverview data={tenantData} />
+        )}
 
-            {/* Vue d'ensemble globale */}
-            <TabsContent value="overview" className="space-y-6">
-              {loadingTenant && (
-                <div className="space-y-4">
-                  <Skeleton className="h-48 w-full" />
-                  <Skeleton className="h-48 w-full" />
+        {/* Liste des boîtes mail */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Boîtes mail</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {filteredUsers.length} boîte{filteredUsers.length > 1 ? 's' : ''} • {periodDays} derniers jours
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadUsersList}
+              disabled={loadingUsers}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${loadingUsers ? 'animate-spin' : ''}`} />
+              Actualiser
+            </Button>
+          </div>
+
+          {loadingUsers && (
+            <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Skeleton key={i} className="h-48 w-full" />
+              ))}
+            </div>
+          )}
+
+          {usersError && (
+            <Alert variant="destructive">
+              <AlertDescription>{usersError}</AlertDescription>
+            </Alert>
+          )}
+
+          {!loadingUsers && !usersError && filteredUsers.length === 0 && (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <FilterIcon className="h-8 w-8 text-muted-foreground" />
                 </div>
-              )}
-              {tenantError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{tenantError}</AlertDescription>
-                </Alert>
-              )}
-              {!loadingTenant && !tenantError && tenantData && (
-                <TenantOverview data={tenantData} />
-              )}
-            </TabsContent>
+                <p className="text-lg font-medium">Aucune boîte mail trouvée</p>
+                <p className="text-sm text-muted-foreground mt-1">Essayez de modifier vos filtres</p>
+              </CardContent>
+            </Card>
+          )}
 
-            {/* Analyse détaillée avec filtres */}
-            <TabsContent value="analysis" className="space-y-6">
-              <div className="grid grid-cols-12 gap-6">
-                {/* Filtres sidebar */}
-                <div className="col-span-3 space-y-6">
-                  <Card>
-                    <CardContent className="pt-6">
-                      <KPIFilters
-                        periodDays={periodDays}
-                        onPeriodChange={setPeriodDays}
-                        accountFilter={accountFilter}
-                        onAccountFilterChange={setAccountFilter}
-                        domains={tenantData?.tenant.domains || []}
-                        domainFilter={domainFilter}
-                        onDomainFilterChange={setDomainFilter}
-                        search={search}
-                        onSearchChange={setSearch}
-                        departments={departments}
-                        departmentFilter={departmentFilter}
-                        onDepartmentFilterChange={setDepartmentFilter}
-                        focusFilter={focusFilter}
-                        onFocusFilterChange={setFocusFilter}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Liste des utilisateurs */}
-                <div className={selectedUserId ? 'col-span-5' : 'col-span-9'}>
-                  <Card className="h-full">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between mb-6">
-                        <div>
-                          <h2 className="text-lg font-semibold text-foreground">Boîtes mail</h2>
-                          <p className="text-sm text-muted-foreground">{filteredUsers.length} résultats</p>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={loadUsersList} 
-                          disabled={loadingUsers}
-                        >
-                          <RefreshCw className={`h-4 w-4 ${loadingUsers ? 'animate-spin' : ''}`} />
-                        </Button>
-                      </div>
-
-                      {loadingUsers && (
-                        <div className="space-y-3">
-                          {[1, 2, 3, 4, 5].map((i) => (
-                            <Skeleton key={i} className="h-24 w-full" />
-                          ))}
-                        </div>
-                      )}
-
-                      {usersError && (
-                        <Alert variant="destructive">
-                          <AlertDescription>{usersError}</AlertDescription>
-                        </Alert>
-                      )}
-
-                      {!loadingUsers && !usersError && filteredUsers.length === 0 && (
-                        <div className="text-center py-12">
-                          <Mail className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                          <p className="text-muted-foreground">Aucune boîte mail trouvée</p>
-                        </div>
-                      )}
-
-                      {!loadingUsers && !usersError && filteredUsers.length > 0 && (
-                        <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
-                          <UsersList
-                            users={filteredUsers}
-                            selectedUserId={selectedUserId}
-                            onSelectUser={handleSelectUser}
-                          />
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Détail utilisateur */}
-                {selectedUserId && (
-                  <div className="col-span-4">
-                    <Card className="h-full">
-                      <CardContent className="pt-6">
-                        <div className="flex items-center justify-between mb-6">
-                          <h2 className="text-lg font-semibold text-foreground">Détail</h2>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={handleClearUser}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-
-                        {loadingUserDetail && (
-                          <div className="space-y-4">
-                            <Skeleton className="h-32 w-full" />
-                            <Skeleton className="h-64 w-full" />
-                          </div>
-                        )}
-
-                        {userDetailError && (
-                          <Alert variant="destructive">
-                            <AlertDescription>{userDetailError}</AlertDescription>
-                          </Alert>
-                        )}
-
-                        {!loadingUserDetail && !userDetailError && userDetailData && (
-                          <div className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
-                            <UserDetail
-                              data={userDetailData}
-                              groupBy={groupBy}
-                              onGroupByChange={setGroupBy}
-                            />
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
+          {!loadingUsers && !usersError && filteredUsers.length > 0 && (
+            <UsersList
+              users={filteredUsers}
+              selectedUserId={selectedUserId}
+              onSelectUser={handleSelectUser}
+              viewMode={viewMode}
+            />
+          )}
         </div>
       </div>
+
+      {/* Modal de détail utilisateur */}
+      {selectedUserId && (
+        <Sheet open={!!selectedUserId} onOpenChange={(open) => !open && handleClearUser()}>
+          <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Analyse détaillée</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6">
+              {loadingUserDetail && (
+                <div className="space-y-4">
+                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-64 w-full" />
+                  <Skeleton className="h-64 w-full" />
+                </div>
+              )}
+
+              {userDetailError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{userDetailError}</AlertDescription>
+                </Alert>
+              )}
+
+              {!loadingUserDetail && !userDetailError && userDetailData && (
+                <UserDetail
+                  data={userDetailData}
+                  groupBy={groupBy}
+                  onGroupByChange={setGroupBy}
+                />
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }
