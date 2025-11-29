@@ -4,10 +4,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MailUserSummary } from '@/lib/types/kpi';
 import { cn } from '@/lib/utils';
-import { Mail, TrendingUp, TrendingDown, Inbox, Clock, Send, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Mail, TrendingUp, TrendingDown, Inbox, Clock, Send, Search, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
 import { useState, useMemo } from 'react';
+
+type SortOption = 'name-asc' | 'name-desc' | 'score-desc' | 'score-asc' | 'sla-desc' | 'sla-asc' | 'backlog-asc' | 'backlog-desc';
 
 interface UsersListProps {
   users: MailUserSummary[];
@@ -20,30 +23,61 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [sortBy, setSortBy] = useState<SortOption>('score-desc');
 
-  // Filtrer les utilisateurs
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery) return users;
-    const query = searchQuery.toLowerCase();
-    return users.filter(u =>
-      u.displayName.toLowerCase().includes(query) ||
-      u.upn.toLowerCase().includes(query) ||
-      u.agency?.toLowerCase().includes(query) ||
-      u.department?.toLowerCase().includes(query)
-    );
-  }, [users, searchQuery]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const paginatedUsers = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredUsers.slice(start, start + itemsPerPage);
-  }, [filteredUsers, currentPage, itemsPerPage]);
   const estimateScore = (user: MailUserSummary): number => {
     const sla = user.metrics.external.first_reply_within_sla || 0;
     const backlog = Math.min(user.metrics.external.backlog_total || 0, 80);
     return Math.round(0.6 * sla + 0.4 * (100 - backlog));
   };
+
+  // Filtrer et trier les utilisateurs
+  const sortedAndFilteredUsers = useMemo(() => {
+    // Filtrer
+    let filtered = users;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = users.filter(u =>
+        u.displayName.toLowerCase().includes(query) ||
+        u.upn.toLowerCase().includes(query) ||
+        u.agency?.toLowerCase().includes(query) ||
+        u.department?.toLowerCase().includes(query)
+      );
+    }
+
+    // Trier
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc':
+          return a.displayName.localeCompare(b.displayName);
+        case 'name-desc':
+          return b.displayName.localeCompare(a.displayName);
+        case 'score-desc':
+          return estimateScore(b) - estimateScore(a);
+        case 'score-asc':
+          return estimateScore(a) - estimateScore(b);
+        case 'sla-desc':
+          return (b.metrics.external.first_reply_within_sla || 0) - (a.metrics.external.first_reply_within_sla || 0);
+        case 'sla-asc':
+          return (a.metrics.external.first_reply_within_sla || 0) - (b.metrics.external.first_reply_within_sla || 0);
+        case 'backlog-asc':
+          return (a.metrics.external.backlog_total || 0) - (b.metrics.external.backlog_total || 0);
+        case 'backlog-desc':
+          return (b.metrics.external.backlog_total || 0) - (a.metrics.external.backlog_total || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [users, searchQuery, sortBy]);
+
+  // Pagination
+  const totalPages = Math.ceil(sortedAndFilteredUsers.length / itemsPerPage);
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return sortedAndFilteredUsers.slice(start, start + itemsPerPage);
+  }, [sortedAndFilteredUsers, currentPage, itemsPerPage]);
 
   const getSLAColor = (sla: number) => {
     if (sla >= 80) return { bg: 'bg-green-500', text: 'text-green-700' };
@@ -60,7 +94,7 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
   if (viewMode === 'list') {
     return (
       <div className="space-y-4">
-        {/* Barre de recherche et pagination */}
+        {/* Barre de recherche, tri et pagination */}
         <div className="flex items-center gap-4 mb-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -74,6 +108,24 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
               className="pl-9"
             />
           </div>
+          
+          <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+            <SelectTrigger className="w-48">
+              <ArrowUpDown className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="score-desc">Score (décroissant)</SelectItem>
+              <SelectItem value="score-asc">Score (croissant)</SelectItem>
+              <SelectItem value="sla-desc">SLA (décroissant)</SelectItem>
+              <SelectItem value="sla-asc">SLA (croissant)</SelectItem>
+              <SelectItem value="backlog-asc">Backlog (croissant)</SelectItem>
+              <SelectItem value="backlog-desc">Backlog (décroissant)</SelectItem>
+              <SelectItem value="name-asc">Nom (A-Z)</SelectItem>
+              <SelectItem value="name-desc">Nom (Z-A)</SelectItem>
+            </SelectContent>
+          </Select>
+
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Afficher</span>
             <select
@@ -99,13 +151,13 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
           <>
             <div className="space-y-2">
               {paginatedUsers.map((user) => {
-          const sla = Math.round(user.metrics.external.first_reply_within_sla || 0);
-          const backlog = user.metrics.external.backlog_total || 0;
-          const received = user.metrics.external.received || 0;
-          const sent = user.metrics.external.sent || 0;
-          const score = estimateScore(user);
-          const isSelected = user.userId === selectedUserId;
-          const slaColor = getSLAColor(sla);
+                const sla = Math.round(user.metrics.external.first_reply_within_sla || 0);
+                const backlog = user.metrics.external.backlog_total || 0;
+                const received = user.metrics.external.received || 0;
+                const sent = user.metrics.external.sent || 0;
+                const score = estimateScore(user);
+                const isSelected = user.userId === selectedUserId;
+                const slaColor = getSLAColor(sla);
 
           return (
             <Card
@@ -181,7 +233,7 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-4">
           <div className="text-sm text-muted-foreground">
-            Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, filteredUsers.length)} sur {filteredUsers.length} utilisateurs
+            Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, sortedAndFilteredUsers.length)} sur {sortedAndFilteredUsers.length} utilisateurs
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -215,7 +267,7 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
   // Vue grille
   return (
     <div className="space-y-4">
-      {/* Barre de recherche et pagination */}
+      {/* Barre de recherche, tri et pagination */}
       <div className="flex items-center gap-4 mb-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -229,6 +281,24 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
             className="pl-9"
           />
         </div>
+
+        <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+          <SelectTrigger className="w-48">
+            <ArrowUpDown className="h-4 w-4 mr-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="score-desc">Score (décroissant)</SelectItem>
+            <SelectItem value="score-asc">Score (croissant)</SelectItem>
+            <SelectItem value="sla-desc">SLA (décroissant)</SelectItem>
+            <SelectItem value="sla-asc">SLA (croissant)</SelectItem>
+            <SelectItem value="backlog-asc">Backlog (croissant)</SelectItem>
+            <SelectItem value="backlog-desc">Backlog (décroissant)</SelectItem>
+            <SelectItem value="name-asc">Nom (A-Z)</SelectItem>
+            <SelectItem value="name-desc">Nom (Z-A)</SelectItem>
+          </SelectContent>
+        </Select>
+        
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Afficher</span>
           <select
@@ -254,14 +324,14 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {paginatedUsers.map((user) => {
-        const sla = Math.round(user.metrics.external.first_reply_within_sla || 0);
-        const backlog = user.metrics.external.backlog_total || 0;
-        const received = user.metrics.external.received || 0;
-        const sent = user.metrics.external.sent || 0;
-        const score = estimateScore(user);
-        const isSelected = user.userId === selectedUserId;
-        const slaColor = getSLAColor(sla);
-        const delayP50 = user.metrics.external.first_reply_p50_min || 0;
+              const sla = Math.round(user.metrics.external.first_reply_within_sla || 0);
+              const backlog = user.metrics.external.backlog_total || 0;
+              const received = user.metrics.external.received || 0;
+              const sent = user.metrics.external.sent || 0;
+              const score = estimateScore(user);
+              const isSelected = user.userId === selectedUserId;
+              const slaColor = getSLAColor(sla);
+              const delayP50 = user.metrics.external.first_reply_p50_min || 0;
 
         return (
           <Card
@@ -357,7 +427,7 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
     {totalPages > 1 && (
       <div className="flex items-center justify-between pt-4">
         <div className="text-sm text-muted-foreground">
-          Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, filteredUsers.length)} sur {filteredUsers.length} utilisateurs
+          Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, sortedAndFilteredUsers.length)} sur {sortedAndFilteredUsers.length} utilisateurs
         </div>
         <div className="flex items-center gap-2">
           <Button
