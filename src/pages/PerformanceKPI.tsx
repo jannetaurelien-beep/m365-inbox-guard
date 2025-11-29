@@ -17,6 +17,7 @@ import { DomainComparison } from '@/components/kpi/DomainComparison';
 import { DomainDetail } from '@/components/kpi/DomainDetail';
 import { GroupManagement } from '@/components/kpi/GroupManagement';
 import { GroupsView } from '@/components/kpi/GroupsView';
+import { GroupsComparison } from '@/components/kpi/GroupsComparison';
 import { GroupPerformanceView } from '@/components/kpi/GroupPerformanceView';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -753,6 +754,11 @@ export default function PerformanceKPI() {
                     Nouveau groupe
                   </Button>
                 </div>
+
+                {/* Graphiques de comparaison */}
+                {userGroups.length > 0 && (
+                  <GroupsComparison groups={userGroups} users={usersData.users} />
+                )}
 
                 <GroupsView
                   groups={userGroups}
