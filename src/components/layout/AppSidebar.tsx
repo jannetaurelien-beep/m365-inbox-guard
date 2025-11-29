@@ -1,4 +1,4 @@
-import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut, Share2, Bell, TrendingUp } from 'lucide-react';
+import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut, Share2, Bell, TrendingUp, Trophy } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
@@ -23,6 +23,7 @@ const menuItems = [
   { title: 'SharePoint', url: '/sharepoint', icon: Share2 },
   { title: 'Notifications', url: '/notifications', icon: Bell },
   { title: 'Performance', url: '/performance-kpi', icon: TrendingUp },
+  { title: 'Classement', url: '/classement', icon: Trophy },
   { title: 'Paramètres', url: '/parametres', icon: Settings },
 ];
 
