@@ -17,6 +17,9 @@ interface KPIFiltersProps {
   departments: string[];
   departmentFilter: string | null;
   onDepartmentFilterChange: (value: string | null) => void;
+  agencies: string[];
+  agencyFilter: string | null;
+  onAgencyFilterChange: (value: string | null) => void;
   focusFilter: FocusFilterType;
   onFocusFilterChange: (value: FocusFilterType) => void;
 }
@@ -34,6 +37,9 @@ export function KPIFilters({
   departments,
   departmentFilter,
   onDepartmentFilterChange,
+  agencies,
+  agencyFilter,
+  onAgencyFilterChange,
   focusFilter,
   onFocusFilterChange,
 }: KPIFiltersProps) {
@@ -112,6 +118,26 @@ export function KPIFilters({
             className="h-9"
           />
         </div>
+
+        {/* Agence */}
+        {agencies.length > 0 && (
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Agence</Label>
+            <Select value={agencyFilter || "all"} onValueChange={(v) => onAgencyFilterChange(v === "all" ? null : v)}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes</SelectItem>
+                {agencies.map((agency) => (
+                  <SelectItem key={agency} value={agency}>
+                    {agency}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* Département */}
         {departments.length > 0 && (

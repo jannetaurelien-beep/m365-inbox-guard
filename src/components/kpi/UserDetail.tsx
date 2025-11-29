@@ -77,12 +77,21 @@ export function UserDetail({ data, groupBy, onGroupByChange }: UserDetailProps) 
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-foreground truncate">{data.user.displayName}</h3>
             <p className="text-sm text-muted-foreground truncate">{data.user.upn}</p>
+            {data.user.jobTitle && (
+              <p className="text-xs text-muted-foreground mt-1">{data.user.jobTitle}</p>
+            )}
           </div>
         </div>
-        {(data.user.department || data.user.manager) && (
-          <div className="flex items-center gap-2 text-xs">
+        {(data.user.department || data.user.agency || data.user.manager) && (
+          <div className="flex items-center gap-2 text-xs flex-wrap">
             {data.user.department && (
               <Badge variant="secondary">{data.user.department}</Badge>
+            )}
+            {data.user.agency && (
+              <Badge variant="outline">{data.user.agency}</Badge>
+            )}
+            {data.user.location && (
+              <span className="text-muted-foreground">{data.user.location}</span>
             )}
             {data.user.manager && (
               <span className="text-muted-foreground">Manager: {data.user.manager}</span>

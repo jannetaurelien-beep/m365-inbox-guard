@@ -22,6 +22,9 @@ export const mockTenantOverview: TenantOverviewResponse = {
       upn: "marie.martin@contoso.com",
       displayName: "Marie Martin",
       department: "Support Client",
+      agency: "Paris Siège",
+      location: "Paris, France",
+      jobTitle: "Responsable Support",
       accountType: "Utilisateur",
       metrics: {
         total: { received: 1250, sent: 980, backlog_total: 15 },
@@ -44,6 +47,9 @@ export const mockTenantOverview: TenantOverviewResponse = {
       upn: "thomas.bernard@contoso.com",
       displayName: "Thomas Bernard",
       department: "Ventes",
+      agency: "Lyon Centre",
+      location: "Lyon, France",
+      jobTitle: "Commercial Senior",
       accountType: "Utilisateur",
       metrics: {
         total: { received: 980, sent: 1120, backlog_total: 8 },
@@ -66,6 +72,8 @@ export const mockTenantOverview: TenantOverviewResponse = {
       upn: "support@contoso.com",
       displayName: "Support Général",
       department: "Support",
+      agency: "Paris Siège",
+      location: "Paris, France",
       accountType: "Boîte partagée",
       metrics: {
         total: { received: 2340, sent: 1890, backlog_total: 45 },
@@ -108,6 +116,9 @@ export const mockUsersList: UsersListResponse = {
       upn: "marie.martin@contoso.com",
       displayName: "Marie Martin",
       department: "Support Client",
+      agency: "Paris Siège",
+      location: "Paris, France",
+      jobTitle: "Responsable Support",
       accountType: "Utilisateur",
       metrics: {
         total: { received: 1250, sent: 980, backlog_total: 15 },
@@ -129,6 +140,9 @@ export const mockUsersList: UsersListResponse = {
       upn: "thomas.bernard@contoso.com",
       displayName: "Thomas Bernard",
       department: "Ventes",
+      agency: "Lyon Centre",
+      location: "Lyon, France",
+      jobTitle: "Commercial Senior",
       accountType: "Utilisateur",
       metrics: {
         total: { received: 980, sent: 1120, backlog_total: 8 },
@@ -150,6 +164,8 @@ export const mockUsersList: UsersListResponse = {
       upn: "support@contoso.com",
       displayName: "Support Général",
       department: "Support",
+      agency: "Paris Siège",
+      location: "Paris, France",
       accountType: "Boîte partagée",
       metrics: {
         total: { received: 2340, sent: 1890, backlog_total: 45 },
@@ -171,6 +187,9 @@ export const mockUsersList: UsersListResponse = {
       upn: "julie.dubois@contoso.com",
       displayName: "Julie Dubois",
       department: "Marketing",
+      agency: "Marseille Sud",
+      location: "Marseille, France",
+      jobTitle: "Chef de Projet Marketing",
       accountType: "Utilisateur",
       metrics: {
         total: { received: 654, sent: 432, backlog_total: 18 },
@@ -192,6 +211,9 @@ export const mockUsersList: UsersListResponse = {
       upn: "pierre.leroy@contoso.com",
       displayName: "Pierre Leroy",
       department: "IT",
+      agency: "Paris Siège",
+      location: "Paris, France",
+      jobTitle: "Ingénieur Systèmes",
       accountType: "Utilisateur",
       metrics: {
         total: { received: 1420, sent: 890, backlog_total: 5 },
@@ -213,6 +235,8 @@ export const mockUsersList: UsersListResponse = {
       upn: "contact@contoso.com",
       displayName: "Contact Commercial",
       department: "Ventes",
+      agency: "Lyon Centre",
+      location: "Lyon, France",
       accountType: "Boîte partagée",
       metrics: {
         total: { received: 3210, sent: 2450, backlog_total: 67 },
@@ -234,6 +258,9 @@ export const mockUsersList: UsersListResponse = {
       upn: "sophie.petit@contoso.com",
       displayName: "Sophie Petit",
       department: "RH",
+      agency: "Toulouse Nord",
+      location: "Toulouse, France",
+      jobTitle: "Responsable Recrutement",
       accountType: "Utilisateur",
       metrics: {
         total: { received: 456, sent: 378, backlog_total: 12 },
@@ -255,6 +282,9 @@ export const mockUsersList: UsersListResponse = {
       upn: "luc.moreau@contoso.com",
       displayName: "Luc Moreau",
       department: "Finance",
+      agency: "Paris Siège",
+      location: "Paris, France",
+      jobTitle: "Contrôleur de Gestion",
       accountType: "Utilisateur",
       metrics: {
         total: { received: 890, sent: 654, backlog_total: 28 },
@@ -332,6 +362,9 @@ export function mockUserDetail(userId: string, periodDays: number): UserDetailRe
       upn: user.upn,
       displayName: user.displayName,
       department: user.department,
+      agency: user.agency,
+      location: user.location,
+      jobTitle: user.jobTitle,
       manager: "directeur@contoso.com"
     },
     periodDays: periodDays,
