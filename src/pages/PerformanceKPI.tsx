@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw, X, Settings, Download, Filter as FilterIcon, Grid3x3, List, Building2, Users as UsersIcon, Globe } from 'lucide-react';
+import { RefreshCw, X, Settings, Download, Filter as FilterIcon, Grid3x3, List, Building2, Users as UsersIcon, Globe, Plus } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KPIFilters } from '@/components/kpi/KPIFilters';
@@ -16,7 +16,13 @@ import { AgencyDetail } from '@/components/kpi/AgencyDetail';
 import { DomainComparison } from '@/components/kpi/DomainComparison';
 import { DomainDetail } from '@/components/kpi/DomainDetail';
 import { GroupManagement } from '@/components/kpi/GroupManagement';
+import { GroupsView } from '@/components/kpi/GroupsView';
 import { GroupPerformanceView } from '@/components/kpi/GroupPerformanceView';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { fetchTenantOverview, fetchUsersList, fetchUserDetail } from '@/lib/api/kpi-api';
 import { TenantOverviewResponse, UsersListResponse, UserDetailResponse, AccountFilterType, FocusFilterType, GroupByType, UserGroup, AgencyMetrics, DomainMetrics, GroupPerformance, MailUserMetricsSub } from '@/lib/types/kpi';
 import { useToast } from '@/hooks/use-toast';
@@ -40,6 +46,14 @@ export default function PerformanceKPI() {
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
   const [selectedAgency, setSelectedAgency] = useState<string | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  
+  // Dialog states for groups
+  const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
+  const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<UserGroup | null>(null);
+  const [groupFormName, setGroupFormName] = useState('');
+  const [groupFormDescription, setGroupFormDescription] = useState('');
+  const [groupFormUserIds, setGroupFormUserIds] = useState<string[]>([]);
 
   // Groupes d'utilisateurs
   const [userGroups, setUserGroups] = useState<UserGroup[]>([
@@ -433,6 +447,45 @@ export default function PerformanceKPI() {
     toast({ title: 'Groupe supprimé', description: 'Le groupe a été supprimé.' });
   };
 
+  const openCreateGroupDialog = () => {
+    setGroupFormName('');
+    setGroupFormDescription('');
+    setGroupFormUserIds([]);
+    setIsCreateGroupOpen(true);
+  };
+
+  const openEditGroupDialog = (group: UserGroup) => {
+    setEditingGroup(group);
+    setGroupFormName(group.name);
+    setGroupFormDescription(group.description || '');
+    setGroupFormUserIds([...group.userIds]);
+    setIsEditGroupOpen(true);
+  };
+
+  const handleSaveGroup = () => {
+    if (groupFormName.trim()) {
+      if (editingGroup) {
+        setUserGroups(userGroups.map(g =>
+          g.id === editingGroup.id
+            ? { ...g, name: groupFormName, description: groupFormDescription, userIds: groupFormUserIds, updatedAt: new Date().toISOString() }
+            : g
+        ));
+        toast({ title: 'Groupe modifié', description: `Le groupe "${groupFormName}" a été modifié avec succès.` });
+        setIsEditGroupOpen(false);
+      } else {
+        handleCreateGroup(groupFormName, groupFormDescription, groupFormUserIds);
+        setIsCreateGroupOpen(false);
+      }
+      setEditingGroup(null);
+    }
+  };
+
+  const toggleUserInGroup = (userId: string) => {
+    setGroupFormUserIds(prev =>
+      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+    );
+  };
+
   // Handlers
   const handleSelectUser = (userId: string) => {
     setSearchParams({ userId });
@@ -687,21 +740,43 @@ export default function PerformanceKPI() {
 
           <TabsContent value="groups" className="space-y-6 mt-6">
             {usersData && (
-              <>
-                <GroupManagement
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-semibold">Groupes d'utilisateurs</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Organisez vos utilisateurs en groupes et suivez leurs performances collectives
+                    </p>
+                  </div>
+                  <Button onClick={openCreateGroupDialog}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouveau groupe
+                  </Button>
+                </div>
+
+                <GroupsView
                   groups={userGroups}
                   users={usersData.users}
-                  onCreateGroup={handleCreateGroup}
-                  onUpdateGroup={handleUpdateGroup}
+                  onSelectGroup={(groupId) => {
+                    setGroupFilter(groupId);
+                  }}
+                  onEditGroup={openEditGroupDialog}
                   onDeleteGroup={handleDeleteGroup}
                 />
 
                 {groupFilter && getGroupPerformance(groupFilter) && (
                   <div className="mt-6">
+                    <Button
+                      variant="outline"
+                      onClick={() => setGroupFilter(null)}
+                      className="mb-4"
+                    >
+                      ← Retour aux groupes
+                    </Button>
                     <GroupPerformanceView groupPerformance={getGroupPerformance(groupFilter)!} />
                   </div>
                 )}
-              </>
+              </div>
             )}
           </TabsContent>
         </Tabs>
@@ -740,6 +815,124 @@ export default function PerformanceKPI() {
           </SheetContent>
         </Sheet>
       )}
+
+      {/* Dialog création groupe */}
+      <Dialog open={isCreateGroupOpen} onOpenChange={setIsCreateGroupOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Créer un groupe</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="groupName">Nom du groupe</Label>
+              <Input
+                id="groupName"
+                value={groupFormName}
+                onChange={(e) => setGroupFormName(e.target.value)}
+                placeholder="Ex: Commerciaux TLS"
+              />
+            </div>
+            <div>
+              <Label htmlFor="groupDescription">Description (optionnelle)</Label>
+              <Input
+                id="groupDescription"
+                value={groupFormDescription}
+                onChange={(e) => setGroupFormDescription(e.target.value)}
+                placeholder="Ex: Équipe commerciale TLS"
+              />
+            </div>
+            <div>
+              <Label>Sélectionner les membres</Label>
+              <ScrollArea className="h-64 border rounded-md p-4 mt-2">
+                <div className="space-y-2">
+                  {usersData?.users.map((user) => (
+                    <div key={user.userId} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`user-${user.userId}`}
+                        checked={groupFormUserIds.includes(user.userId)}
+                        onCheckedChange={() => toggleUserInGroup(user.userId)}
+                      />
+                      <label
+                        htmlFor={`user-${user.userId}`}
+                        className="text-sm cursor-pointer flex-1"
+                      >
+                        {user.displayName} ({user.upn})
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsCreateGroupOpen(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleSaveGroup} disabled={!groupFormName.trim()}>
+                Créer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog édition groupe */}
+      <Dialog open={isEditGroupOpen} onOpenChange={setIsEditGroupOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modifier le groupe</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="editGroupName">Nom du groupe</Label>
+              <Input
+                id="editGroupName"
+                value={groupFormName}
+                onChange={(e) => setGroupFormName(e.target.value)}
+                placeholder="Ex: Commerciaux TLS"
+              />
+            </div>
+            <div>
+              <Label htmlFor="editGroupDescription">Description (optionnelle)</Label>
+              <Input
+                id="editGroupDescription"
+                value={groupFormDescription}
+                onChange={(e) => setGroupFormDescription(e.target.value)}
+                placeholder="Ex: Équipe commerciale TLS"
+              />
+            </div>
+            <div>
+              <Label>Sélectionner les membres</Label>
+              <ScrollArea className="h-64 border rounded-md p-4 mt-2">
+                <div className="space-y-2">
+                  {usersData?.users.map((user) => (
+                    <div key={user.userId} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`edit-user-${user.userId}`}
+                        checked={groupFormUserIds.includes(user.userId)}
+                        onCheckedChange={() => toggleUserInGroup(user.userId)}
+                      />
+                      <label
+                        htmlFor={`edit-user-${user.userId}`}
+                        className="text-sm cursor-pointer flex-1"
+                      >
+                        {user.displayName} ({user.upn})
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsEditGroupOpen(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleSaveGroup} disabled={!groupFormName.trim()}>
+                Enregistrer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

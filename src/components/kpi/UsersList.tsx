@@ -2,9 +2,12 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { MailUserSummary } from '@/lib/types/kpi';
 import { cn } from '@/lib/utils';
-import { Mail, TrendingUp, TrendingDown, Inbox, Clock, Send } from 'lucide-react';
+import { Mail, TrendingUp, TrendingDown, Inbox, Clock, Send, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useMemo } from 'react';
 
 interface UsersListProps {
   users: MailUserSummary[];
@@ -14,6 +17,28 @@ interface UsersListProps {
 }
 
 export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'grid' }: UsersListProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Filtrer les utilisateurs
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery) return users;
+    const query = searchQuery.toLowerCase();
+    return users.filter(u =>
+      u.displayName.toLowerCase().includes(query) ||
+      u.upn.toLowerCase().includes(query) ||
+      u.agency?.toLowerCase().includes(query) ||
+      u.department?.toLowerCase().includes(query)
+    );
+  }, [users, searchQuery]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredUsers.slice(start, start + itemsPerPage);
+  }, [filteredUsers, currentPage, itemsPerPage]);
   const estimateScore = (user: MailUserSummary): number => {
     const sla = user.metrics.external.first_reply_within_sla || 0;
     const backlog = Math.min(user.metrics.external.backlog_total || 0, 80);
@@ -34,8 +59,46 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
 
   if (viewMode === 'list') {
     return (
-      <div className="space-y-2">
-        {users.map((user) => {
+      <div className="space-y-4">
+        {/* Barre de recherche et pagination */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher par nom, email, agence..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Afficher</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+        </div>
+
+        {paginatedUsers.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            Aucun utilisateur trouvé
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2">
+              {paginatedUsers.map((user) => {
           const sla = Math.round(user.metrics.external.first_reply_within_sla || 0);
           const backlog = user.metrics.external.backlog_total || 0;
           const received = user.metrics.external.received || 0;
@@ -113,13 +176,84 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
           );
         })}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-4">
+          <div className="text-sm text-muted-foreground">
+            Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, filteredUsers.length)} sur {filteredUsers.length} utilisateurs
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm">
+              Page {currentPage} sur {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+      </>
+        )}
+      </div>
     );
   }
 
   // Vue grille
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {users.map((user) => {
+    <div className="space-y-4">
+      {/* Barre de recherche et pagination */}
+      <div className="flex items-center gap-4 mb-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher par nom, email, agence..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Afficher</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="border rounded px-2 py-1 text-sm"
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
+      </div>
+
+      {paginatedUsers.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          Aucun utilisateur trouvé
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {paginatedUsers.map((user) => {
         const sla = Math.round(user.metrics.external.first_reply_within_sla || 0);
         const backlog = user.metrics.external.backlog_total || 0;
         const received = user.metrics.external.received || 0;
@@ -217,6 +351,39 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
           </Card>
         );
       })}
+    </div>
+
+    {/* Pagination */}
+    {totalPages > 1 && (
+      <div className="flex items-center justify-between pt-4">
+        <div className="text-sm text-muted-foreground">
+          Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, filteredUsers.length)} sur {filteredUsers.length} utilisateurs
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm">
+            Page {currentPage} sur {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    )}
+    </>
+      )}
     </div>
   );
 }
