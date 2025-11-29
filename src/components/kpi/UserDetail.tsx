@@ -53,57 +53,71 @@ export function UserDetail({ data, groupBy, onGroupByChange }: UserDetailProps) 
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header utilisateur */}
-      <Card className="border-l-4 border-l-primary">
-        <CardHeader>
+      <Card className="border-l-4 border-l-primary rounded-2xl bg-gradient-to-r from-primary/5 to-accent/5">
+        <CardHeader className="p-6">
           <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-primary" />
-                <CardTitle className="text-xl">{data.user.displayName}</CardTitle>
+            <div className="space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                  <User className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <CardTitle className="text-2xl font-bold">{data.user.displayName}</CardTitle>
               </div>
-              <p className="text-sm text-muted-foreground">{data.user.upn}</p>
-              {data.user.department && (
-                <Badge variant="secondary">{data.user.department}</Badge>
-              )}
-              {data.user.manager && (
-                <p className="text-xs text-muted-foreground">Manager: {data.user.manager}</p>
-              )}
+              <p className="text-base text-muted-foreground ml-16">{data.user.upn}</p>
+              <div className="flex items-center gap-2 ml-16">
+                {data.user.department && (
+                  <Badge variant="secondary" className="px-3 py-1.5">{data.user.department}</Badge>
+                )}
+                {data.user.manager && (
+                  <Badge variant="outline" className="px-3 py-1.5">Manager: {data.user.manager}</Badge>
+                )}
+              </div>
             </div>
-            <div className="text-right text-sm text-muted-foreground">
-              <p>{data.periodDays} jours</p>
-              <p>SLA: {data.slaHours}h</p>
-              {data.generatedAt && <p className="text-xs mt-1">{format(new Date(data.generatedAt), 'dd/MM/yyyy HH:mm', { locale: fr })}</p>}
+            <div className="text-right space-y-1">
+              <Badge variant="secondary" className="px-3 py-1.5 text-sm">
+                {data.periodDays} jours
+              </Badge>
+              <p className="text-sm text-muted-foreground">SLA: {data.slaHours}h</p>
+              {data.generatedAt && <p className="text-xs text-muted-foreground mt-2">{format(new Date(data.generatedAt), 'dd/MM/yyyy HH:mm', { locale: fr })}</p>}
             </div>
           </div>
         </CardHeader>
       </Card>
 
       {/* Score global */}
-      <Card className="bg-gradient-to-br from-primary/5 to-primary/10">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
+      <Card className="bg-gradient-to-br from-primary via-primary to-accent rounded-2xl shadow-2xl">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold flex items-center gap-3 text-primary-foreground">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+              <TrendingUp className="h-6 w-6" />
+            </div>
             Score de performance
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-8">
             <div className="text-center">
-              <div className="text-5xl font-bold text-primary">{Math.round(data.score.totalScore)}</div>
-              <p className="text-sm text-muted-foreground mt-1">Score global</p>
+              <div className="text-7xl font-bold text-primary-foreground mb-2">{Math.round(data.score.totalScore)}</div>
+              <p className="text-sm text-primary-foreground/80 font-medium">Score global</p>
             </div>
-            <div className="flex-1 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Réactivité</span>
-                <Badge variant="secondary">{Math.round(data.score.breakdown.reactivity)}</Badge>
+            <div className="flex-1 space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/10 backdrop-blur-sm">
+                <span className="text-sm font-medium text-primary-foreground/90">Réactivité</span>
+                <Badge variant="secondary" className="bg-white/90 text-primary px-4 py-1.5 text-base font-bold">
+                  {Math.round(data.score.breakdown.reactivity)}
+                </Badge>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Gestion backlog</span>
-                <Badge variant="secondary">{Math.round(data.score.breakdown.backlog)}</Badge>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/10 backdrop-blur-sm">
+                <span className="text-sm font-medium text-primary-foreground/90">Gestion backlog</span>
+                <Badge variant="secondary" className="bg-white/90 text-primary px-4 py-1.5 text-base font-bold">
+                  {Math.round(data.score.breakdown.backlog)}
+                </Badge>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Efficacité</span>
-                <Badge variant="secondary">{Math.round(data.score.breakdown.efficiency)}</Badge>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/10 backdrop-blur-sm">
+                <span className="text-sm font-medium text-primary-foreground/90">Efficacité</span>
+                <Badge variant="secondary" className="bg-white/90 text-primary px-4 py-1.5 text-base font-bold">
+                  {Math.round(data.score.breakdown.efficiency)}
+                </Badge>
               </div>
             </div>
           </div>
@@ -171,15 +185,17 @@ export function UserDetail({ data, groupBy, onGroupByChange }: UserDetailProps) 
       {/* Graphiques */}
       <div className="space-y-6">
         {/* Délai médian & SLA */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
+        <Card className="rounded-2xl border-2 shadow-xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-primary" />
+              </div>
               Délai médian (P50) & % dans SLA
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="date" className="text-xs" />
@@ -195,15 +211,17 @@ export function UserDetail({ data, groupBy, onGroupByChange }: UserDetailProps) 
         </Card>
 
         {/* Reçus vs Envoyés */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Mail className="h-4 w-4 text-primary" />
+        <Card className="rounded-2xl border-2 shadow-xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Mail className="h-5 w-5 text-primary" />
+              </div>
               E-mails reçus vs envoyés
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <AreaChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="date" className="text-xs" />
@@ -218,15 +236,17 @@ export function UserDetail({ data, groupBy, onGroupByChange }: UserDetailProps) 
         </Card>
 
         {/* Backlog */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Inbox className="h-4 w-4 text-primary" />
+        <Card className="rounded-2xl border-2 shadow-xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Inbox className="h-5 w-5 text-primary" />
+              </div>
               Backlog (Total, Non lus, Marqués)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="date" className="text-xs" />
