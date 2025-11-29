@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { UserDetailResponse, GroupByType, MetricType } from '@/lib/types/kpi';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { User, Mail, TrendingUp, Clock, Inbox } from 'lucide-react';
+import { User, Clock, Inbox, AlertTriangle, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -20,14 +20,13 @@ interface UserDetailProps {
 export function UserDetail({ data, groupBy, onGroupByChange }: UserDetailProps) {
   const [metricType, setMetricType] = useState<MetricType>('external');
   const [excludeWeekends, setExcludeWeekends] = useState(false);
-  const [businessHoursOnly, setBusinessHoursOnly] = useState(false);
 
   // Filtrer les données si excludeWeekends
   const filteredSeries = excludeWeekends
     ? data.series.filter((point) => {
         const date = new Date(point.date);
         const day = date.getDay();
-        return day !== 0 && day !== 6; // Exclure dimanche (0) et samedi (6)
+        return day !== 0 && day !== 6;
       })
     : data.series;
 
@@ -47,261 +46,179 @@ export function UserDetail({ data, groupBy, onGroupByChange }: UserDetailProps) 
     };
   });
 
-  // Dernières données externes pour les insights
   const lastExternal = data.series.length > 0 ? data.series[data.series.length - 1].external : null;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header utilisateur */}
-      <Card className="border-l-4 border-l-primary rounded-2xl bg-gradient-to-r from-primary/5 to-accent/5">
-        <CardHeader className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                  <User className="h-6 w-6 text-primary-foreground" />
-                </div>
-                <CardTitle className="text-2xl font-bold">{data.user.displayName}</CardTitle>
-              </div>
-              <p className="text-base text-muted-foreground ml-16">{data.user.upn}</p>
-              <div className="flex items-center gap-2 ml-16">
-                {data.user.department && (
-                  <Badge variant="secondary" className="px-3 py-1.5">{data.user.department}</Badge>
-                )}
-                {data.user.manager && (
-                  <Badge variant="outline" className="px-3 py-1.5">Manager: {data.user.manager}</Badge>
-                )}
-              </div>
-            </div>
-            <div className="text-right space-y-1">
-              <Badge variant="secondary" className="px-3 py-1.5 text-sm">
-                {data.periodDays} jours
-              </Badge>
-              <p className="text-sm text-muted-foreground">SLA: {data.slaHours}h</p>
-              {data.generatedAt && <p className="text-xs text-muted-foreground mt-2">{format(new Date(data.generatedAt), 'dd/MM/yyyy HH:mm', { locale: fr })}</p>}
-            </div>
+    <div className="space-y-6">
+      {/* Header utilisateur - épuré */}
+      <div className="space-y-3 pb-4 border-b">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <User className="h-5 w-5 text-primary" />
           </div>
-        </CardHeader>
-      </Card>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-foreground truncate">{data.user.displayName}</h3>
+            <p className="text-sm text-muted-foreground truncate">{data.user.upn}</p>
+          </div>
+        </div>
+        {(data.user.department || data.user.manager) && (
+          <div className="flex items-center gap-2 text-xs">
+            {data.user.department && (
+              <Badge variant="secondary">{data.user.department}</Badge>
+            )}
+            {data.user.manager && (
+              <span className="text-muted-foreground">Manager: {data.user.manager}</span>
+            )}
+          </div>
+        )}
+      </div>
 
-      {/* Score global */}
-      <Card className="bg-gradient-to-br from-primary via-primary to-accent rounded-2xl shadow-2xl">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-bold flex items-center gap-3 text-primary-foreground">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <TrendingUp className="h-6 w-6" />
+      {/* Score - compact */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Score global</p>
+              <p className="text-4xl font-bold text-primary">{Math.round(data.score.totalScore)}</p>
             </div>
-            Score de performance
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-8">
-            <div className="text-center">
-              <div className="text-7xl font-bold text-primary-foreground mb-2">{Math.round(data.score.totalScore)}</div>
-              <p className="text-sm text-primary-foreground/80 font-medium">Score global</p>
-            </div>
-            <div className="flex-1 space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-white/10 backdrop-blur-sm">
-                <span className="text-sm font-medium text-primary-foreground/90">Réactivité</span>
-                <Badge variant="secondary" className="bg-white/90 text-primary px-4 py-1.5 text-base font-bold">
-                  {Math.round(data.score.breakdown.reactivity)}
-                </Badge>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">Réactivité</span>
+                <Badge variant="secondary">{Math.round(data.score.breakdown.reactivity)}</Badge>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-white/10 backdrop-blur-sm">
-                <span className="text-sm font-medium text-primary-foreground/90">Gestion backlog</span>
-                <Badge variant="secondary" className="bg-white/90 text-primary px-4 py-1.5 text-base font-bold">
-                  {Math.round(data.score.breakdown.backlog)}
-                </Badge>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">Backlog</span>
+                <Badge variant="secondary">{Math.round(data.score.breakdown.backlog)}</Badge>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-white/10 backdrop-blur-sm">
-                <span className="text-sm font-medium text-primary-foreground/90">Efficacité</span>
-                <Badge variant="secondary" className="bg-white/90 text-primary px-4 py-1.5 text-base font-bold">
-                  {Math.round(data.score.breakdown.efficiency)}
-                </Badge>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">Efficacité</span>
+                <Badge variant="secondary">{Math.round(data.score.breakdown.efficiency)}</Badge>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Contrôles */}
-      <Card>
-        <CardContent className="pt-6 space-y-4">
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Tabs métriques */}
-            <div className="flex-1 min-w-[200px]">
-              <Label className="text-xs text-muted-foreground mb-2 block">Type de métrique</Label>
-              <Tabs value={metricType} onValueChange={(v) => setMetricType(v as MetricType)}>
-                <TabsList className="w-full">
-                  <TabsTrigger value="external" className="flex-1">Externes</TabsTrigger>
-                  <TabsTrigger value="internal" className="flex-1">Internes</TabsTrigger>
-                  <TabsTrigger value="total" className="flex-1">Total</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
+      {/* Contrôles - compact */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <Tabs value={metricType} onValueChange={(v) => setMetricType(v as MetricType)} className="flex-1">
+            <TabsList className="w-full">
+              <TabsTrigger value="external" className="flex-1">Ext.</TabsTrigger>
+              <TabsTrigger value="internal" className="flex-1">Int.</TabsTrigger>
+              <TabsTrigger value="total" className="flex-1">Total</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Select value={groupBy} onValueChange={(v) => onGroupByChange(v as GroupByType)}>
+            <SelectTrigger className="w-[100px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="day">Jour</SelectItem>
+              <SelectItem value="week">Semaine</SelectItem>
+              <SelectItem value="month">Mois</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Switch
+            id="exclude-weekends"
+            checked={excludeWeekends}
+            onCheckedChange={setExcludeWeekends}
+          />
+          <Label htmlFor="exclude-weekends" className="text-xs cursor-pointer">
+            Exclure week-ends
+          </Label>
+        </div>
+      </div>
 
-            {/* Group by */}
-            <div className="w-[150px]">
-              <Label className="text-xs text-muted-foreground mb-2 block">Groupement</Label>
-              <Select value={groupBy} onValueChange={(v) => onGroupByChange(v as GroupByType)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="day">Jour</SelectItem>
-                  <SelectItem value="week">Semaine</SelectItem>
-                  <SelectItem value="month">Mois</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Switches */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="exclude-weekends"
-                  checked={excludeWeekends}
-                  onCheckedChange={setExcludeWeekends}
-                />
-                <Label htmlFor="exclude-weekends" className="text-sm cursor-pointer">
-                  Exclure week-ends
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="business-hours"
-                  checked={businessHoursOnly}
-                  onCheckedChange={setBusinessHoursOnly}
-                />
-                <Label htmlFor="business-hours" className="text-sm cursor-pointer">
-                  Heures ouvrées
-                </Label>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Graphiques */}
-      <div className="space-y-6">
-        {/* Délai médian & SLA */}
-        <Card className="rounded-2xl border-2 shadow-xl">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-primary" />
-              </div>
-              Délai médian (P50) & % dans SLA
+      {/* Graphiques - épurés */}
+      <div className="space-y-4">
+        {/* Délai & SLA */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              Délai médian & SLA
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
+            <ResponsiveContainer width="100%" height={200}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="date" className="text-xs" />
-                <YAxis yAxisId="left" className="text-xs" label={{ value: 'Minutes', angle: -90, position: 'insideLeft' }} />
-                <YAxis yAxisId="right" orientation="right" className="text-xs" label={{ value: '% SLA', angle: 90, position: 'insideRight' }} />
-                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                <Legend />
-                <Line yAxisId="left" type="monotone" dataKey="delaip50" stroke="hsl(var(--primary))" strokeWidth={2} name="Délai P50 (min)" />
-                <Line yAxisId="right" type="monotone" dataKey="sla" stroke="hsl(var(--accent))" strokeWidth={2} name="% dans SLA" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
+                <Tooltip contentStyle={{ fontSize: 12 }} />
+                <Line yAxisId="left" type="monotone" dataKey="delaip50" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                <Line yAxisId="right" type="monotone" dataKey="sla" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Reçus vs Envoyés */}
-        <Card className="rounded-2xl border-2 shadow-xl">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Mail className="h-5 w-5 text-primary" />
-              </div>
-              E-mails reçus vs envoyés
-            </CardTitle>
+        {/* Volumes */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Volumes</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
+            <ResponsiveContainer width="100%" height={150}>
               <AreaChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="date" className="text-xs" />
-                <YAxis className="text-xs" />
-                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                <Legend />
-                <Area type="monotone" dataKey="recus" stackId="1" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.6} name="Reçus" />
-                <Area type="monotone" dataKey="envoyes" stackId="2" stroke="hsl(var(--accent))" fill="hsl(var(--accent))" fillOpacity={0.6} name="Envoyés" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip contentStyle={{ fontSize: 12 }} />
+                <Area type="monotone" dataKey="recus" stackId="1" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.6} />
+                <Area type="monotone" dataKey="envoyes" stackId="2" stroke="hsl(var(--accent))" fill="hsl(var(--accent))" fillOpacity={0.6} />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
         {/* Backlog */}
-        <Card className="rounded-2xl border-2 shadow-xl">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Inbox className="h-5 w-5 text-primary" />
-              </div>
-              Backlog (Total, Non lus, Marqués)
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Inbox className="h-4 w-4 text-muted-foreground" />
+              Backlog
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
+            <ResponsiveContainer width="100%" height={150}>
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="date" className="text-xs" />
-                <YAxis className="text-xs" />
-                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                <Legend />
-                <Bar dataKey="backlog" stackId="a" fill="hsl(var(--primary))" name="Total" />
-                <Bar dataKey="backlogUnread" stackId="a" fill="hsl(var(--accent))" name="Non lus" />
-                <Bar dataKey="backlogFlagged" stackId="a" fill="hsl(var(--destructive))" name="Marqués" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip contentStyle={{ fontSize: 12 }} />
+                <Bar dataKey="backlog" stackId="a" fill="hsl(var(--primary))" />
+                <Bar dataKey="backlogUnread" stackId="a" fill="hsl(var(--accent))" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Insights / Recommandations */}
+      {/* Insights - compact */}
       {lastExternal && (
         <Card className="border-l-4 border-l-accent">
-          <CardHeader>
-            <CardTitle className="text-base">Recommandations</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <p className="text-muted-foreground">
-              Basé sur les dernières données externes ({format(new Date(data.series[data.series.length - 1].date), 'dd/MM/yyyy', { locale: fr })})
-            </p>
-            
-            {lastExternal.first_reply_p90_min && (
-              <div className="flex items-start gap-2">
-                <Clock className="h-4 w-4 text-orange-500 mt-0.5" />
-                <p>
-                  <span className="font-medium">Délai P90:</span> {Math.round(lastExternal.first_reply_p90_min)} minutes (90% des réponses)
-                </p>
-              </div>
-            )}
-
-            <div className="flex items-start gap-2">
-              <Inbox className="h-4 w-4 text-purple-500 mt-0.5" />
-              <p>
-                <span className="font-medium">Backlog actuel:</span> {lastExternal.backlog_total || 0} e-mails
-              </p>
-            </div>
-
+          <CardContent className="p-4 space-y-2 text-sm">
+            <p className="font-medium text-foreground">Recommandations</p>
             {(lastExternal.backlog_total || 0) > 40 ? (
-              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                <p className="font-medium text-destructive">⚠️ Priorisation recommandée</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Le backlog élevé nécessite une attention immédiate. Triez par importance et délai.
-                </p>
+              <div className="flex items-start gap-2 text-destructive">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Backlog élevé: {lastExternal.backlog_total}</p>
+                  <p className="text-xs text-muted-foreground">Priorisation recommandée</p>
+                </div>
               </div>
             ) : (
-              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                <p className="font-medium text-green-700">✓ Rythme équilibré</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Le volume de traitement est maîtrisé. Continuez sur cette lancée.
-                </p>
+              <div className="flex items-start gap-2 text-green-700">
+                <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Rythme équilibré</p>
+                  <p className="text-xs text-muted-foreground">Volume maîtrisé</p>
+                </div>
               </div>
             )}
           </CardContent>
