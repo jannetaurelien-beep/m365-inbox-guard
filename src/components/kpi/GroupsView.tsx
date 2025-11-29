@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { UserGroup, MailUserSummary } from '@/lib/types/kpi';
-import { Users, ChevronDown, ChevronUp, Trash2, Edit, TrendingUp } from 'lucide-react';
+import { Users, ChevronDown, ChevronUp, Trash2, Edit, TrendingUp, FileDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { exportGroupMembersToCSV } from '@/lib/export-utils';
 
 interface GroupsViewProps {
   groups: UserGroup[];
@@ -13,9 +14,10 @@ interface GroupsViewProps {
   onSelectGroup: (groupId: string) => void;
   onEditGroup: (group: UserGroup) => void;
   onDeleteGroup: (groupId: string) => void;
+  onExportSuccess?: (message: string) => void;
 }
 
-export function GroupsView({ groups, users, onSelectGroup, onEditGroup, onDeleteGroup }: GroupsViewProps) {
+export function GroupsView({ groups, users, onSelectGroup, onEditGroup, onDeleteGroup, onExportSuccess }: GroupsViewProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const toggleGroup = (groupId: string) => {
@@ -162,14 +164,27 @@ export function GroupsView({ groups, users, onSelectGroup, onEditGroup, onDelete
                   <div className="space-y-3">
                     <div className="flex items-center justify-between mb-4 pb-3 border-b">
                       <h4 className="font-semibold text-sm">Membres du groupe</h4>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onSelectGroup(group.id)}
-                      >
-                        <TrendingUp className="h-4 w-4 mr-2" />
-                        Voir les performances
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            exportGroupMembersToCSV(group, users);
+                            onExportSuccess?.(`${metrics.users.length} membres exportés`);
+                          }}
+                        >
+                          <FileDown className="h-4 w-4 mr-2" />
+                          Exporter
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onSelectGroup(group.id)}
+                        >
+                          <TrendingUp className="h-4 w-4 mr-2" />
+                          Performances
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="grid gap-3">
