@@ -32,7 +32,25 @@ export function UserDetail({ data, groupBy, onGroupByChange }: UserDetailProps) 
 
   // Préparer les données pour les graphiques
   const chartData = filteredSeries.map((point) => {
-    const metrics = point[metricType];
+    let metrics;
+    
+    // Calculer le total si nécessaire
+    if (metricType === 'total') {
+      const ext = point.external;
+      const int = point.internal;
+      metrics = {
+        received: (ext.received || 0) + (int.received || 0),
+        sent: (ext.sent || 0) + (int.sent || 0),
+        backlog_total: (ext.backlog_total || 0) + (int.backlog_total || 0),
+        backlog_unread: (ext.backlog_unread || 0) + (int.backlog_unread || 0),
+        backlog_flagged: (ext.backlog_flagged || 0) + (int.backlog_flagged || 0),
+        first_reply_p50_min: ext.first_reply_p50_min || 0,
+        first_reply_within_sla: ext.first_reply_within_sla || 0,
+      };
+    } else {
+      metrics = point[metricType];
+    }
+    
     return {
       date: format(new Date(point.date), 'dd/MM', { locale: fr }),
       fullDate: point.date,
