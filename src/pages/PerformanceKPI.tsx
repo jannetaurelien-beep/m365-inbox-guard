@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw, X, Settings, Download, Filter as FilterIcon, Grid3x3, List, Building2, Users as UsersIcon, Globe, Plus } from 'lucide-react';
+import { RefreshCw, X, Settings, Download, Filter as FilterIcon, Grid3x3, List, Building2, Users as UsersIcon, Globe, Plus, FileDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KPIFilters } from '@/components/kpi/KPIFilters';
@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { fetchTenantOverview, fetchUsersList, fetchUserDetail } from '@/lib/api/kpi-api';
+import { exportUsersToCSV, exportGroupsToCSV, exportGroupMembersToCSV } from '@/lib/export-utils';
 import { TenantOverviewResponse, UsersListResponse, UserDetailResponse, AccountFilterType, FocusFilterType, GroupByType, UserGroup, AgencyMetrics, DomainMetrics, GroupPerformance, MailUserMetricsSub } from '@/lib/types/kpi';
 import { useToast } from '@/hooks/use-toast';
 
@@ -649,15 +650,31 @@ export default function PerformanceKPI() {
                 {filteredUsers.length} boîte{filteredUsers.length > 1 ? 's' : ''} • {periodDays} derniers jours
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadUsersList}
-              disabled={loadingUsers}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loadingUsers ? 'animate-spin' : ''}`} />
-              Actualiser
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (usersData) {
+                    exportUsersToCSV(filteredUsers, `utilisateurs-kpi-${new Date().toISOString().split('T')[0]}.csv`);
+                    toast({ title: 'Export réussi', description: `${filteredUsers.length} utilisateurs exportés` });
+                  }
+                }}
+                disabled={!usersData || filteredUsers.length === 0}
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Exporter CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadUsersList}
+                disabled={loadingUsers}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loadingUsers ? 'animate-spin' : ''}`} />
+                Actualiser
+              </Button>
+            </div>
           </div>
 
           {loadingUsers && (
@@ -749,15 +766,34 @@ export default function PerformanceKPI() {
                       Organisez vos utilisateurs en groupes et suivez leurs performances collectives
                     </p>
                   </div>
-                  <Button onClick={openCreateGroupDialog}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nouveau groupe
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        exportGroupsToCSV(userGroups, usersData.users, `groupes-kpi-${new Date().toISOString().split('T')[0]}.csv`);
+                        toast({ title: 'Export réussi', description: `${userGroups.length} groupes exportés` });
+                      }}
+                      disabled={userGroups.length === 0}
+                    >
+                      <FileDown className="h-4 w-4 mr-2" />
+                      Exporter groupes
+                    </Button>
+                    <Button onClick={openCreateGroupDialog}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nouveau groupe
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Graphiques de comparaison */}
                 {userGroups.length > 0 && (
-                  <GroupsComparison groups={userGroups} users={usersData.users} />
+                  <GroupsComparison 
+                    groups={userGroups} 
+                    users={usersData.users}
+                    onExportSuccess={(message) => {
+                      toast({ title: 'Export réussi', description: message });
+                    }}
+                  />
                 )}
 
                 <GroupsView
@@ -768,6 +804,9 @@ export default function PerformanceKPI() {
                   }}
                   onEditGroup={openEditGroupDialog}
                   onDeleteGroup={handleDeleteGroup}
+                  onExportSuccess={(message) => {
+                    toast({ title: 'Export réussi', description: message });
+                  }}
                 />
 
                 {groupFilter && getGroupPerformance(groupFilter) && (

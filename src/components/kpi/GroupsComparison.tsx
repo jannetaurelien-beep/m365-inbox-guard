@@ -1,15 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserGroup, MailUserSummary } from '@/lib/types/kpi';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, LineChart, Line } from 'recharts';
-import { BarChart3, Radar as RadarIcon, TrendingUp } from 'lucide-react';
+import { BarChart3, Radar as RadarIcon, TrendingUp, FileDown } from 'lucide-react';
+import { exportGroupsToCSV } from '@/lib/export-utils';
 
 interface GroupsComparisonProps {
   groups: UserGroup[];
   users: MailUserSummary[];
+  onExportSuccess?: (message: string) => void;
 }
 
-export function GroupsComparison({ groups, users }: GroupsComparisonProps) {
+export function GroupsComparison({ groups, users, onExportSuccess }: GroupsComparisonProps) {
   // Calculer les métriques pour chaque groupe
   const groupsData = groups.map(group => {
     const groupUsers = users.filter(u => group.userIds.includes(u.userId));
@@ -210,7 +213,20 @@ export function GroupsComparison({ groups, users }: GroupsComparisonProps) {
       {/* Tableau récapitulatif */}
       <Card>
         <CardHeader>
-          <CardTitle>Tableau récapitulatif</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Tableau récapitulatif</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                exportGroupsToCSV(groups, users, `comparaison-groupes-${new Date().toISOString().split('T')[0]}.csv`);
+                onExportSuccess?.(`Tableau de ${groups.length} groupes exporté`);
+              }}
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              Exporter tableau
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
