@@ -21,6 +21,9 @@ interface KPIFiltersProps {
   agencies: string[];
   agencyFilter: string | null;
   onAgencyFilterChange: (value: string | null) => void;
+  jobTitles: string[];
+  jobTitleFilter: string | null;
+  onJobTitleFilterChange: (value: string | null) => void;
   focusFilter: FocusFilterType;
   onFocusFilterChange: (value: FocusFilterType) => void;
   groups?: UserGroup[];
@@ -44,6 +47,9 @@ export function KPIFilters({
   agencies,
   agencyFilter,
   onAgencyFilterChange,
+  jobTitles,
+  jobTitleFilter,
+  onJobTitleFilterChange,
   focusFilter,
   onFocusFilterChange,
   groups = [],
@@ -159,6 +165,26 @@ export function KPIFilters({
                 {departments.map((dept) => (
                   <SelectItem key={dept} value={dept}>
                     {dept}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Métier */}
+        {jobTitles.length > 0 && (
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Métier</Label>
+            <Select value={jobTitleFilter || "all"} onValueChange={(v) => onJobTitleFilterChange(v === "all" ? null : v)}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous</SelectItem>
+                {jobTitles.map((job) => (
+                  <SelectItem key={job} value={job}>
+                    {job}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -6,9 +6,10 @@ import { TrendingUp, TrendingDown, Users, Mail, Clock, AlertCircle } from 'lucid
 
 interface AgencyComparisonProps {
   agencies: AgencyMetrics[];
+  onSelectAgency?: (agency: string) => void;
 }
 
-export function AgencyComparison({ agencies }: AgencyComparisonProps) {
+export function AgencyComparison({ agencies, onSelectAgency }: AgencyComparisonProps) {
   const sortedByScore = [...agencies].sort((a, b) => (b.avgScore || 0) - (a.avgScore || 0));
   const maxScore = Math.max(...agencies.map(a => a.avgScore || 0));
 
@@ -33,7 +34,11 @@ export function AgencyComparison({ agencies }: AgencyComparisonProps) {
           const backlog = agency.metrics.external.backlog_total || 0;
 
           return (
-            <Card key={agency.agency} className="relative overflow-hidden">
+            <Card 
+              key={agency.agency} 
+              className="relative overflow-hidden cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+              onClick={() => onSelectAgency?.(agency.agency)}
+            >
               <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${getScoreGradient(score)}`} />
               
               <CardHeader className="pb-3">

@@ -12,6 +12,7 @@ import { TenantOverview } from '@/components/kpi/TenantOverview';
 import { UsersList } from '@/components/kpi/UsersList';
 import { UserDetail } from '@/components/kpi/UserDetail';
 import { AgencyComparison } from '@/components/kpi/AgencyComparison';
+import { AgencyDetail } from '@/components/kpi/AgencyDetail';
 import { GroupManagement } from '@/components/kpi/GroupManagement';
 import { GroupPerformanceView } from '@/components/kpi/GroupPerformanceView';
 import { fetchTenantOverview, fetchUsersList, fetchUserDetail } from '@/lib/api/kpi-api';
@@ -31,9 +32,11 @@ export default function PerformanceKPI() {
   const [search, setSearch] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
   const [agencyFilter, setAgencyFilter] = useState<string | null>(null);
+  const [jobTitleFilter, setJobTitleFilter] = useState<string | null>(null);
   const [focusFilter, setFocusFilter] = useState<FocusFilterType>('all');
   const [groupBy, setGroupBy] = useState<GroupByType>('day');
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
+  const [selectedAgency, setSelectedAgency] = useState<string | null>(null);
 
   // Groupes d'utilisateurs
   const [userGroups, setUserGroups] = useState<UserGroup[]>([
@@ -174,6 +177,15 @@ export default function PerformanceKPI() {
     return Array.from(agcs).sort();
   }, [usersData]);
 
+  const jobTitles = useMemo(() => {
+    if (!usersData) return [];
+    const jobs = new Set<string>();
+    usersData.users.forEach((u) => {
+      if (u.jobTitle) jobs.add(u.jobTitle);
+    });
+    return Array.from(jobs).sort();
+  }, [usersData]);
+
   // Calculer les métriques par agence
   const agencyMetrics = useMemo((): AgencyMetrics[] => {
     if (!usersData) return [];
@@ -303,6 +315,10 @@ export default function PerformanceKPI() {
       filtered = filtered.filter((u) => u.agency === agencyFilter);
     }
 
+    if (jobTitleFilter) {
+      filtered = filtered.filter((u) => u.jobTitle === jobTitleFilter);
+    }
+
     if (groupFilter) {
       const group = userGroups.find(g => g.id === groupFilter);
       if (group) {
@@ -323,7 +339,7 @@ export default function PerformanceKPI() {
     }
 
     return filtered;
-  }, [usersData, search, departmentFilter, agencyFilter, groupFilter, focusFilter]);
+  }, [usersData, search, departmentFilter, agencyFilter, jobTitleFilter, groupFilter, focusFilter]);
 
   // Handlers pour les groupes
   const handleCreateGroup = (name: string, description: string, userIds: string[]) => {
@@ -403,6 +419,9 @@ export default function PerformanceKPI() {
                       agencies={agencies}
                       agencyFilter={agencyFilter}
                       onAgencyFilterChange={setAgencyFilter}
+                      jobTitles={jobTitles}
+                      jobTitleFilter={jobTitleFilter}
+                      onJobTitleFilterChange={setJobTitleFilter}
                       focusFilter={focusFilter}
                       onFocusFilterChange={setFocusFilter}
                       groups={userGroups}
@@ -545,8 +564,17 @@ export default function PerformanceKPI() {
                   <Skeleton key={i} className="h-64 w-full" />
                 ))}
               </div>
+            ) : selectedAgency ? (
+              <AgencyDetail 
+                agency={selectedAgency}
+                users={usersData?.users.filter(u => u.agency === selectedAgency) || []}
+                onBack={() => setSelectedAgency(null)}
+              />
             ) : (
-              <AgencyComparison agencies={agencyMetrics} />
+              <AgencyComparison 
+                agencies={agencyMetrics}
+                onSelectAgency={setSelectedAgency}
+              />
             )}
           </TabsContent>
 
