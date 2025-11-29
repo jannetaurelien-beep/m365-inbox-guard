@@ -2,16 +2,44 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { TenantOverviewResponse, UserGroup, MailUserSummary } from '@/lib/types/kpi';
-import { Mail, Send, Clock, CheckCircle2, Inbox, AlertTriangle, Info, AlertCircle, ArrowUp, ArrowDown, Users } from 'lucide-react';
+import { Mail, Send, Clock, CheckCircle2, Inbox, AlertTriangle, Info, AlertCircle, ArrowUp, ArrowDown, Users, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useMemo } from 'react';
 
 interface TenantOverviewProps {
   data: TenantOverviewResponse;
   groups?: UserGroup[];
   users?: MailUserSummary[];
+  onSelectGroup?: (groupId: string) => void;
 }
 
-export function TenantOverview({ data, groups = [], users = [] }: TenantOverviewProps) {
+export function TenantOverview({ data, groups = [], users = [], onSelectGroup }: TenantOverviewProps) {
+  const [userSearch, setUserSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  // Filtrer et paginer les top users
+  const filteredTopUsers = useMemo(() => {
+    if (!userSearch) return data.topUsers;
+    const searchLower = userSearch.toLowerCase();
+    return data.topUsers.filter(u => 
+      u.displayName.toLowerCase().includes(searchLower) || 
+      u.upn.toLowerCase().includes(searchLower)
+    );
+  }, [data.topUsers, userSearch]);
+  
+  const totalPages = Math.ceil(filteredTopUsers.length / itemsPerPage);
+  const paginatedUsers = useMemo(() => {
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    return filteredTopUsers.slice(startIdx, startIdx + itemsPerPage);
+  }, [filteredTopUsers, currentPage]);
+  
+  // Reset page when search changes
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [userSearch]);
   // Calculer les performances des groupes
   const groupsPerformance = groups.map(group => {
     const groupUsers = users.filter(u => group.userIds.includes(u.userId));
@@ -144,7 +172,11 @@ export function TenantOverview({ data, groups = [], users = [] }: TenantOverview
               const backlogColor = gp.avgBacklog < 20 ? 'bg-green-100 text-green-700' : gp.avgBacklog < 40 ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700';
 
               return (
-                <div key={gp.group.id} className="flex items-center gap-4 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                <div 
+                  key={gp.group.id} 
+                  className="flex items-center gap-4 p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => onSelectGroup?.(gp.group.id)}
+                >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Users className="h-5 w-5 text-primary" />
@@ -199,10 +231,31 @@ export function TenantOverview({ data, groups = [], users = [] }: TenantOverview
         {data.topUsers.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg font-semibold">Top utilisateurs (externes)</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold">Top utilisateurs (externes)</CardTitle>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {filteredTopUsers.length} / {data.topUsers.length}
+                </div>
+              </div>
+              <div className="relative mt-3">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher un utilisateur..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {data.topUsers.map((user, idx) => {
+              {paginatedUsers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Aucun utilisateur trouvé
+                </div>
+              ) : (
+                <>
+                  {paginatedUsers.map((user, idx) => {
+                    const actualIdx = (currentPage - 1) * itemsPerPage + idx;
                 const sla = user.metrics.external.first_reply_within_sla || 0;
                 const backlog = user.metrics.external.backlog_total || 0;
                 const volume = user.metrics.external.received + user.metrics.external.sent;
@@ -214,7 +267,7 @@ export function TenantOverview({ data, groups = [], users = [] }: TenantOverview
                   <div key={user.userId} className="flex items-center gap-4 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold shrink-0">
-                        {idx + 1}
+                        {actualIdx + 1}
                       </div>
                       <Avatar className="h-10 w-10 shrink-0">
                         <AvatarFallback className="bg-muted text-foreground text-sm font-medium">
@@ -237,6 +290,35 @@ export function TenantOverview({ data, groups = [], users = [] }: TenantOverview
                   </div>
                 );
               })}
+              
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Page {currentPage} sur {totalPages}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+              </>
+              )}
             </CardContent>
           </Card>
         )}
