@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw, X, Settings, Download, Filter as FilterIcon, Grid3x3, List, Building2, Users as UsersIcon } from 'lucide-react';
+import { RefreshCw, X, Settings, Download, Filter as FilterIcon, Grid3x3, List, Building2, Users as UsersIcon, Globe } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KPIFilters } from '@/components/kpi/KPIFilters';
@@ -13,10 +13,12 @@ import { UsersList } from '@/components/kpi/UsersList';
 import { UserDetail } from '@/components/kpi/UserDetail';
 import { AgencyComparison } from '@/components/kpi/AgencyComparison';
 import { AgencyDetail } from '@/components/kpi/AgencyDetail';
+import { DomainComparison } from '@/components/kpi/DomainComparison';
+import { DomainDetail } from '@/components/kpi/DomainDetail';
 import { GroupManagement } from '@/components/kpi/GroupManagement';
 import { GroupPerformanceView } from '@/components/kpi/GroupPerformanceView';
 import { fetchTenantOverview, fetchUsersList, fetchUserDetail } from '@/lib/api/kpi-api';
-import { TenantOverviewResponse, UsersListResponse, UserDetailResponse, AccountFilterType, FocusFilterType, GroupByType, UserGroup, AgencyMetrics, GroupPerformance, MailUserMetricsSub } from '@/lib/types/kpi';
+import { TenantOverviewResponse, UsersListResponse, UserDetailResponse, AccountFilterType, FocusFilterType, GroupByType, UserGroup, AgencyMetrics, DomainMetrics, GroupPerformance, MailUserMetricsSub } from '@/lib/types/kpi';
 import { useToast } from '@/hooks/use-toast';
 
 export default function PerformanceKPI() {
@@ -37,6 +39,7 @@ export default function PerformanceKPI() {
   const [groupBy, setGroupBy] = useState<GroupByType>('day');
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
   const [selectedAgency, setSelectedAgency] = useState<string | null>(null);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
 
   // Groupes d'utilisateurs
   const [userGroups, setUserGroups] = useState<UserGroup[]>([
@@ -184,6 +187,68 @@ export default function PerformanceKPI() {
       if (u.jobTitle) jobs.add(u.jobTitle);
     });
     return Array.from(jobs).sort();
+  }, [usersData]);
+
+  // Calculer les métriques par domaine
+  const domainMetrics = useMemo((): DomainMetrics[] => {
+    if (!usersData) return [];
+
+    const metricsMap = new Map<string, {
+      users: typeof usersData.users;
+      metrics: { total: MailUserMetricsSub; external: MailUserMetricsSub; internal: MailUserMetricsSub };
+    }>();
+
+    usersData.users.forEach((user) => {
+      const domain = user.upn.split('@')[1] || 'unknown';
+      if (!metricsMap.has(domain)) {
+        metricsMap.set(domain, {
+          users: [],
+          metrics: {
+            total: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
+            external: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
+            internal: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
+          },
+        });
+      }
+
+      const domainData = metricsMap.get(domain)!;
+      domainData.users.push(user);
+
+      // Agréger les métriques
+      ['total', 'external', 'internal'].forEach((type) => {
+        const metricType = type as 'total' | 'external' | 'internal';
+        const userMetrics = user.metrics[metricType];
+        const domainMetrics = domainData.metrics[metricType];
+
+        domainMetrics.received += userMetrics.received;
+        domainMetrics.sent += userMetrics.sent;
+        domainMetrics.backlog_total += userMetrics.backlog_total || 0;
+        domainMetrics.backlog_unread += userMetrics.backlog_unread || 0;
+        domainMetrics.backlog_flagged += userMetrics.backlog_flagged || 0;
+      });
+    });
+
+    // Calculer les moyennes et scores
+    return Array.from(metricsMap.entries()).map(([domain, data]) => {
+      const userCount = data.users.length;
+      const avgSla = data.users.reduce((sum, u) => sum + (u.metrics.external.first_reply_within_sla || 0), 0) / userCount;
+      const avgBacklog = data.metrics.external.backlog_total / userCount;
+      
+      // Score basé sur SLA et backlog
+      const slaScore = avgSla;
+      const backlogScore = Math.max(0, 100 - (avgBacklog / 50) * 100);
+      const avgScore = (slaScore * 0.6 + backlogScore * 0.4);
+
+      // Calculer la moyenne pour first_reply_within_sla
+      data.metrics.external.first_reply_within_sla = avgSla;
+
+      return {
+        domain,
+        userCount,
+        metrics: data.metrics,
+        avgScore,
+      };
+    });
   }, [usersData]);
 
   // Calculer les métriques par agence
@@ -474,9 +539,13 @@ export default function PerformanceKPI() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+            <TabsTrigger value="domains">
+              <Globe className="h-4 w-4 mr-2" />
+              Domaines
+            </TabsTrigger>
             <TabsTrigger value="agencies">
               <Building2 className="h-4 w-4 mr-2" />
-              Comparaison agences
+              Agences
             </TabsTrigger>
             <TabsTrigger value="groups">
               <UsersIcon className="h-4 w-4 mr-2" />
@@ -555,6 +624,27 @@ export default function PerformanceKPI() {
               />
             )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="domains" className="space-y-6 mt-6">
+            {loadingUsers ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {[1, 2].map((i) => (
+                  <Skeleton key={i} className="h-64 w-full" />
+                ))}
+              </div>
+            ) : selectedDomain ? (
+              <DomainDetail 
+                domain={selectedDomain}
+                users={usersData?.users.filter(u => u.upn.endsWith(`@${selectedDomain}`)) || []}
+                onBack={() => setSelectedDomain(null)}
+              />
+            ) : (
+              <DomainComparison 
+                domains={domainMetrics}
+                onSelectDomain={setSelectedDomain}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="agencies" className="space-y-6 mt-6">

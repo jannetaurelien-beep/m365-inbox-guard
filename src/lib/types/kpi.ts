@@ -115,6 +115,17 @@ export interface AgencyMetrics {
   avgScore?: number;
 }
 
+export interface DomainMetrics {
+  domain: string;
+  userCount: number;
+  metrics: {
+    total: MailUserMetricsSub;
+    external: MailUserMetricsSub;
+    internal: MailUserMetricsSub;
+  };
+  avgScore?: number;
+}
+
 export interface GroupPerformance {
   group: UserGroup;
   metrics: {
