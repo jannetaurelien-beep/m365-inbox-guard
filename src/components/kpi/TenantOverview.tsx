@@ -2,14 +2,38 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { TenantOverviewResponse } from '@/lib/types/kpi';
-import { Mail, Send, Clock, CheckCircle2, Inbox, AlertTriangle, Info, AlertCircle, ArrowUp, ArrowDown } from 'lucide-react';
+import { TenantOverviewResponse, UserGroup, MailUserSummary } from '@/lib/types/kpi';
+import { Mail, Send, Clock, CheckCircle2, Inbox, AlertTriangle, Info, AlertCircle, ArrowUp, ArrowDown, Users } from 'lucide-react';
 
 interface TenantOverviewProps {
   data: TenantOverviewResponse;
+  groups?: UserGroup[];
+  users?: MailUserSummary[];
 }
 
-export function TenantOverview({ data }: TenantOverviewProps) {
+export function TenantOverview({ data, groups = [], users = [] }: TenantOverviewProps) {
+  // Calculer les performances des groupes
+  const groupsPerformance = groups.map(group => {
+    const groupUsers = users.filter(u => group.userIds.includes(u.userId));
+    const totalReceived = groupUsers.reduce((sum, u) => sum + u.metrics.external.received, 0);
+    const totalSent = groupUsers.reduce((sum, u) => sum + u.metrics.external.sent, 0);
+    const avgSla = groupUsers.length > 0 
+      ? groupUsers.reduce((sum, u) => sum + (u.metrics.external.first_reply_within_sla || 0), 0) / groupUsers.length 
+      : 0;
+    const avgBacklog = groupUsers.length > 0
+      ? groupUsers.reduce((sum, u) => sum + (u.metrics.external.backlog_total || 0), 0) / groupUsers.length
+      : 0;
+    
+    return {
+      group,
+      userCount: groupUsers.length,
+      avgSla,
+      avgBacklog,
+      totalReceived,
+      totalSent,
+    };
+  });
+
   const kpiCards = [
     {
       title: 'E-mails reçus',
@@ -104,6 +128,48 @@ export function TenantOverview({ data }: TenantOverviewProps) {
           );
         })}
       </div>
+
+      {/* Groupes créés */}
+      {groupsPerformance.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Groupes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {groupsPerformance.map((gp) => {
+              const slaColor = gp.avgSla >= 80 ? 'bg-green-100 text-green-700' : gp.avgSla >= 60 ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700';
+              const backlogColor = gp.avgBacklog < 20 ? 'bg-green-100 text-green-700' : gp.avgBacklog < 40 ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700';
+
+              return (
+                <div key={gp.group.id} className="flex items-center gap-4 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground truncate">{gp.group.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {gp.userCount} membre{gp.userCount > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="outline" className={`${slaColor} border-0 text-xs`}>
+                      {Math.round(gp.avgSla)}%
+                    </Badge>
+                    <Badge variant="outline" className={`${backlogColor} border-0 text-xs`}>
+                      {Math.round(gp.avgBacklog)}
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Layout 2 colonnes pour alertes et top users */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

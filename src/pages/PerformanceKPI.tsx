@@ -566,7 +566,11 @@ export default function PerformanceKPI() {
               </Alert>
             )}
             {!loadingTenant && !tenantError && tenantData && (
-              <TenantOverview data={tenantData} />
+              <TenantOverview 
+                data={tenantData} 
+                groups={userGroups}
+                users={usersData?.users || []}
+              />
             )}
 
             {/* Liste des boîtes mail */}
