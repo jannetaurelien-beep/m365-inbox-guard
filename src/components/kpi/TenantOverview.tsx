@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TenantOverviewResponse, UserGroup, MailUserSummary } from '@/lib/types/kpi';
 import { Mail, Send, Clock, CheckCircle2, Inbox, AlertTriangle, Info, AlertCircle, ArrowUp, ArrowDown, Users, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 interface TenantOverviewProps {
   data: TenantOverviewResponse;
@@ -37,7 +37,7 @@ export function TenantOverview({ data, groups = [], users = [], onSelectGroup }:
   }, [filteredTopUsers, currentPage]);
   
   // Reset page when search changes
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [userSearch]);
   // Calculer les performances des groupes
