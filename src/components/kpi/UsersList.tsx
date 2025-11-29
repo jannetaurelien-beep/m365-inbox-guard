@@ -62,13 +62,18 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
                   </Avatar>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold text-sm truncate">{user.displayName}</p>
-                      {user.department && (
-                        <Badge variant="secondary" className="text-xs">{user.department}</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">{user.upn}</p>
+              <div className="flex items-center gap-2 mb-1">
+                <p className="font-semibold text-sm truncate">{user.displayName}</p>
+                {user.jobTitle && (
+                  <Badge variant="outline" className="text-xs">{user.jobTitle}</Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground truncate">{user.upn}</p>
+              {(user.agency || user.location) && (
+                <p className="text-xs text-muted-foreground truncate mt-1">
+                  {user.agency && user.location ? `${user.agency} • ${user.location}` : user.agency || user.location}
+                </p>
+              )}
                   </div>
 
                   <div className="flex items-center gap-6">
@@ -150,9 +155,14 @@ export function UsersList({ users, selectedUserId, onSelectUser, viewMode = 'gri
               <div className="mb-4">
                 <h3 className="font-semibold text-sm truncate mb-1">{user.displayName}</h3>
                 <p className="text-xs text-muted-foreground truncate mb-2">{user.upn}</p>
-                {user.department && (
-                  <Badge variant="secondary" className="text-xs">{user.department}</Badge>
-                )}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {user.jobTitle && (
+                    <Badge variant="outline" className="text-xs">{user.jobTitle}</Badge>
+                  )}
+                  {user.agency && (
+                    <Badge variant="secondary" className="text-xs">{user.agency}</Badge>
+                  )}
+                </div>
               </div>
 
               {/* SLA Progress */}

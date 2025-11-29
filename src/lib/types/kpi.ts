@@ -17,6 +17,9 @@ export interface MailUserSummary {
   upn: string;
   displayName: string;
   department?: string;
+  agency?: string;
+  location?: string;
+  jobTitle?: string;
   accountType?: "Utilisateur" | "Boîte partagée";
   metrics: {
     total: MailUserMetricsSub;
@@ -68,6 +71,9 @@ export interface UserDetailResponse {
     displayName: string;
     manager?: string;
     department?: string;
+    agency?: string;
+    location?: string;
+    jobTitle?: string;
   };
   periodDays: number;
   slaHours: number;

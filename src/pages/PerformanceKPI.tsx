@@ -25,6 +25,7 @@ export default function PerformanceKPI() {
   const [domainFilter, setDomainFilter] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
+  const [agencyFilter, setAgencyFilter] = useState<string | null>(null);
   const [focusFilter, setFocusFilter] = useState<FocusFilterType>('all');
   const [groupBy, setGroupBy] = useState<GroupByType>('day');
 
@@ -128,7 +129,7 @@ export default function PerformanceKPI() {
     }
   }, [selectedUserId, periodDays, groupBy]);
 
-  // Extraire les départements uniques
+  // Extraire les départements et agences uniques
   const departments = useMemo(() => {
     if (!usersData) return [];
     const depts = new Set<string>();
@@ -136,6 +137,15 @@ export default function PerformanceKPI() {
       if (u.department) depts.add(u.department);
     });
     return Array.from(depts).sort();
+  }, [usersData]);
+
+  const agencies = useMemo(() => {
+    if (!usersData) return [];
+    const agcs = new Set<string>();
+    usersData.users.forEach((u) => {
+      if (u.agency) agcs.add(u.agency);
+    });
+    return Array.from(agcs).sort();
   }, [usersData]);
 
   // Filtrer les users localement
@@ -155,6 +165,10 @@ export default function PerformanceKPI() {
 
     if (departmentFilter) {
       filtered = filtered.filter((u) => u.department === departmentFilter);
+    }
+
+    if (agencyFilter) {
+      filtered = filtered.filter((u) => u.agency === agencyFilter);
     }
 
     if (focusFilter !== 'all') {
@@ -220,6 +234,9 @@ export default function PerformanceKPI() {
                       departments={departments}
                       departmentFilter={departmentFilter}
                       onDepartmentFilterChange={setDepartmentFilter}
+                      agencies={agencies}
+                      agencyFilter={agencyFilter}
+                      onAgencyFilterChange={setAgencyFilter}
                       focusFilter={focusFilter}
                       onFocusFilterChange={setFocusFilter}
                     />
