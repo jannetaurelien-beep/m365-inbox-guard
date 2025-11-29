@@ -1,15 +1,8 @@
 import { TenantOverviewResponse, UsersListResponse, UserDetailResponse } from '../types/kpi';
+import { mockTenantOverview, mockUsersList, mockUserDetail } from '../mock-data/kpi-mock';
 
-// Fonction helper pour construire l'URL avec les params
-function buildUrl(endpoint: string, params: Record<string, string | number | null | undefined>): string {
-  const url = new URL(endpoint, window.location.origin);
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== null && value !== undefined) {
-      url.searchParams.append(key, String(value));
-    }
-  });
-  return url.toString();
-}
+// Simulation d'un délai réseau pour rendre l'interface plus réaliste
+const simulateDelay = (ms: number = 500) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function fetchTenantOverview(
   periodDays: number,
@@ -17,18 +10,22 @@ export async function fetchTenantOverview(
   accountType?: string | null,
   domain?: string | null
 ): Promise<TenantOverviewResponse> {
-  const url = buildUrl('/api/mail-kpis/tenant/', {
-    periodDays,
-    client,
-    accountType,
-    domain,
-  });
+  await simulateDelay();
   
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch tenant overview: ${response.statusText}`);
+  // Retourner les données mockées avec la période demandée
+  const data = { ...mockTenantOverview, periodDays };
+  
+  // Filtrer les top users par accountType si spécifié
+  if (accountType) {
+    data.topUsers = data.topUsers.filter(u => u.accountType === accountType);
   }
-  return response.json();
+  
+  // Filtrer par domaine si spécifié
+  if (domain) {
+    data.topUsers = data.topUsers.filter(u => u.upn.endsWith(`@${domain}`));
+  }
+  
+  return data;
 }
 
 export async function fetchUsersList(
@@ -37,18 +34,25 @@ export async function fetchUsersList(
   accountType?: string | null,
   domain?: string | null
 ): Promise<UsersListResponse> {
-  const url = buildUrl('/api/mail-kpis/users-summary/', {
-    periodDays,
-    client,
-    accountType,
-    domain,
-  });
+  await simulateDelay();
   
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch users list: ${response.statusText}`);
+  let users = [...mockUsersList.users];
+  
+  // Filtrer par accountType si spécifié
+  if (accountType) {
+    users = users.filter(u => u.accountType === accountType);
   }
-  return response.json();
+  
+  // Filtrer par domaine si spécifié
+  if (domain) {
+    users = users.filter(u => u.upn.endsWith(`@${domain}`));
+  }
+  
+  return {
+    periodDays,
+    generatedAt: new Date().toISOString(),
+    users
+  };
 }
 
 export async function fetchUserDetail(
@@ -56,14 +60,8 @@ export async function fetchUserDetail(
   periodDays: number,
   groupBy: 'day' | 'week' | 'month'
 ): Promise<UserDetailResponse> {
-  const url = buildUrl(`/api/mail-kpis/users/${userId}/detail/`, {
-    periodDays,
-    groupBy,
-  });
+  await simulateDelay(300);
   
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch user detail: ${response.statusText}`);
-  }
-  return response.json();
+  // Générer les données de détail pour l'utilisateur
+  return mockUserDetail(userId, periodDays);
 }
