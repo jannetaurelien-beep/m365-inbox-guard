@@ -536,9 +536,18 @@ export default function PerformanceKPI() {
 
       {/* Contenu principal */}
       <div className="container mx-auto px-6 py-6 space-y-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={(val) => {
+          setActiveTab(val);
+          // Reset group filter when leaving groups tab
+          if (val !== 'groups') {
+            setGroupFilter(null);
+          }
+        }}>
           <TabsList>
-            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+            <TabsTrigger value="overview">
+              <Globe className="h-4 w-4 mr-2" />
+              Vue d'ensemble
+            </TabsTrigger>
             <TabsTrigger value="domains">
               <Globe className="h-4 w-4 mr-2" />
               Domaines
@@ -570,6 +579,10 @@ export default function PerformanceKPI() {
                 data={tenantData} 
                 groups={userGroups}
                 users={usersData?.users || []}
+                onSelectGroup={(groupId) => {
+                  setActiveTab('groups');
+                  setGroupFilter(groupId);
+                }}
               />
             )}
 
