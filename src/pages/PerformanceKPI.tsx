@@ -4,20 +4,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw, X, Settings, Download, Filter as FilterIcon, Grid3x3, List } from 'lucide-react';
+import { RefreshCw, X, Settings, Download, Filter as FilterIcon, Grid3x3, List, Building2, Users as UsersIcon } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KPIFilters } from '@/components/kpi/KPIFilters';
 import { TenantOverview } from '@/components/kpi/TenantOverview';
 import { UsersList } from '@/components/kpi/UsersList';
 import { UserDetail } from '@/components/kpi/UserDetail';
+import { AgencyComparison } from '@/components/kpi/AgencyComparison';
+import { GroupManagement } from '@/components/kpi/GroupManagement';
+import { GroupPerformanceView } from '@/components/kpi/GroupPerformanceView';
 import { fetchTenantOverview, fetchUsersList, fetchUserDetail } from '@/lib/api/kpi-api';
-import { TenantOverviewResponse, UsersListResponse, UserDetailResponse, AccountFilterType, FocusFilterType, GroupByType } from '@/lib/types/kpi';
+import { TenantOverviewResponse, UsersListResponse, UserDetailResponse, AccountFilterType, FocusFilterType, GroupByType, UserGroup, AgencyMetrics, GroupPerformance, MailUserMetricsSub } from '@/lib/types/kpi';
 import { useToast } from '@/hooks/use-toast';
 
 export default function PerformanceKPI() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [activeTab, setActiveTab] = useState('overview');
 
   // État des filtres
   const [periodDays, setPeriodDays] = useState(30);
@@ -28,6 +33,27 @@ export default function PerformanceKPI() {
   const [agencyFilter, setAgencyFilter] = useState<string | null>(null);
   const [focusFilter, setFocusFilter] = useState<FocusFilterType>('all');
   const [groupBy, setGroupBy] = useState<GroupByType>('day');
+  const [groupFilter, setGroupFilter] = useState<string | null>(null);
+
+  // Groupes d'utilisateurs
+  const [userGroups, setUserGroups] = useState<UserGroup[]>([
+    {
+      id: 'group-1',
+      name: 'Commerciaux TLS',
+      description: 'Équipe commerciale TLS',
+      userIds: ['user-1', 'user-2'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: 'group-2',
+      name: 'Support Technique',
+      description: 'Équipe support technique',
+      userIds: ['user-3', 'user-5'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ]);
 
   // Données
   const [tenantData, setTenantData] = useState<TenantOverviewResponse | null>(null);
@@ -148,6 +174,112 @@ export default function PerformanceKPI() {
     return Array.from(agcs).sort();
   }, [usersData]);
 
+  // Calculer les métriques par agence
+  const agencyMetrics = useMemo((): AgencyMetrics[] => {
+    if (!usersData) return [];
+
+    const metricsMap = new Map<string, {
+      users: typeof usersData.users;
+      metrics: { total: MailUserMetricsSub; external: MailUserMetricsSub; internal: MailUserMetricsSub };
+    }>();
+
+    usersData.users.forEach((user) => {
+      const agency = user.agency || 'Non assigné';
+      if (!metricsMap.has(agency)) {
+        metricsMap.set(agency, {
+          users: [],
+          metrics: {
+            total: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
+            external: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
+            internal: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
+          },
+        });
+      }
+
+      const agencyData = metricsMap.get(agency)!;
+      agencyData.users.push(user);
+
+      // Agréger les métriques
+      ['total', 'external', 'internal'].forEach((type) => {
+        const metricType = type as 'total' | 'external' | 'internal';
+        const userMetrics = user.metrics[metricType];
+        const agencyMetrics = agencyData.metrics[metricType];
+
+        agencyMetrics.received += userMetrics.received;
+        agencyMetrics.sent += userMetrics.sent;
+        agencyMetrics.backlog_total += userMetrics.backlog_total || 0;
+        agencyMetrics.backlog_unread += userMetrics.backlog_unread || 0;
+        agencyMetrics.backlog_flagged += userMetrics.backlog_flagged || 0;
+      });
+    });
+
+    // Calculer les moyennes et scores
+    return Array.from(metricsMap.entries()).map(([agency, data]) => {
+      const userCount = data.users.length;
+      const avgSla = data.users.reduce((sum, u) => sum + (u.metrics.external.first_reply_within_sla || 0), 0) / userCount;
+      const avgBacklog = data.metrics.external.backlog_total / userCount;
+      
+      // Score basé sur SLA et backlog
+      const slaScore = avgSla;
+      const backlogScore = Math.max(0, 100 - (avgBacklog / 50) * 100);
+      const avgScore = (slaScore * 0.6 + backlogScore * 0.4);
+
+      // Calculer la moyenne pour first_reply_within_sla
+      data.metrics.external.first_reply_within_sla = avgSla;
+
+      return {
+        agency,
+        userCount,
+        metrics: data.metrics,
+        avgScore,
+      };
+    });
+  }, [usersData]);
+
+  // Calculer la performance d'un groupe
+  const getGroupPerformance = (groupId: string): GroupPerformance | null => {
+    const group = userGroups.find(g => g.id === groupId);
+    if (!group || !usersData) return null;
+
+    const groupUsers = usersData.users.filter(u => group.userIds.includes(u.userId));
+    if (groupUsers.length === 0) return null;
+
+    const metrics = {
+      total: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
+      external: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
+      internal: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
+    };
+
+    groupUsers.forEach((user) => {
+      ['total', 'external', 'internal'].forEach((type) => {
+        const metricType = type as 'total' | 'external' | 'internal';
+        const userMetrics = user.metrics[metricType];
+        const groupMetrics = metrics[metricType];
+
+        groupMetrics.received += userMetrics.received;
+        groupMetrics.sent += userMetrics.sent;
+        groupMetrics.backlog_total += userMetrics.backlog_total || 0;
+        groupMetrics.backlog_unread += userMetrics.backlog_unread || 0;
+        groupMetrics.backlog_flagged += userMetrics.backlog_flagged || 0;
+      });
+    });
+
+    const avgSla = groupUsers.reduce((sum, u) => sum + (u.metrics.external.first_reply_within_sla || 0), 0) / groupUsers.length;
+    metrics.external.first_reply_within_sla = avgSla;
+
+    const avgBacklog = metrics.external.backlog_total / groupUsers.length;
+    const slaScore = avgSla;
+    const backlogScore = Math.max(0, 100 - (avgBacklog / 50) * 100);
+    const avgScore = (slaScore * 0.6 + backlogScore * 0.4);
+
+    return {
+      group,
+      metrics,
+      users: groupUsers,
+      avgScore,
+    };
+  };
+
   // Filtrer les users localement
   const filteredUsers = useMemo(() => {
     if (!usersData) return [];
@@ -171,6 +303,13 @@ export default function PerformanceKPI() {
       filtered = filtered.filter((u) => u.agency === agencyFilter);
     }
 
+    if (groupFilter) {
+      const group = userGroups.find(g => g.id === groupFilter);
+      if (group) {
+        filtered = filtered.filter((u) => group.userIds.includes(u.userId));
+      }
+    }
+
     if (focusFilter !== 'all') {
       filtered = filtered.filter((u) => {
         const backlog = u.metrics.external.backlog_total || 0;
@@ -184,7 +323,34 @@ export default function PerformanceKPI() {
     }
 
     return filtered;
-  }, [usersData, search, departmentFilter, focusFilter]);
+  }, [usersData, search, departmentFilter, agencyFilter, groupFilter, focusFilter]);
+
+  // Handlers pour les groupes
+  const handleCreateGroup = (name: string, description: string, userIds: string[]) => {
+    const newGroup: UserGroup = {
+      id: `group-${Date.now()}`,
+      name,
+      description,
+      userIds,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setUserGroups([...userGroups, newGroup]);
+    toast({ title: 'Groupe créé', description: `Le groupe "${name}" a été créé avec succès.` });
+  };
+
+  const handleUpdateGroup = (groupId: string, userIds: string[]) => {
+    setUserGroups(userGroups.map(g => 
+      g.id === groupId ? { ...g, userIds, updatedAt: new Date().toISOString() } : g
+    ));
+    toast({ title: 'Groupe mis à jour', description: 'Les membres du groupe ont été mis à jour.' });
+  };
+
+  const handleDeleteGroup = (groupId: string) => {
+    setUserGroups(userGroups.filter(g => g.id !== groupId));
+    if (groupFilter === groupId) setGroupFilter(null);
+    toast({ title: 'Groupe supprimé', description: 'Le groupe a été supprimé.' });
+  };
 
   // Handlers
   const handleSelectUser = (userId: string) => {
@@ -239,6 +405,9 @@ export default function PerformanceKPI() {
                       onAgencyFilterChange={setAgencyFilter}
                       focusFilter={focusFilter}
                       onFocusFilterChange={setFocusFilter}
+                      groups={userGroups}
+                      groupFilter={groupFilter}
+                      onGroupFilterChange={setGroupFilter}
                     />
                   </div>
                 </SheetContent>
@@ -283,23 +452,37 @@ export default function PerformanceKPI() {
 
       {/* Contenu principal */}
       <div className="container mx-auto px-6 py-6 space-y-6">
-        {/* Vue d'ensemble */}
-        {loadingTenant && (
-          <div className="grid gap-6">
-            <Skeleton className="h-48 w-full" />
-          </div>
-        )}
-        {tenantError && (
-          <Alert variant="destructive">
-            <AlertDescription>{tenantError}</AlertDescription>
-          </Alert>
-        )}
-        {!loadingTenant && !tenantError && tenantData && (
-          <TenantOverview data={tenantData} />
-        )}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+            <TabsTrigger value="agencies">
+              <Building2 className="h-4 w-4 mr-2" />
+              Comparaison agences
+            </TabsTrigger>
+            <TabsTrigger value="groups">
+              <UsersIcon className="h-4 w-4 mr-2" />
+              Groupes
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Liste des boîtes mail */}
-        <div className="space-y-4">
+          <TabsContent value="overview" className="space-y-6 mt-6">
+            {/* Vue d'ensemble */}
+            {loadingTenant && (
+              <div className="grid gap-6">
+                <Skeleton className="h-48 w-full" />
+              </div>
+            )}
+            {tenantError && (
+              <Alert variant="destructive">
+                <AlertDescription>{tenantError}</AlertDescription>
+              </Alert>
+            )}
+            {!loadingTenant && !tenantError && tenantData && (
+              <TenantOverview data={tenantData} />
+            )}
+
+            {/* Liste des boîtes mail */}
+            <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold">Boîtes mail</h2>
@@ -344,15 +527,49 @@ export default function PerformanceKPI() {
             </Card>
           )}
 
-          {!loadingUsers && !usersError && filteredUsers.length > 0 && (
-            <UsersList
-              users={filteredUsers}
-              selectedUserId={selectedUserId}
-              onSelectUser={handleSelectUser}
-              viewMode={viewMode}
-            />
-          )}
-        </div>
+            {!loadingUsers && !usersError && filteredUsers.length > 0 && (
+              <UsersList
+                users={filteredUsers}
+                selectedUserId={selectedUserId}
+                onSelectUser={handleSelectUser}
+                viewMode={viewMode}
+              />
+            )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="agencies" className="space-y-6 mt-6">
+            {loadingUsers ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-64 w-full" />
+                ))}
+              </div>
+            ) : (
+              <AgencyComparison agencies={agencyMetrics} />
+            )}
+          </TabsContent>
+
+          <TabsContent value="groups" className="space-y-6 mt-6">
+            {usersData && (
+              <>
+                <GroupManagement
+                  groups={userGroups}
+                  users={usersData.users}
+                  onCreateGroup={handleCreateGroup}
+                  onUpdateGroup={handleUpdateGroup}
+                  onDeleteGroup={handleDeleteGroup}
+                />
+
+                {groupFilter && getGroupPerformance(groupFilter) && (
+                  <div className="mt-6">
+                    <GroupPerformanceView groupPerformance={getGroupPerformance(groupFilter)!} />
+                  </div>
+                )}
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Modal de détail utilisateur */}
