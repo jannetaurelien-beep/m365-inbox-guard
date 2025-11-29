@@ -1,8 +1,9 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar, Filter, Search } from 'lucide-react';
-import { AccountFilterType, FocusFilterType } from '@/lib/types/kpi';
+import { Button } from '@/components/ui/button';
+import { Calendar, Filter, Search, X } from 'lucide-react';
+import { AccountFilterType, FocusFilterType, UserGroup } from '@/lib/types/kpi';
 
 interface KPIFiltersProps {
   periodDays: number;
@@ -22,6 +23,9 @@ interface KPIFiltersProps {
   onAgencyFilterChange: (value: string | null) => void;
   focusFilter: FocusFilterType;
   onFocusFilterChange: (value: FocusFilterType) => void;
+  groups?: UserGroup[];
+  groupFilter?: string | null;
+  onGroupFilterChange?: (value: string | null) => void;
 }
 
 export function KPIFilters({
@@ -42,6 +46,9 @@ export function KPIFilters({
   onAgencyFilterChange,
   focusFilter,
   onFocusFilterChange,
+  groups = [],
+  groupFilter = null,
+  onGroupFilterChange,
 }: KPIFiltersProps) {
   return (
     <div className="space-y-6">
@@ -174,6 +181,38 @@ export function KPIFilters({
             </SelectContent>
           </Select>
         </div>
+
+        {/* Groupe */}
+        {groups.length > 0 && onGroupFilterChange && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">Groupe</Label>
+              {groupFilter && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onGroupFilterChange(null)}
+                  className="h-auto p-0 text-xs"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            <Select value={groupFilter || 'all'} onValueChange={(v) => onGroupFilterChange(v === 'all' ? null : v)}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Tous les groupes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les groupes</SelectItem>
+                {groups.map((group) => (
+                  <SelectItem key={group.id} value={group.id}>
+                    {group.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
     </div>
   );

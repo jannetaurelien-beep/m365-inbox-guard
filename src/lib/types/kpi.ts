@@ -93,3 +93,35 @@ export type AccountFilterType = "user" | "shared" | "all";
 export type FocusFilterType = "all" | "high-backlog" | "low-sla" | "anomalies";
 export type GroupByType = "day" | "week" | "month";
 export type MetricType = "external" | "internal" | "total";
+
+export interface UserGroup {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  userIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AgencyMetrics {
+  agency: string;
+  userCount: number;
+  metrics: {
+    total: MailUserMetricsSub;
+    external: MailUserMetricsSub;
+    internal: MailUserMetricsSub;
+  };
+  avgScore?: number;
+}
+
+export interface GroupPerformance {
+  group: UserGroup;
+  metrics: {
+    total: MailUserMetricsSub;
+    external: MailUserMetricsSub;
+    internal: MailUserMetricsSub;
+  };
+  users: MailUserSummary[];
+  avgScore?: number;
+}
