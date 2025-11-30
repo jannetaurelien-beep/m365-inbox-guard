@@ -97,9 +97,33 @@ export function GroupsComparison({ groups, users, onExportSuccess }: GroupsCompa
   }
 
   return (
-    <div className="space-y-4">
-      {/* En-tête avec export */}
-      <div className="flex justify-end">
+    <div className="space-y-6">
+      {/* En-tête avec stats globales */}
+      <div className="flex justify-between items-start gap-4">
+        <div className="grid grid-cols-3 gap-4 flex-1">
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm text-muted-foreground">Total groupes</p>
+              <p className="text-2xl font-bold">{groups.length}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm text-muted-foreground">SLA moyen</p>
+              <p className="text-2xl font-bold">
+                {Math.round(groupsData.reduce((sum, g) => sum + g.avgSla, 0) / groupsData.length)}%
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm text-muted-foreground">Emails totaux</p>
+              <p className="text-2xl font-bold">
+                {groupsData.reduce((sum, g) => sum + g.totalReceived + g.totalSent, 0).toLocaleString()}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
         <Button
           variant="outline"
           size="sm"
@@ -113,34 +137,40 @@ export function GroupsComparison({ groups, users, onExportSuccess }: GroupsCompa
         </Button>
       </div>
 
-      {/* Graphique SLA simplifié */}
+      {/* Graphique SLA avec couleurs */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Performance SLA</CardTitle>
+          <CardTitle className="text-base">Performance SLA par groupe</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={280}>
             <BarChart data={groupsData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" opacity={0.3} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis 
-                dataKey="name" 
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                dataKey="shortName" 
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
               />
               <YAxis 
                 domain={[0, 100]} 
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                label={{ value: 'SLA %', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
               />
               <Tooltip 
                 contentStyle={{ 
                   backgroundColor: 'hsl(var(--popover))',
                   border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  color: 'hsl(var(--foreground))'
                 }}
                 formatter={(value: number) => [`${value}%`, 'SLA']}
+                labelFormatter={(label) => {
+                  const group = groupsData.find(g => g.shortName === label);
+                  return group ? group.name : label;
+                }}
               />
               <Bar 
                 dataKey="avgSla" 
-                radius={[6, 6, 0, 0]}
+                radius={[8, 8, 0, 0]}
               >
                 {groupsData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
@@ -151,36 +181,41 @@ export function GroupsComparison({ groups, users, onExportSuccess }: GroupsCompa
         </CardContent>
       </Card>
 
-      {/* Cartes récapitulatives */}
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      {/* Cartes des groupes */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {groupsData.map((group) => (
-          <Card key={group.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="pt-4">
-              <div className="flex items-start gap-3">
-                <div 
-                  className="h-10 w-1 rounded-full flex-shrink-0" 
-                  style={{ backgroundColor: group.color }} 
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{group.name}</p>
-                  <p className="text-sm text-muted-foreground mb-3">{group.memberCount} membres</p>
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">SLA</p>
-                      <p className={`text-xl font-bold ${
-                        group.avgSla >= 80 ? 'text-green-600' : 
-                        group.avgSla >= 60 ? 'text-orange-600' : 
-                        'text-red-600'
-                      }`}>
-                        {group.avgSla}%
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">Emails</p>
-                      <p className="text-lg font-semibold">
-                        {(group.totalReceived + group.totalSent).toLocaleString()}
-                      </p>
-                    </div>
+          <Card key={group.id} className="hover:shadow-lg transition-all duration-200 border-l-4" style={{ borderLeftColor: group.color }}>
+            <CardContent className="pt-5">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-lg truncate">{group.name}</h3>
+                    <p className="text-sm text-muted-foreground">{group.memberCount} membres</p>
+                  </div>
+                  <div 
+                    className="h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                    style={{ backgroundColor: group.color }}
+                  >
+                    {group.avgSla}%
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Reçus</p>
+                    <p className="text-sm font-semibold">{group.totalReceived.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Envoyés</p>
+                    <p className="text-sm font-semibold">{group.totalSent.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Backlog</p>
+                    <p className="text-sm font-semibold">{group.avgBacklog}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Délai P50</p>
+                    <p className="text-sm font-semibold">{group.avgDelayP50} min</p>
                   </div>
                 </div>
               </div>
