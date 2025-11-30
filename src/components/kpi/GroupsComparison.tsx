@@ -1,9 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserGroup, MailUserSummary } from '@/lib/types/kpi';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, PieChart, Pie, Cell } from 'recharts';
-import { BarChart3, FileDown, TrendingUp, Users } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { FileDown } from 'lucide-react';
 import { exportGroupsToCSV } from '@/lib/export-utils';
 
 interface GroupsComparisonProps {
@@ -91,150 +90,104 @@ export function GroupsComparison({ groups, users, onExportSuccess }: GroupsCompa
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
-          <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium">Aucune comparaison disponible</p>
-          <p className="text-sm text-muted-foreground mt-1">Créez au moins un groupe pour voir les graphiques</p>
+          <p className="text-lg font-medium text-muted-foreground">Aucun groupe créé</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Graphique principal simplifié */}
+    <div className="space-y-4">
+      {/* En-tête avec export */}
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            exportGroupsToCSV(groups, users, `groupes-${new Date().toISOString().split('T')[0]}.csv`);
+            onExportSuccess?.(`${groups.length} groupes exportés`);
+          }}
+        >
+          <FileDown className="h-4 w-4 mr-2" />
+          Exporter
+        </Button>
+      </div>
+
+      {/* Graphique SLA simplifié */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Comparaison des groupes
-            </CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                exportGroupsToCSV(groups, users, `comparaison-groupes-${new Date().toISOString().split('T')[0]}.csv`);
-                onExportSuccess?.(`Comparaison de ${groups.length} groupes exportée`);
-              }}
-            >
-              <FileDown className="h-4 w-4 mr-2" />
-              Exporter
-            </Button>
-          </div>
+          <CardTitle className="text-base">Performance SLA</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="sla" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="sla">Performance SLA</TabsTrigger>
-              <TabsTrigger value="volume">Volume</TabsTrigger>
-            </TabsList>
-
-            {/* Onglet SLA */}
-            <TabsContent value="sla" className="space-y-4">
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={groupsData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="name" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                    formatter={(value: number) => `${value}%`}
-                  />
-                  <Bar 
-                    dataKey="avgSla" 
-                    fill="hsl(var(--chart-1))"
-                    radius={[8, 8, 0, 0]}
-                  >
-                    {groupsData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </TabsContent>
-
-            {/* Onglet Volume */}
-            <TabsContent value="volume" className="space-y-4">
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={volumeData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={140}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {volumeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => `${value.toLocaleString()} emails`}
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </TabsContent>
-          </Tabs>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={groupsData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" opacity={0.3} />
+              <XAxis 
+                dataKey="name" 
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <YAxis 
+                domain={[0, 100]} 
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--popover))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
+                formatter={(value: number) => [`${value}%`, 'SLA']}
+              />
+              <Bar 
+                dataKey="avgSla" 
+                radius={[6, 6, 0, 0]}
+              >
+                {groupsData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      {/* Tableau récapitulatif simple */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Résumé des groupes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {groupsData.map((group) => (
-              <div 
-                key={group.id} 
-                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="h-4 w-4 rounded-full" 
-                    style={{ backgroundColor: group.color }} 
-                  />
-                  <div>
-                    <p className="font-semibold">{group.name}</p>
-                    <p className="text-sm text-muted-foreground">{group.memberCount} membres</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-6">
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">SLA</p>
-                    <p className={`text-lg font-bold ${
-                      group.avgSla >= 80 ? 'text-green-600' : 
-                      group.avgSla >= 60 ? 'text-orange-600' : 
-                      'text-red-600'
-                    }`}>
-                      {group.avgSla}%
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Emails</p>
-                    <p className="text-lg font-bold">
-                      {(group.totalReceived + group.totalSent).toLocaleString()}
-                    </p>
+      {/* Cartes récapitulatives */}
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {groupsData.map((group) => (
+          <Card key={group.id} className="hover:shadow-md transition-shadow">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-3">
+                <div 
+                  className="h-10 w-1 rounded-full flex-shrink-0" 
+                  style={{ backgroundColor: group.color }} 
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">{group.name}</p>
+                  <p className="text-sm text-muted-foreground mb-3">{group.memberCount} membres</p>
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">SLA</p>
+                      <p className={`text-xl font-bold ${
+                        group.avgSla >= 80 ? 'text-green-600' : 
+                        group.avgSla >= 60 ? 'text-orange-600' : 
+                        'text-red-600'
+                      }`}>
+                        {group.avgSla}%
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Emails</p>
+                      <p className="text-lg font-semibold">
+                        {(group.totalReceived + group.totalSent).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
