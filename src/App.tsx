@@ -13,6 +13,7 @@ import Users from "./pages/Users";
 import UserDetail from "./pages/UserDetail";
 import CreateUser from "./pages/CreateUser";
 import Actions from "./pages/Actions";
+import AutomationCenter from "./pages/AutomationCenter";
 import AppointmentBooking from "./pages/AppointmentBooking";
 import ServerFiles from "./pages/ServerFiles";
 import VacationMessages from "./pages/VacationMessages";
@@ -48,6 +49,7 @@ const App = () => (
                     <Route path="/utilisateurs" element={<Users />} />
                     <Route path="/utilisateurs/:id" element={<UserDetail />} />
                     <Route path="/actions" element={<Actions />} />
+                    <Route path="/automatisations" element={<AutomationCenter />} />
                     <Route path="/actions/creer-utilisateur" element={<CreateUser />} />
                     <Route path="/actions/rendez-vous" element={<AppointmentBooking />} />
                     <Route path="/actions/*" element={<div className="p-8 text-center"><p className="text-muted-foreground">Formulaire à venir</p></div>} />
