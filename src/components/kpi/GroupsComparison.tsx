@@ -101,68 +101,13 @@ export function GroupsComparison({ groups, users, onExportSuccess }: GroupsCompa
 
   return (
     <div className="space-y-6">
-      {/* KPIs en cartes */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Groupes actifs</p>
-                <p className="text-2xl font-bold">{groups.length}</p>
-              </div>
-              <Users className="h-8 w-8 text-primary opacity-30" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total membres</p>
-                <p className="text-2xl font-bold">{groupsData.reduce((sum, g) => sum + g.memberCount, 0)}</p>
-              </div>
-              <Users className="h-8 w-8 text-blue-500 opacity-30" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">SLA moyen global</p>
-                <p className="text-2xl font-bold">
-                  {groupsData.length > 0 ? Math.round(groupsData.reduce((sum, g) => sum + g.avgSla, 0) / groupsData.length) : 0}%
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-green-500 opacity-30" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Emails totaux</p>
-                <p className="text-2xl font-bold">
-                  {groupsData.reduce((sum, g) => sum + g.totalReceived + g.totalSent, 0).toLocaleString()}
-                </p>
-              </div>
-              <BarChart3 className="h-8 w-8 text-orange-500 opacity-30" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Graphiques de comparaison */}
+      {/* Graphique principal simplifié */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              Analyse comparative détaillée
+              Comparaison des groupes
             </CardTitle>
             <Button
               variant="outline"
@@ -178,260 +123,116 @@ export function GroupsComparison({ groups, users, onExportSuccess }: GroupsCompa
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="performance" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="performance">Performance</TabsTrigger>
+          <Tabs defaultValue="sla" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="sla">Performance SLA</TabsTrigger>
               <TabsTrigger value="volume">Volume</TabsTrigger>
-              <TabsTrigger value="radar">Vue globale</TabsTrigger>
-              <TabsTrigger value="table">Tableau</TabsTrigger>
             </TabsList>
 
-            {/* Onglet Performance - SLA et Backlog */}
-            <TabsContent value="performance" className="space-y-6">
-              <div>
-                <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                  <div className="h-1 w-8 bg-primary rounded" />
-                  Taux de respect du SLA par groupe
-                </h4>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={groupsData} layout="horizontal">
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="category" dataKey="shortName" />
-                    <YAxis type="number" domain={[0, 100]} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--popover))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                      formatter={(value: number) => [`${value}%`, 'SLA']}
-                      labelFormatter={(label) => groupsData.find(g => g.shortName === label)?.name}
-                    />
-                    <Bar 
-                      dataKey="avgSla" 
-                      name="SLA (%)" 
-                      fill="hsl(var(--primary))"
-                      radius={[8, 8, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Objectif : maintenir un SLA ≥ 80%
-                </p>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                  <div className="h-1 w-8 bg-destructive rounded" />
-                  Backlog moyen par groupe
-                </h4>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={groupsData} layout="horizontal">
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="category" dataKey="shortName" />
-                    <YAxis type="number" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--popover))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                      formatter={(value: number) => [`${value} emails`, 'Backlog']}
-                      labelFormatter={(label) => groupsData.find(g => g.shortName === label)?.name}
-                    />
-                    <Bar 
-                      dataKey="avgBacklog" 
-                      name="Backlog moyen" 
-                      fill="hsl(var(--destructive))"
-                      radius={[8, 8, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Objectif : maintenir un backlog {"<"} 20 emails
-                </p>
-              </div>
+            {/* Onglet SLA */}
+            <TabsContent value="sla" className="space-y-4">
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={groupsData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="name" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                    formatter={(value: number) => `${value}%`}
+                  />
+                  <Bar 
+                    dataKey="avgSla" 
+                    fill="hsl(var(--chart-1))"
+                    radius={[8, 8, 0, 0]}
+                  >
+                    {groupsData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </TabsContent>
 
             {/* Onglet Volume */}
-            <TabsContent value="volume" className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="text-sm font-semibold mb-4">Répartition du volume total</h4>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <PieChart>
-                      <Pie
-                        data={volumeData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={120}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {volumeData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => `${value.toLocaleString()} emails`} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-semibold mb-4">Volume emails reçus vs envoyés</h4>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={groupsData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="shortName" />
-                      <YAxis />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--popover))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                        labelFormatter={(label) => groupsData.find(g => g.shortName === label)?.name}
-                      />
-                      <Legend />
-                      <Bar dataKey="totalReceived" name="Reçus" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} />
-                      <Bar dataKey="totalSent" name="Envoyés" fill="hsl(var(--chart-2))" radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-semibold mb-4">Délai de réponse moyen (P50)</h4>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={groupsData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="shortName" />
-                    <YAxis label={{ value: 'Minutes', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--popover))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                      formatter={(value: number) => [`${value} min`, 'Délai moyen']}
-                      labelFormatter={(label) => groupsData.find(g => g.shortName === label)?.name}
-                    />
-                    <Bar 
-                      dataKey="avgDelayP50" 
-                      name="Délai (min)" 
-                      fill="hsl(var(--chart-3))"
-                      radius={[8, 8, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </TabsContent>
-
-            {/* Onglet Radar - Vue globale */}
-            <TabsContent value="radar">
-              <div className="flex flex-col items-center">
-                <ResponsiveContainer width="100%" height={500}>
-                  <RadarChart data={radarData}>
-                    <PolarGrid stroke="hsl(var(--border))" />
-                    <PolarAngleAxis 
-                      dataKey="metric" 
-                      tick={{ fill: 'hsl(var(--foreground))' }}
-                    />
-                    <PolarRadiusAxis angle={90} domain={[0, 100]} />
-                    {groupsData.map((group, index) => (
-                      <Radar
-                        key={group.id}
-                        name={group.name}
-                        dataKey={group.name}
-                        stroke={group.color}
-                        fill={group.color}
-                        fillOpacity={0.25}
-                        strokeWidth={2}
-                      />
+            <TabsContent value="volume" className="space-y-4">
+              <ResponsiveContainer width="100%" height={400}>
+                <PieChart>
+                  <Pie
+                    data={volumeData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={140}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {volumeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--popover))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Legend />
-                  </RadarChart>
-                </ResponsiveContainer>
-                <div className="mt-6 p-4 bg-muted/50 rounded-lg max-w-2xl">
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Légende :</strong> Ce graphique compare les groupes sur 4 dimensions clés :
-                  </p>
-                  <ul className="text-sm text-muted-foreground mt-2 space-y-1 list-disc list-inside">
-                    <li><strong>SLA</strong> : Taux de respect des délais de réponse (0-100%)</li>
-                    <li><strong>Réactivité</strong> : Rapidité de réponse calculée sur le P50 (0-100)</li>
-                    <li><strong>Gestion backlog</strong> : Capacité à maintenir un backlog faible (0-100)</li>
-                    <li><strong>Volume traité</strong> : Part du volume total traité par le groupe (0-100)</li>
-                  </ul>
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* Onglet Tableau */}
-            <TabsContent value="table">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-3 font-semibold">Groupe</th>
-                      <th className="text-center p-3 font-semibold">Membres</th>
-                      <th className="text-center p-3 font-semibold">SLA moyen</th>
-                      <th className="text-center p-3 font-semibold">Backlog moyen</th>
-                      <th className="text-center p-3 font-semibold">Délai P50</th>
-                      <th className="text-center p-3 font-semibold">Emails reçus</th>
-                      <th className="text-center p-3 font-semibold">Emails envoyés</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {groupsData.map((group) => (
-                      <tr key={group.id} className="border-b hover:bg-muted/50 transition-colors">
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <div className="h-3 w-3 rounded-full" style={{ backgroundColor: group.color }} />
-                            <span className="font-medium">{group.name}</span>
-                          </div>
-                        </td>
-                        <td className="text-center p-3">{group.memberCount}</td>
-                        <td className="text-center p-3">
-                          <span className={
-                            group.avgSla >= 80 
-                              ? 'text-green-600 font-semibold' 
-                              : group.avgSla >= 60 
-                                ? 'text-orange-600 font-semibold' 
-                                : 'text-red-600 font-semibold'
-                          }>
-                            {group.avgSla}%
-                          </span>
-                        </td>
-                        <td className="text-center p-3">
-                          <span className={
-                            group.avgBacklog < 20 
-                              ? 'text-green-600 font-semibold' 
-                              : group.avgBacklog < 40 
-                                ? 'text-orange-600 font-semibold' 
-                                : 'text-red-600 font-semibold'
-                          }>
-                            {group.avgBacklog}
-                          </span>
-                        </td>
-                        <td className="text-center p-3">{group.avgDelayP50} min</td>
-                        <td className="text-center p-3">{group.totalReceived.toLocaleString()}</td>
-                        <td className="text-center p-3">{group.totalSent.toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number) => `${value.toLocaleString()} emails`}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </TabsContent>
           </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Tableau récapitulatif simple */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Résumé des groupes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {groupsData.map((group) => (
+              <div 
+                key={group.id} 
+                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="h-4 w-4 rounded-full" 
+                    style={{ backgroundColor: group.color }} 
+                  />
+                  <div>
+                    <p className="font-semibold">{group.name}</p>
+                    <p className="text-sm text-muted-foreground">{group.memberCount} membres</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">SLA</p>
+                    <p className={`text-lg font-bold ${
+                      group.avgSla >= 80 ? 'text-green-600' : 
+                      group.avgSla >= 60 ? 'text-orange-600' : 
+                      'text-red-600'
+                    }`}>
+                      {group.avgSla}%
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Emails</p>
+                    <p className="text-lg font-bold">
+                      {(group.totalReceived + group.totalSent).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>
