@@ -12,11 +12,14 @@ interface GroupsComparisonProps {
 }
 
 const COLORS = [
-  'hsl(var(--chart-1))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
+  'hsl(217, 91%, 60%)',  // Bleu vif
+  'hsl(142, 71%, 45%)',  // Vert moderne
+  'hsl(262, 83%, 58%)',  // Violet
+  'hsl(31, 97%, 52%)',   // Orange
+  'hsl(340, 82%, 52%)',  // Rose/Rouge
+  'hsl(199, 89%, 48%)',  // Cyan
+  'hsl(48, 96%, 53%)',   // Jaune
+  'hsl(152, 69%, 31%)',  // Vert foncé
 ];
 
 export function GroupsComparison({ groups, users, onExportSuccess }: GroupsComparisonProps) {
