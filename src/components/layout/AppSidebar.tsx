@@ -1,4 +1,4 @@
-import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut, Share2, Bell, TrendingUp, Trophy } from 'lucide-react';
+import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut, Share2, Bell, TrendingUp, Trophy, Workflow } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
@@ -16,6 +16,7 @@ const menuItems = [
   { title: 'Tableau de bord', url: '/', icon: Home },
   { title: 'Utilisateurs', url: '/utilisateurs', icon: Users },
   { title: 'Actions', url: '/actions', icon: Zap },
+  { title: 'Automatisations', url: '/automatisations', icon: Workflow },
   { title: 'Fichiers Serveur', url: '/fichiers-serveur', icon: FolderTree },
   { title: "Messages d'absence", url: '/messages-absence', icon: Mail },
   { title: 'Licences', url: '/licences', icon: CreditCard },
