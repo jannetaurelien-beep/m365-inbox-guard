@@ -530,29 +530,48 @@ export default function PerformanceKPI() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Header global fixe */}
-      <div className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Header avec gradient coloré */}
+      <div className="sticky top-0 z-50 border-b border-primary/10 bg-gradient-to-r from-background/95 via-background/98 to-primary/5 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <h1 className="text-2xl font-bold tracking-tight">Performance Dashboard</h1>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                Données en temps réel
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-xl blur-lg opacity-40 animate-pulse" />
+                  <div className="relative w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg">
+                    <Globe className="h-6 w-6 text-primary-foreground" />
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+                    Performance KPI
+                  </h1>
+                  <p className="text-xs text-muted-foreground">Analyse en temps réel</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Live</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <FilterIcon className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 hover:border-primary/40 hover:bg-primary/10 transition-all">
+                    <FilterIcon className="h-4 w-4 mr-2 text-primary" />
                     Filtres
                   </Button>
                 </SheetTrigger>
-                <SheetContent>
+                <SheetContent className="bg-gradient-to-b from-background to-primary/5">
                   <SheetHeader>
-                    <SheetTitle>Filtres</SheetTitle>
+                    <SheetTitle className="flex items-center gap-2">
+                      <FilterIcon className="h-5 w-5 text-primary" />
+                      Filtres avancés
+                    </SheetTitle>
                   </SheetHeader>
                   <div className="mt-6">
                     <KPIFilters
@@ -583,38 +602,39 @@ export default function PerformanceKPI() {
                   </div>
                 </SheetContent>
               </Sheet>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" className="bg-gradient-to-r from-accent/5 to-primary/5 border-accent/20 hover:border-accent/40 hover:bg-accent/10 transition-all">
+                <Download className="h-4 w-4 mr-2 text-accent" />
                 Export
               </Button>
-              <div className="flex items-center border rounded-md">
+              <div className="flex items-center border border-primary/20 rounded-lg overflow-hidden bg-background/50">
                 <Button
-                  variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
-                  className="rounded-r-none"
+                  className={`rounded-none ${viewMode === 'grid' ? 'bg-gradient-to-r from-primary to-primary/80' : ''}`}
                 >
                   <Grid3x3 className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="rounded-l-none"
+                  className={`rounded-none ${viewMode === 'list' ? 'bg-gradient-to-r from-primary to-primary/80' : ''}`}
                 >
                   <List className="h-4 w-4" />
                 </Button>
               </div>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={loadTenantOverview}
                 disabled={loadingTenant}
+                className="border-primary/20 hover:border-primary/40 hover:bg-primary/10"
               >
-                <RefreshCw className={`h-4 w-4 ${loadingTenant ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 text-primary ${loadingTenant ? 'animate-spin' : ''}`} />
               </Button>
-              <Button variant="ghost" size="sm">
-                <Settings className="h-4 w-4" />
+              <Button variant="outline" size="sm" className="border-primary/20 hover:border-primary/40 hover:bg-primary/10">
+                <Settings className="h-4 w-4 text-primary" />
               </Button>
             </div>
           </div>
@@ -630,21 +650,41 @@ export default function PerformanceKPI() {
             setGroupFilter(null);
           }
         }}>
-          <TabsList>
-            <TabsTrigger value="overview">
-              <Globe className="h-4 w-4 mr-2" />
+          <TabsList className="bg-gradient-to-r from-primary/5 via-background to-accent/5 border border-primary/10 p-1 h-auto">
+            <TabsTrigger 
+              value="overview" 
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all"
+            >
+              <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center mr-2">
+                <Globe className="h-3.5 w-3.5 text-primary" />
+              </div>
               Vue d'ensemble
             </TabsTrigger>
-            <TabsTrigger value="domains">
-              <Globe className="h-4 w-4 mr-2" />
+            <TabsTrigger 
+              value="domains"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-violet-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
+            >
+              <div className="w-6 h-6 rounded-md bg-violet-500/10 flex items-center justify-center mr-2">
+                <Globe className="h-3.5 w-3.5 text-violet-500" />
+              </div>
               Domaines
             </TabsTrigger>
-            <TabsTrigger value="agencies">
-              <Building2 className="h-4 w-4 mr-2" />
+            <TabsTrigger 
+              value="agencies"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
+            >
+              <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center mr-2">
+                <Building2 className="h-3.5 w-3.5 text-amber-500" />
+              </div>
               Agences
             </TabsTrigger>
-            <TabsTrigger value="groups">
-              <UsersIcon className="h-4 w-4 mr-2" />
+            <TabsTrigger 
+              value="groups"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
+            >
+              <div className="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center mr-2">
+                <UsersIcon className="h-3.5 w-3.5 text-emerald-500" />
+              </div>
               Groupes
             </TabsTrigger>
           </TabsList>
