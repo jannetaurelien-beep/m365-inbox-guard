@@ -4,13 +4,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Shield, Lock, Mail, CheckCircle2, KeyRound, Eye, EyeOff, Unlock, ShieldCheck } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Shield, Lock, Mail, KeyRound, Eye, EyeOff, Fingerprint, Zap, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginPhase, setLoginPhase] = useState<'idle' | 'scanning' | 'verifying' | 'success'>('idle');
   const navigate = useNavigate();
@@ -32,15 +34,19 @@ const Login = () => {
     setLoginPhase('scanning');
 
     // Phase 1: Scanning
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    await new Promise(resolve => setTimeout(resolve, 1500));
     setLoginPhase('verifying');
 
     // Phase 2: Verifying
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 2000));
     setLoginPhase('success');
 
     // Phase 3: Success
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (rememberMe) {
+      localStorage.setItem('rememberMe', 'true');
+    }
 
     toast({
       title: "Authentification réussie",
@@ -92,7 +98,7 @@ const Login = () => {
             {/* Security Animation Overlay */}
             {isLoading && (
               <div className="absolute inset-0 bg-background/95 backdrop-blur-sm rounded-lg z-20 flex flex-col items-center justify-center">
-                <SecurityAnimation phase={loginPhase} />
+                <QuantumAuthAnimation phase={loginPhase} />
               </div>
             )}
 
@@ -153,6 +159,22 @@ const Login = () => {
                 </div>
               </div>
 
+              {/* Remember me checkbox */}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  className="border-border data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                />
+                <Label 
+                  htmlFor="remember" 
+                  className="text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                >
+                  Se souvenir de moi
+                </Label>
+              </div>
+
               {/* Login Button */}
               <Button
                 type="submit"
@@ -185,178 +207,208 @@ const Login = () => {
   );
 };
 
-// Security Animation Component - DNA Helix & Hexagonal Authentication
-function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying' | 'success' }) {
+// Quantum Authentication Animation - Neural Network Style
+function QuantumAuthAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying' | 'success' }) {
   const [progress, setProgress] = useState(0);
-  const [hexagons, setHexagons] = useState<boolean[]>(Array(7).fill(false));
-  const [codeChars, setCodeChars] = useState<string[]>([]);
-  const [rotation, setRotation] = useState(0);
+  const [activeNodes, setActiveNodes] = useState<number[]>([]);
+  const [dataPackets, setDataPackets] = useState<{id: number, from: number, to: number, progress: number}[]>([]);
+  const [encryptionText, setEncryptionText] = useState('');
+
+  // Neural network nodes positions (arranged in layers)
+  const nodes = [
+    // Layer 1 (left)
+    { x: 15, y: 25, layer: 0 },
+    { x: 15, y: 50, layer: 0 },
+    { x: 15, y: 75, layer: 0 },
+    // Layer 2 (middle-left)
+    { x: 35, y: 20, layer: 1 },
+    { x: 35, y: 40, layer: 1 },
+    { x: 35, y: 60, layer: 1 },
+    { x: 35, y: 80, layer: 1 },
+    // Layer 3 (middle-right)
+    { x: 65, y: 25, layer: 2 },
+    { x: 65, y: 50, layer: 2 },
+    { x: 65, y: 75, layer: 2 },
+    // Layer 4 (right - output)
+    { x: 85, y: 50, layer: 3 },
+  ];
+
+  // Connections between nodes
+  const connections = [
+    [0, 3], [0, 4], [1, 3], [1, 4], [1, 5], [2, 4], [2, 5], [2, 6],
+    [3, 7], [3, 8], [4, 7], [4, 8], [4, 9], [5, 8], [5, 9], [6, 8], [6, 9],
+    [7, 10], [8, 10], [9, 10]
+  ];
 
   useEffect(() => {
     if (phase === 'scanning') {
-      const interval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 1, 100));
-        setRotation(prev => prev + 2);
+      // Animate progress
+      const progressInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 0.8, 100));
       }, 20);
-      return () => clearInterval(interval);
+
+      // Activate nodes sequentially
+      nodes.forEach((_, i) => {
+        setTimeout(() => {
+          setActiveNodes(prev => [...prev, i]);
+        }, i * 100);
+      });
+
+      // Generate data packets flowing through network
+      let packetId = 0;
+      const packetInterval = setInterval(() => {
+        const randomConnection = connections[Math.floor(Math.random() * connections.length)];
+        setDataPackets(prev => [...prev.slice(-8), { 
+          id: packetId++, 
+          from: randomConnection[0], 
+          to: randomConnection[1], 
+          progress: 0 
+        }]);
+      }, 150);
+
+      // Animate packets
+      const animatePackets = setInterval(() => {
+        setDataPackets(prev => 
+          prev.map(p => ({ ...p, progress: Math.min(p.progress + 8, 100) }))
+            .filter(p => p.progress < 100)
+        );
+      }, 30);
+
+      return () => {
+        clearInterval(progressInterval);
+        clearInterval(packetInterval);
+        clearInterval(animatePackets);
+      };
     }
   }, [phase]);
 
   useEffect(() => {
     if (phase === 'verifying') {
-      // Activate hexagons one by one
-      hexagons.forEach((_, i) => {
-        setTimeout(() => {
-          setHexagons(prev => {
-            const next = [...prev];
-            next[i] = true;
-            return next;
-          });
-        }, i * 180);
-      });
-
-      // Generate random code characters
-      const chars = 'ABCDEF0123456789';
+      const chars = 'ABCDEF0123456789αβγδεζηθ';
       const interval = setInterval(() => {
-        setCodeChars(prev => {
-          const newChar = chars[Math.floor(Math.random() * chars.length)];
-          return [...prev.slice(-12), newChar];
-        });
-      }, 80);
+        let text = '';
+        for (let i = 0; i < 32; i++) {
+          text += chars[Math.floor(Math.random() * chars.length)];
+        }
+        setEncryptionText(text);
+      }, 50);
       return () => clearInterval(interval);
     }
   }, [phase]);
 
   return (
-    <div className="text-center p-6">
+    <div className="text-center p-4 w-full max-w-xs">
       {phase === 'scanning' && (
-        <div className="space-y-6">
-          {/* DNA Helix Scanner */}
-          <div className="relative w-44 h-44 mx-auto">
-            {/* Outer rotating hexagonal frame */}
-            <svg 
-              className="absolute inset-0 w-full h-full" 
-              viewBox="0 0 140 140"
-              style={{ transform: `rotate(${rotation * 0.5}deg)` }}
-            >
-              <polygon
-                points="70,10 120,35 120,95 70,120 20,95 20,35"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1"
-                className="text-indigo-500/40"
-              />
-            </svg>
-            
-            {/* Second rotating frame (opposite direction) */}
-            <svg 
-              className="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)]" 
-              viewBox="0 0 140 140"
-              style={{ transform: `rotate(${-rotation * 0.3}deg)` }}
-            >
-              <polygon
-                points="70,10 120,35 120,95 70,120 20,95 20,35"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1"
-                strokeDasharray="8 4"
-                className="text-cyan-500/50"
-              />
+        <div className="space-y-4">
+          {/* Neural Network Visualization */}
+          <div className="relative w-56 h-44 mx-auto">
+            <svg viewBox="0 0 100 100" className="w-full h-full">
+              {/* Background glow */}
+              <defs>
+                <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="rgba(99, 102, 241, 0.8)" />
+                  <stop offset="100%" stopColor="rgba(99, 102, 241, 0)" />
+                </radialGradient>
+                <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="rgba(99, 102, 241, 0.2)" />
+                  <stop offset="50%" stopColor="rgba(34, 211, 238, 0.6)" />
+                  <stop offset="100%" stopColor="rgba(99, 102, 241, 0.2)" />
+                </linearGradient>
+              </defs>
+
+              {/* Draw connections */}
+              {connections.map(([from, to], i) => {
+                const fromNode = nodes[from];
+                const toNode = nodes[to];
+                const isActive = activeNodes.includes(from) && activeNodes.includes(to);
+                return (
+                  <line
+                    key={`conn-${i}`}
+                    x1={fromNode.x}
+                    y1={fromNode.y}
+                    x2={toNode.x}
+                    y2={toNode.y}
+                    stroke={isActive ? "url(#connectionGradient)" : "rgba(99, 102, 241, 0.1)"}
+                    strokeWidth={isActive ? "0.8" : "0.3"}
+                    className="transition-all duration-300"
+                  />
+                );
+              })}
+
+              {/* Draw data packets */}
+              {dataPackets.map(packet => {
+                const fromNode = nodes[packet.from];
+                const toNode = nodes[packet.to];
+                const x = fromNode.x + (toNode.x - fromNode.x) * (packet.progress / 100);
+                const y = fromNode.y + (toNode.y - fromNode.y) * (packet.progress / 100);
+                return (
+                  <circle
+                    key={`packet-${packet.id}`}
+                    cx={x}
+                    cy={y}
+                    r="1.5"
+                    fill="#22d3ee"
+                    className="drop-shadow-[0_0_4px_rgba(34,211,238,1)]"
+                  />
+                );
+              })}
+
+              {/* Draw nodes */}
+              {nodes.map((node, i) => {
+                const isActive = activeNodes.includes(i);
+                const isOutput = i === nodes.length - 1;
+                return (
+                  <g key={`node-${i}`}>
+                    {isActive && (
+                      <circle
+                        cx={node.x}
+                        cy={node.y}
+                        r={isOutput ? "6" : "4"}
+                        fill="url(#nodeGlow)"
+                        className="animate-pulse"
+                      />
+                    )}
+                    <circle
+                      cx={node.x}
+                      cy={node.y}
+                      r={isOutput ? "4" : "2.5"}
+                      fill={isActive ? (isOutput ? "#8b5cf6" : "#6366f1") : "#1e1b4b"}
+                      stroke={isActive ? "#22d3ee" : "#4f46e5"}
+                      strokeWidth="0.5"
+                      className="transition-all duration-300"
+                    />
+                  </g>
+                );
+              })}
             </svg>
 
-            {/* DNA Helix strands */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative w-20 h-28">
-                {[...Array(8)].map((_, i) => {
-                  const yPos = (i / 7) * 100;
-                  const phase = (i + rotation * 0.03) * 0.9;
-                  const xOffset1 = Math.sin(phase) * 28;
-                  const xOffset2 = Math.sin(phase + Math.PI) * 28;
-                  const scale1 = 0.6 + Math.cos(phase) * 0.4;
-                  const scale2 = 0.6 + Math.cos(phase + Math.PI) * 0.4;
-                  
-                  return (
-                    <div key={i}>
-                      {/* Left strand node */}
-                      <div
-                        className="absolute rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 transition-all duration-100"
-                        style={{
-                          width: `${10 * scale1}px`,
-                          height: `${10 * scale1}px`,
-                          left: `calc(50% + ${xOffset1}px - ${5 * scale1}px)`,
-                          top: `${yPos}%`,
-                          boxShadow: `0 0 ${12 * scale1}px rgba(34, 211, 238, 0.8)`,
-                          zIndex: scale1 > 0.8 ? 10 : 5
-                        }}
-                      />
-                      {/* Right strand node */}
-                      <div
-                        className="absolute rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 transition-all duration-100"
-                        style={{
-                          width: `${10 * scale2}px`,
-                          height: `${10 * scale2}px`,
-                          left: `calc(50% + ${xOffset2}px - ${5 * scale2}px)`,
-                          top: `${yPos}%`,
-                          boxShadow: `0 0 ${12 * scale2}px rgba(139, 92, 246, 0.8)`,
-                          zIndex: scale2 > 0.8 ? 10 : 5
-                        }}
-                      />
-                      {/* Connection line */}
-                      {Math.abs(xOffset1 - xOffset2) > 5 && (
-                        <div
-                          className="absolute h-px bg-gradient-to-r from-cyan-400/60 via-white/40 to-violet-400/60"
-                          style={{
-                            left: `calc(50% + ${Math.min(xOffset1, xOffset2) + 5}px)`,
-                            width: `${Math.abs(xOffset1 - xOffset2) - 10}px`,
-                            top: `calc(${yPos}% + 4px)`,
-                            opacity: Math.min(scale1, scale2) + 0.2
-                          }}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
+            {/* Central fingerprint icon */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 flex items-center justify-center backdrop-blur-sm border border-indigo-500/30">
+                <Fingerprint className="w-6 h-6 text-indigo-400 animate-pulse" />
               </div>
             </div>
 
-            {/* Scanning pulse rings */}
+            {/* Scanning ring */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-32 h-32 rounded-full border border-cyan-500/20 animate-ping" style={{ animationDuration: '2s' }} />
+              <div 
+                className="w-32 h-32 rounded-full border-2 border-cyan-500/40"
+                style={{
+                  animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite'
+                }}
+              />
             </div>
-            
-            {/* Orbiting particles */}
-            {[...Array(4)].map((_, i) => {
-              const angle = (rotation * 2 + i * 90) * Math.PI / 180;
-              return (
-                <div
-                  key={i}
-                  className="absolute w-2 h-2 rounded-full bg-cyan-400"
-                  style={{
-                    left: `calc(50% + ${Math.cos(angle) * 70}px - 4px)`,
-                    top: `calc(50% + ${Math.sin(angle) * 70}px - 4px)`,
-                    boxShadow: '0 0 10px rgba(34, 211, 238, 0.9), 0 0 20px rgba(34, 211, 238, 0.4)'
-                  }}
-                />
-              );
-            })}
           </div>
 
-          <div className="space-y-3">
-            <p className="text-foreground font-semibold text-lg">Analyse biométrique</p>
-            <p className="text-muted-foreground text-sm font-mono tracking-wider">
-              SÉQUENÇAGE: {progress.toFixed(0)}%
+          <div className="space-y-2">
+            <p className="text-foreground font-semibold">Analyse du réseau neuronal</p>
+            <p className="text-muted-foreground text-xs font-mono">
+              DEEP SCAN: {progress.toFixed(0)}%
             </p>
-            <div className="w-56 h-2 mx-auto bg-muted rounded-full overflow-hidden relative">
+            <div className="w-48 h-1.5 mx-auto bg-muted rounded-full overflow-hidden">
               <div
-                className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-500 via-indigo-500 to-violet-500 rounded-full"
+                className="h-full bg-gradient-to-r from-indigo-500 via-cyan-500 to-violet-500 rounded-full transition-all"
                 style={{ width: `${progress}%` }}
-              />
-              <div
-                className="absolute inset-y-0 w-12 bg-gradient-to-r from-transparent via-white/60 to-transparent"
-                style={{ 
-                  left: `${Math.max(0, progress - 15)}%`,
-                  opacity: progress < 100 ? 1 : 0
-                }}
               />
             </div>
           </div>
@@ -364,173 +416,156 @@ function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying'
       )}
 
       {phase === 'verifying' && (
-        <div className="space-y-6">
-          {/* Hexagonal verification grid */}
-          <div className="relative w-44 h-44 mx-auto">
-            {/* Outer hexagons */}
-            {[0, 60, 120, 180, 240, 300].map((angle, i) => {
-              const x = 50 + Math.cos((angle - 90) * Math.PI / 180) * 38;
-              const y = 50 + Math.sin((angle - 90) * Math.PI / 180) * 38;
-              return (
-                <div
-                  key={i}
-                  className={`absolute w-10 h-10 transition-all duration-500 ${
-                    hexagons[i] ? 'scale-110' : 'scale-100'
-                  }`}
-                  style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
-                >
-                  <svg viewBox="0 0 100 100" className="w-full h-full">
-                    <polygon
-                      points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5"
-                      fill={hexagons[i] ? 'rgba(16, 185, 129, 0.25)' : 'rgba(99, 102, 241, 0.1)'}
-                      stroke={hexagons[i] ? '#10b981' : '#6366f1'}
-                      strokeWidth="3"
-                      className="transition-all duration-500"
-                      style={{
-                        filter: hexagons[i] ? 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.8))' : 'none'
-                      }}
-                    />
-                  </svg>
-                  {hexagons[i] && (
-                    <div className="absolute inset-0 flex items-center justify-center text-emerald-400 font-bold text-sm animate-scale-in">
-                      ✓
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        <div className="space-y-4">
+          {/* Encryption visualization */}
+          <div className="relative w-56 h-44 mx-auto">
+            {/* Rotating rings */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div 
+                className="w-40 h-40 rounded-full border border-dashed border-violet-500/50"
+                style={{ animation: 'spin 8s linear infinite' }}
+              />
+              <div 
+                className="absolute w-32 h-32 rounded-full border border-dotted border-cyan-500/50"
+                style={{ animation: 'spin 6s linear infinite reverse' }}
+              />
+              <div 
+                className="absolute w-24 h-24 rounded-full border border-indigo-500/50"
+                style={{ animation: 'spin 4s linear infinite' }}
+              />
+            </div>
 
-            {/* Center hexagon with lock */}
-            <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 transition-all duration-700 ${hexagons[6] ? 'scale-110' : ''}`}>
-              <svg viewBox="0 0 100 100" className="w-full h-full">
-                <polygon
-                  points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5"
-                  fill={hexagons[6] ? 'rgba(16, 185, 129, 0.35)' : 'rgba(99, 102, 241, 0.2)'}
-                  stroke={hexagons[6] ? '#10b981' : '#818cf8'}
-                  strokeWidth="2.5"
-                  className="transition-all duration-500"
-                  style={{
-                    filter: hexagons[6] ? 'drop-shadow(0 0 18px rgba(16, 185, 129, 0.9))' : 'drop-shadow(0 0 12px rgba(99, 102, 241, 0.5))'
-                  }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                {hexagons[6] ? (
-                  <Unlock className="w-7 h-7 text-emerald-400 animate-scale-in" />
-                ) : (
-                  <Lock className="w-7 h-7 text-indigo-400" />
-                )}
+            {/* Central lock with energy field */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative">
+                {/* Energy pulses */}
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute inset-0 w-16 h-16 rounded-full border-2 border-emerald-500/40"
+                    style={{
+                      animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite',
+                      animationDelay: `${i * 0.5}s`
+                    }}
+                  />
+                ))}
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-600/30 to-emerald-600/30 flex items-center justify-center backdrop-blur-md border border-emerald-500/50 shadow-lg shadow-emerald-500/20">
+                  <Zap className="w-8 h-8 text-emerald-400 animate-pulse" />
+                </div>
               </div>
             </div>
 
-            {/* Connection lines from center to outer hexagons */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none">
-              {[0, 60, 120, 180, 240, 300].map((angle, i) => {
-                const x1 = 50 + Math.cos((angle - 90) * Math.PI / 180) * 18;
-                const y1 = 50 + Math.sin((angle - 90) * Math.PI / 180) * 18;
-                const x2 = 50 + Math.cos((angle - 90) * Math.PI / 180) * 30;
-                const y2 = 50 + Math.sin((angle - 90) * Math.PI / 180) * 30;
-                return (
-                  <line
-                    key={`line-${i}`}
-                    x1={`${x1}%`} y1={`${y1}%`}
-                    x2={`${x2}%`} y2={`${y2}%`}
-                    stroke={hexagons[i] ? '#10b981' : '#6366f180'}
-                    strokeWidth="2"
-                    className="transition-all duration-500"
-                    style={{
-                      filter: hexagons[i] ? 'drop-shadow(0 0 6px rgba(16, 185, 129, 0.8))' : 'none'
-                    }}
-                  />
-                );
-              })}
-            </svg>
-
-            {/* Rotating outer ring */}
-            <div className="absolute inset-0 rounded-full border border-dashed border-emerald-500/40 animate-spin" style={{ animationDuration: '12s' }} />
+            {/* Floating encryption symbols */}
+            {[...Array(6)].map((_, i) => {
+              const angle = (i / 6) * Math.PI * 2;
+              const radius = 75;
+              return (
+                <div
+                  key={i}
+                  className="absolute text-xs font-mono text-cyan-400/60"
+                  style={{
+                    left: `calc(50% + ${Math.cos(angle) * radius}px - 8px)`,
+                    top: `calc(50% + ${Math.sin(angle) * radius}px - 8px)`,
+                    animation: `pulse 2s ease-in-out infinite`,
+                    animationDelay: `${i * 0.3}s`
+                  }}
+                >
+                  {['α', 'β', 'γ', 'δ', 'ε', 'ζ'][i]}
+                </div>
+              );
+            })}
           </div>
 
-          <div className="space-y-3">
-            <p className="text-foreground font-semibold text-lg">Authentification multi-facteurs</p>
-            {/* Code display */}
-            <div className="flex justify-center gap-1 font-mono text-sm">
-              {codeChars.slice(-8).map((char, i) => (
-                <span
-                  key={i}
-                  className="w-6 h-7 flex items-center justify-center bg-muted/80 rounded text-emerald-500 dark:text-emerald-400 border border-emerald-500/30 font-bold"
-                  style={{ opacity: 0.4 + (i / 8) * 0.6 }}
+          <div className="space-y-2">
+            <p className="text-foreground font-semibold">Chiffrement quantique</p>
+            <div className="font-mono text-[10px] text-emerald-500/80 tracking-widest break-all h-6 overflow-hidden px-4">
+              {encryptionText}
+            </div>
+            <div className="flex justify-center gap-1">
+              {['AES-256', 'RSA-4096', 'SHA-3'].map((protocol, i) => (
+                <span 
+                  key={protocol}
+                  className="px-2 py-0.5 text-[10px] rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                  style={{ animation: `pulse 1s ease-in-out infinite`, animationDelay: `${i * 0.2}s` }}
                 >
-                  {char}
+                  {protocol}
                 </span>
               ))}
             </div>
-            <p className="text-muted-foreground text-sm">
-              {hexagons.filter(Boolean).length}/7 protocoles validés
-            </p>
           </div>
         </div>
       )}
 
       {phase === 'success' && (
-        <div className="space-y-6 animate-scale-in">
-          <div className="relative w-44 h-44 mx-auto">
-            {/* Success burst rays */}
+        <div className="space-y-4 animate-scale-in">
+          <div className="relative w-56 h-44 mx-auto">
+            {/* Success celebration */}
             <div className="absolute inset-0 flex items-center justify-center">
-              {[...Array(12)].map((_, i) => (
+              {/* Starburst rays */}
+              {[...Array(16)].map((_, i) => (
                 <div
                   key={i}
-                  className="absolute w-1 h-12 bg-gradient-to-t from-emerald-500/80 to-transparent rounded-full"
+                  className="absolute w-0.5 origin-bottom"
                   style={{
-                    transform: `rotate(${i * 30}deg) translateY(-45px)`,
-                    animation: 'pulse 1.5s ease-in-out infinite',
-                    animationDelay: `${i * 0.08}s`
+                    height: `${40 + Math.random() * 30}px`,
+                    background: `linear-gradient(to top, transparent, ${i % 2 === 0 ? '#10b981' : '#22d3ee'})`,
+                    transform: `rotate(${i * 22.5}deg) translateY(-50px)`,
+                    animation: 'pulse 1s ease-in-out infinite',
+                    animationDelay: `${i * 0.05}s`
                   }}
                 />
               ))}
             </div>
 
-            {/* Pulsing success rings */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-40 h-40 rounded-full border-2 border-emerald-500/40 animate-ping" style={{ animationDuration: '1.5s' }} />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 rounded-full border-2 border-emerald-400/50 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.2s' }} />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-24 h-24 rounded-full border-2 border-cyan-400/40 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.4s' }} />
-            </div>
+            {/* Success ripples */}
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <div
+                  className="rounded-full border-2 border-emerald-500/50"
+                  style={{
+                    width: `${80 + i * 40}px`,
+                    height: `${80 + i * 40}px`,
+                    animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+                    animationDelay: `${i * 0.3}s`
+                  }}
+                />
+              </div>
+            ))}
 
-            {/* Central success icon */}
+            {/* Central success badge */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500/40 to-cyan-500/40 flex items-center justify-center backdrop-blur-sm border-2 border-emerald-500/60 shadow-lg shadow-emerald-500/30">
-                <ShieldCheck className="w-10 h-10 text-emerald-400" />
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-emerald-500/50 animate-bounce" style={{ animationDuration: '1s' }}>
+                <ShieldCheck className="w-10 h-10 text-white" />
               </div>
             </div>
 
-            {/* Floating success particles */}
-            {[...Array(8)].map((_, i) => (
+            {/* Confetti particles */}
+            {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="absolute w-2 h-2 rounded-full bg-emerald-400"
+                className="absolute w-2 h-2 rounded-full"
                 style={{
-                  left: `${25 + Math.random() * 50}%`,
-                  top: `${25 + Math.random() * 50}%`,
-                  animation: 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite',
-                  animationDelay: `${i * 0.15}s`,
-                  boxShadow: '0 0 8px rgba(52, 211, 153, 0.8)'
+                  left: `${20 + Math.random() * 60}%`,
+                  top: `${20 + Math.random() * 60}%`,
+                  background: ['#10b981', '#22d3ee', '#8b5cf6', '#f59e0b'][i % 4],
+                  animation: `ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite`,
+                  animationDelay: `${Math.random()}s`
                 }}
               />
             ))}
           </div>
 
-          <div className="space-y-3">
-            <p className="text-emerald-500 dark:text-emerald-400 font-bold text-xl">Accès Autorisé</p>
-            <p className="text-muted-foreground text-sm">Initialisation de votre session sécurisée...</p>
-            <div className="flex justify-center gap-2 mt-2">
+          <div className="space-y-2">
+            <p className="text-emerald-500 font-bold text-xl">Accès Autorisé</p>
+            <p className="text-muted-foreground text-sm">Bienvenue dans votre espace sécurisé</p>
+            <div className="flex justify-center gap-1.5 mt-2">
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-bounce"
+                  className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce"
                   style={{ animationDelay: `${i * 0.15}s` }}
                 />
               ))}
