@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { TenantOverviewResponse, UserGroup, MailUserSummary } from '@/lib/types/kpi';
 import { Mail, Send, Clock, CheckCircle2, Inbox, AlertTriangle, Info, AlertCircle, ArrowUp, ArrowDown, Users, Search, ChevronLeft, ChevronRight, TrendingUp, Zap, Target, Activity } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
+import { getGroupColor, getGroupIcon } from './GroupCustomization';
 
 interface TenantOverviewProps {
   data: TenantOverviewResponse;
@@ -243,23 +244,24 @@ export function TenantOverview({ data, groups = [], users = [], onSelectGroup }:
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
-            {groupsPerformance.map((gp, idx) => {
-              const color = groupColors[idx % groupColors.length];
+            {groupsPerformance.map((gp) => {
+              const colorPreset = getGroupColor(gp.group.color);
+              const GroupIcon = getGroupIcon(gp.group.icon);
               const slaColor = gp.avgSla >= 80 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' : gp.avgSla >= 60 ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' : 'bg-red-500/10 text-red-600 border-red-500/30';
               const backlogColor = gp.avgBacklog < 20 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' : gp.avgBacklog < 40 ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' : 'bg-red-500/10 text-red-600 border-red-500/30';
 
               return (
                 <div 
                   key={gp.group.id} 
-                  className={`flex items-center gap-4 p-4 rounded-xl border border-transparent hover:border-primary/20 bg-gradient-to-r ${color.bg} hover:shadow-md transition-all duration-300 cursor-pointer group`}
+                  className={`flex items-center gap-4 p-4 rounded-xl border border-transparent hover:border-primary/20 bg-gradient-to-r from-${colorPreset.value}-500/5 to-${colorPreset.value}-500/10 hover:shadow-md transition-all duration-300 cursor-pointer group`}
                   onClick={() => onSelectGroup?.(gp.group.id)}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${color.gradient} flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform`}>
-                      <Users className="h-5 w-5 text-white" />
+                    <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${colorPreset.gradient} flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform`}>
+                      <GroupIcon className="h-5 w-5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`font-semibold text-sm ${color.text} truncate`}>{gp.group.name}</p>
+                      <p className={`font-semibold text-sm text-${colorPreset.value}-600 dark:text-${colorPreset.value}-400 truncate`}>{gp.group.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {gp.userCount} membre{gp.userCount > 1 ? 's' : ''} • {gp.totalReceived.toLocaleString()} emails
                       </p>
