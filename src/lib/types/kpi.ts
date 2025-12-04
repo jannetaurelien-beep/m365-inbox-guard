@@ -99,6 +99,7 @@ export interface UserGroup {
   name: string;
   description?: string;
   color?: string;
+  icon?: string;
   userIds: string[];
   createdAt: string;
   updatedAt: string;

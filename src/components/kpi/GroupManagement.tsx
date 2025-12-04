@@ -6,16 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { UserGroup, MailUserSummary } from '@/lib/types/kpi';
-import { Plus, Users, Trash2, Edit, Search, ChevronRight, ChevronLeft, UserPlus, UserMinus, Sparkles, Target, Mail, X, Check, ArrowLeftRight } from 'lucide-react';
+import { Plus, Users, Trash2, Edit, Search, ChevronRight, UserPlus, UserMinus, Sparkles, Target, Mail, X, Check, ArrowLeftRight, Palette } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { GroupCustomization, getGroupColor, getGroupIcon } from './GroupCustomization';
 
 interface GroupManagementProps {
   groups: UserGroup[];
   users: MailUserSummary[];
-  onCreateGroup: (name: string, description: string, userIds: string[]) => void;
-  onUpdateGroup: (groupId: string, userIds: string[]) => void;
+  onCreateGroup: (name: string, description: string, userIds: string[], icon?: string, color?: string) => void;
+  onUpdateGroup: (groupId: string, userIds: string[], icon?: string, color?: string) => void;
   onDeleteGroup: (groupId: string) => void;
 }
 
@@ -40,30 +41,44 @@ export function GroupManagement({ groups, users, onCreateGroup, onUpdateGroup, o
   const [editingGroup, setEditingGroup] = useState<UserGroup | null>(null);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
+  const [newGroupIcon, setNewGroupIcon] = useState('users');
+  const [newGroupColor, setNewGroupColor] = useState('blue');
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchSelected, setSearchSelected] = useState('');
 
   const handleCreate = () => {
     if (newGroupName.trim()) {
-      onCreateGroup(newGroupName, newGroupDescription, selectedUserIds);
-      setNewGroupName('');
-      setNewGroupDescription('');
-      setSelectedUserIds([]);
+      onCreateGroup(newGroupName, newGroupDescription, selectedUserIds, newGroupIcon, newGroupColor);
+      resetForm();
       setIsCreateOpen(false);
     }
   };
 
   const handleUpdate = () => {
     if (editingGroup) {
-      onUpdateGroup(editingGroup.id, selectedUserIds);
+      onUpdateGroup(editingGroup.id, selectedUserIds, newGroupIcon, newGroupColor);
       setEditingGroup(null);
-      setSelectedUserIds([]);
+      resetForm();
     }
+  };
+
+  const resetForm = () => {
+    setNewGroupName('');
+    setNewGroupDescription('');
+    setNewGroupIcon('users');
+    setNewGroupColor('blue');
+    setSelectedUserIds([]);
+    setSearchTerm('');
+    setSearchSelected('');
   };
 
   const openEdit = (group: UserGroup) => {
     setEditingGroup(group);
+    setNewGroupName(group.name);
+    setNewGroupDescription(group.description || '');
+    setNewGroupIcon(group.icon || 'users');
+    setNewGroupColor(group.color || 'blue');
     setSelectedUserIds([...group.userIds]);
     setSearchTerm('');
     setSearchSelected('');
@@ -175,7 +190,7 @@ export function GroupManagement({ groups, users, onCreateGroup, onUpdateGroup, o
   };
 
   const UserSelector = () => (
-    <div className="grid grid-cols-2 gap-4 h-[500px]">
+    <div className="grid grid-cols-2 gap-4 h-[400px]">
       {/* Colonne gauche - Utilisateurs disponibles */}
       <div className="flex flex-col border-2 border-primary/10 rounded-2xl overflow-hidden bg-gradient-to-b from-background to-primary/5">
         <div className="p-4 border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent">
@@ -288,6 +303,88 @@ export function GroupManagement({ groups, users, onCreateGroup, onUpdateGroup, o
     </div>
   );
 
+  const GroupFormDialog = ({ isCreate }: { isCreate: boolean }) => {
+    const colorPreset = getGroupColor(newGroupColor);
+    const GroupIcon = getGroupIcon(newGroupIcon);
+
+    return (
+      <div className="space-y-5">
+        {/* Customization Section */}
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10">
+          <div className="flex items-center gap-2 mb-4">
+            <Palette className="h-4 w-4 text-primary" />
+            <Label className="text-sm font-medium">Personnalisation</Label>
+          </div>
+          <GroupCustomization 
+            icon={newGroupIcon}
+            color={newGroupColor}
+            onIconChange={setNewGroupIcon}
+            onColorChange={setNewGroupColor}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="groupName" className="text-sm font-medium">Nom du groupe *</Label>
+            <Input
+              id="groupName"
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              placeholder="Ex: Commerciaux TLS..."
+              className="h-11 bg-gradient-to-r from-background to-primary/5 border-primary/20 focus:border-primary/40"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="groupDescription" className="text-sm font-medium">Description</Label>
+            <Input
+              id="groupDescription"
+              value={newGroupDescription}
+              onChange={(e) => setNewGroupDescription(e.target.value)}
+              placeholder="Description facultative..."
+              className="h-11 bg-gradient-to-r from-background to-primary/5 border-primary/20 focus:border-primary/40"
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            Sélectionner les membres
+          </Label>
+          <UserSelector />
+        </div>
+
+        <div className="flex items-center justify-between pt-4 border-t">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+              {selectedUserIds.length} membre{selectedUserIds.length > 1 ? 's' : ''} sélectionné{selectedUserIds.length > 1 ? 's' : ''}
+            </Badge>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => {
+              if (isCreate) {
+                setIsCreateOpen(false);
+              } else {
+                setEditingGroup(null);
+              }
+              resetForm();
+            }}>
+              Annuler
+            </Button>
+            <Button 
+              onClick={isCreate ? handleCreate : handleUpdate} 
+              disabled={!newGroupName.trim()}
+              className={cn("shadow-lg bg-gradient-to-r", colorPreset.gradient)}
+            >
+              <Check className="h-4 w-4 mr-2" />
+              {isCreate ? 'Créer le groupe' : 'Enregistrer'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -302,11 +399,7 @@ export function GroupManagement({ groups, users, onCreateGroup, onUpdateGroup, o
         </div>
         <Dialog open={isCreateOpen} onOpenChange={(open) => {
           setIsCreateOpen(open);
-          if (!open) {
-            setSearchTerm('');
-            setSearchSelected('');
-            setSelectedUserIds([]);
-          }
+          if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
             <Button size="default" className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg">
@@ -314,76 +407,39 @@ export function GroupManagement({ groups, users, onCreateGroup, onUpdateGroup, o
               Nouveau groupe
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                  <Users className="h-5 w-5 text-white" />
+                <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center", getGroupColor(newGroupColor).gradient)}>
+                  {(() => { const Icon = getGroupIcon(newGroupIcon); return <Icon className="h-5 w-5 text-white" />; })()}
                 </div>
                 Créer un nouveau groupe
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="groupName" className="text-sm font-medium">Nom du groupe *</Label>
-                  <Input
-                    id="groupName"
-                    value={newGroupName}
-                    onChange={(e) => setNewGroupName(e.target.value)}
-                    placeholder="Ex: Commerciaux TLS..."
-                    className="h-11 bg-gradient-to-r from-background to-primary/5 border-primary/20 focus:border-primary/40"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="groupDescription" className="text-sm font-medium">Description</Label>
-                  <Input
-                    id="groupDescription"
-                    value={newGroupDescription}
-                    onChange={(e) => setNewGroupDescription(e.target.value)}
-                    placeholder="Description facultative..."
-                    className="h-11 bg-gradient-to-r from-background to-primary/5 border-primary/20 focus:border-primary/40"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <Label className="text-sm font-medium flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" />
-                  Sélectionner les membres
-                </Label>
-                <UserSelector />
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                    {selectedUserIds.length} membre{selectedUserIds.length > 1 ? 's' : ''} sélectionné{selectedUserIds.length > 1 ? 's' : ''}
-                  </Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => {
-                    setIsCreateOpen(false);
-                    setSearchTerm('');
-                    setSearchSelected('');
-                    setSelectedUserIds([]);
-                  }}>
-                    Annuler
-                  </Button>
-                  <Button 
-                    onClick={handleCreate} 
-                    disabled={!newGroupName.trim()}
-                    className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-lg"
-                  >
-                    <Check className="h-4 w-4 mr-2" />
-                    Créer le groupe
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <GroupFormDialog isCreate={true} />
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingGroup} onOpenChange={(open) => {
+        if (!open) {
+          setEditingGroup(null);
+          resetForm();
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center", getGroupColor(newGroupColor).gradient)}>
+                {(() => { const Icon = getGroupIcon(newGroupIcon); return <Icon className="h-5 w-5 text-white" />; })()}
+              </div>
+              Modifier le groupe
+            </DialogTitle>
+          </DialogHeader>
+          <GroupFormDialog isCreate={false} />
+        </DialogContent>
+      </Dialog>
 
       {groups.length === 0 ? (
         <Card className="border-2 border-dashed border-primary/20 bg-gradient-to-br from-background to-primary/5">
@@ -405,9 +461,10 @@ export function GroupManagement({ groups, users, onCreateGroup, onUpdateGroup, o
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {groups.map((group, idx) => {
-            const colorClass = avatarColors[idx % avatarColors.length];
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 stagger-fade-in">
+          {groups.map((group) => {
+            const colorPreset = getGroupColor(group.color);
+            const GroupIcon = getGroupIcon(group.icon);
             const groupUsers = users.filter(u => group.userIds.includes(u.userId));
             const avgSla = groupUsers.length > 0 
               ? groupUsers.reduce((sum, u) => sum + (u.metrics.external.first_reply_within_sla || 0), 0) / groupUsers.length 
@@ -417,71 +474,43 @@ export function GroupManagement({ groups, users, onCreateGroup, onUpdateGroup, o
               <Card 
                 key={group.id} 
                 className={cn(
-                  "overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-2",
-                  "bg-gradient-to-br from-background to-primary/5 border-primary/10 hover:border-primary/30"
+                  "group overflow-hidden transition-all duration-300 hover:shadow-xl border-2",
+                  `bg-gradient-to-br from-${colorPreset.value}-500/5 to-${colorPreset.value}-500/10 border-${colorPreset.value}-500/20 hover:border-${colorPreset.value}-500/40`
                 )}
               >
                 <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className={cn("w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 shadow-lg", colorClass)}>
-                        <Users className="h-6 w-6 text-white" />
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg transition-transform group-hover:scale-105",
+                        colorPreset.gradient
+                      )}>
+                        <GroupIcon className="h-6 w-6 text-white" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base truncate">{group.name}</CardTitle>
+                      <div>
+                        <CardTitle className="text-base">{group.name}</CardTitle>
                         {group.description && (
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{group.description}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{group.description}</p>
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-1 shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEdit(group)}
-                        className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary"
-                      >
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(group)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDeleteGroup(group.id)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDeleteGroup(group.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {/* Avatars preview */}
-                  <div className="flex items-center gap-1">
-                    {groupUsers.slice(0, 5).map((user, i) => (
-                      <Avatar 
-                        key={user.userId} 
-                        className={cn(
-                          "h-8 w-8 ring-2 ring-background",
-                          i > 0 && "-ml-2"
-                        )}
-                      >
-                        <AvatarFallback className={cn("bg-gradient-to-br text-white text-xs font-medium", getAvatarColor(user.displayName))}>
-                          {user.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
-                    {groupUsers.length > 5 && (
-                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium -ml-2 ring-2 ring-background">
-                        +{groupUsers.length - 5}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="gap-1.5 bg-primary/10 text-primary border-primary/20">
-                      <Users className="h-3 w-3" />
-                      {group.userIds.length} membre{group.userIds.length > 1 ? 's' : ''}
-                    </Badge>
+                <CardContent className="pt-0">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{group.userIds.length}</span>
+                      <span className="text-muted-foreground">membres</span>
+                    </div>
                     <Badge 
                       variant="outline" 
                       className={cn(
@@ -491,69 +520,36 @@ export function GroupManagement({ groups, users, onCreateGroup, onUpdateGroup, o
                         "bg-red-500/10 text-red-600 border-red-500/30"
                       )}
                     >
-                      <Target className="h-3 w-3 mr-1" />
-                      {Math.round(avgSla)}% SLA
+                      SLA: {Math.round(avgSla)}%
                     </Badge>
+                  </div>
+                  
+                  {/* Avatars preview */}
+                  <div className="flex items-center mt-3">
+                    {groupUsers.slice(0, 5).map((user, i) => (
+                      <Avatar 
+                        key={user.userId} 
+                        className={cn(
+                          "h-7 w-7 ring-2 ring-background",
+                          i > 0 && "-ml-2"
+                        )}
+                      >
+                        <AvatarFallback className={cn("bg-gradient-to-br text-white text-xs", getAvatarColor(user.displayName))}>
+                          {user.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
+                    {groupUsers.length > 5 && (
+                      <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium -ml-2 ring-2 ring-background">
+                        +{groupUsers.length - 5}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             );
           })}
         </div>
-      )}
-
-      {editingGroup && (
-        <Dialog open={!!editingGroup} onOpenChange={(open) => {
-          if (!open) {
-            setEditingGroup(null);
-            setSearchTerm('');
-            setSearchSelected('');
-          }
-        }}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-xl">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                  <Edit className="h-5 w-5 text-white" />
-                </div>
-                Modifier : {editingGroup.name}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <Label className="text-sm font-medium flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" />
-                  Gérer les membres du groupe
-                </Label>
-                <UserSelector />
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                    {selectedUserIds.length} membre{selectedUserIds.length > 1 ? 's' : ''} sélectionné{selectedUserIds.length > 1 ? 's' : ''}
-                  </Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => {
-                    setEditingGroup(null);
-                    setSearchTerm('');
-                    setSearchSelected('');
-                  }}>
-                    Annuler
-                  </Button>
-                  <Button 
-                    onClick={handleUpdate}
-                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg"
-                  >
-                    <Check className="h-4 w-4 mr-2" />
-                    Enregistrer
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       )}
     </div>
   );
