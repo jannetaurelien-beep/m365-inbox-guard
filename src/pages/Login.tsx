@@ -50,21 +50,21 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
       {/* Animated grid background */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.08)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]"></div>
       
       {/* Glowing orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-[128px] animate-pulse"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-[128px] animate-pulse" style={{ animationDelay: '1s' }}></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-500/10 rounded-full blur-[128px]"></div>
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-[128px] animate-pulse"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 dark:bg-cyan-500/20 rounded-full blur-[128px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-500/5 dark:bg-violet-500/10 rounded-full blur-[128px]"></div>
 
       {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-cyan-400/40 rounded-full animate-pulse"
+            className="absolute w-1 h-1 bg-indigo-500/30 dark:bg-cyan-400/40 rounded-full animate-pulse"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -82,16 +82,16 @@ const Login = () => {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 shadow-2xl shadow-indigo-500/30 mb-4">
             <Shield className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">MailFlow Pro</h1>
-          <p className="text-slate-400">Portail d'administration Microsoft 365</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">MailFlow Pro</h1>
+          <p className="text-muted-foreground">Portail d'administration Microsoft 365</p>
         </div>
 
         {/* Login Card */}
-        <Card className="border-slate-800/50 bg-slate-900/80 backdrop-blur-xl shadow-2xl animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        <Card className="border-border/50 bg-card/80 backdrop-blur-xl shadow-2xl animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <CardContent className="p-8">
             {/* Security Animation Overlay */}
             {isLoading && (
-              <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-sm rounded-lg z-20 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 bg-background/95 backdrop-blur-sm rounded-lg z-20 flex flex-col items-center justify-center">
                 <SecurityAnimation phase={loginPhase} />
               </div>
             )}
@@ -99,12 +99,12 @@ const Login = () => {
             <form onSubmit={handleLogin} className="space-y-6">
               {/* Email field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-300 text-sm font-medium">
+                <Label htmlFor="email" className="text-foreground/80 text-sm font-medium">
                   Identifiant
                 </Label>
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-lg opacity-0 group-focus-within:opacity-100 blur transition-opacity -z-10"></div>
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors">
                     <Mail className="h-5 w-5" />
                   </div>
                   <Input
@@ -113,7 +113,7 @@ const Login = () => {
                     placeholder="nom.prenom@entreprise.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 pl-11 bg-slate-800/50 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all"
+                    className="h-12 pl-11 bg-muted/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all"
                     required
                   />
                 </div>
@@ -122,16 +122,16 @@ const Login = () => {
               {/* Password field */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-slate-300 text-sm font-medium">
+                  <Label htmlFor="password" className="text-foreground/80 text-sm font-medium">
                     Mot de passe
                   </Label>
-                  <a href="#" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
+                  <a href="#" className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors">
                     Mot de passe oublié ?
                   </a>
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-lg opacity-0 group-focus-within:opacity-100 blur transition-opacity -z-10"></div>
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors">
                     <Lock className="h-5 w-5" />
                   </div>
                   <Input
@@ -140,13 +140,13 @@ const Login = () => {
                     placeholder="••••••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 pl-11 pr-11 bg-slate-800/50 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all"
+                    className="h-12 pl-11 pr-11 bg-muted/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -165,11 +165,11 @@ const Login = () => {
             </form>
 
             {/* Security badge */}
-            <div className="mt-6 pt-6 border-t border-slate-800/50">
-              <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
+            <div className="mt-6 pt-6 border-t border-border/50">
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <Shield className="h-4 w-4 text-emerald-500" />
                 <span>Connexion chiffrée TLS 1.3</span>
-                <span className="w-1 h-1 rounded-full bg-slate-600"></span>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/50"></span>
                 <span>SSO Microsoft Azure AD</span>
               </div>
             </div>
@@ -177,7 +177,7 @@ const Login = () => {
         </Card>
 
         {/* Footer */}
-        <p className="text-center text-slate-500 text-sm mt-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        <p className="text-center text-muted-foreground text-sm mt-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
           © 2024 MailFlow Pro • Tous droits réservés
         </p>
       </div>
@@ -224,7 +224,7 @@ function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying'
             <div className="absolute inset-3 rounded-full border border-cyan-500/50 animate-pulse"></div>
             
             {/* Inner shield container */}
-            <div className="absolute inset-6 rounded-full bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-indigo-500/30 flex items-center justify-center overflow-hidden">
+            <div className="absolute inset-6 rounded-full bg-gradient-to-br from-muted/80 to-muted border border-indigo-500/30 flex items-center justify-center overflow-hidden">
               {/* Scanning beam */}
               <div 
                 className="absolute w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
@@ -235,14 +235,14 @@ function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying'
               ></div>
               
               {/* Lock icon */}
-              <Lock className="w-10 h-10 text-indigo-400" />
+              <Lock className="w-10 h-10 text-indigo-500 dark:text-indigo-400" />
             </div>
             
             {/* Floating particles */}
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="absolute w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"
+                className="absolute w-1.5 h-1.5 bg-cyan-500 dark:bg-cyan-400 rounded-full animate-pulse"
                 style={{
                   left: `${50 + 45 * Math.cos((i * 60 + progress * 3) * Math.PI / 180)}%`,
                   top: `${50 + 45 * Math.sin((i * 60 + progress * 3) * Math.PI / 180)}%`,
@@ -254,9 +254,9 @@ function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying'
           </div>
           
           <div className="space-y-3">
-            <p className="text-white font-semibold text-lg">Analyse des identifiants</p>
-            <p className="text-slate-400 text-sm">Chiffrement en cours...</p>
-            <div className="w-52 h-2 mx-auto bg-slate-800 rounded-full overflow-hidden">
+            <p className="text-foreground font-semibold text-lg">Analyse des identifiants</p>
+            <p className="text-muted-foreground text-sm">Chiffrement en cours...</p>
+            <div className="w-52 h-2 mx-auto bg-muted rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-indigo-500 via-cyan-500 to-indigo-500 transition-all duration-75"
                 style={{ 
@@ -301,23 +301,23 @@ function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying'
             ))}
             
             {/* Center unlock icon */}
-            <div className="absolute inset-9 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+            <div className="absolute inset-9 rounded-full bg-gradient-to-br from-muted to-muted/80 flex items-center justify-center">
               <Unlock className={`w-8 h-8 transition-all duration-500 ${
-                rings.every(r => r) ? 'text-emerald-400 scale-110' : 'text-indigo-400'
+                rings.every(r => r) ? 'text-emerald-500 dark:text-emerald-400 scale-110' : 'text-indigo-500 dark:text-indigo-400'
               }`} />
             </div>
           </div>
           
           <div className="space-y-2">
-            <p className="text-white font-semibold text-lg">Déverrouillage sécurisé</p>
+            <p className="text-foreground font-semibold text-lg">Déverrouillage sécurisé</p>
             <div className="flex justify-center gap-2">
               {['Protocole', 'Certificat', 'Session'].map((label, i) => (
                 <span 
                   key={label}
                   className={`text-xs px-2 py-1 rounded-full transition-all duration-300 ${
                     rings[i] 
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                      : 'bg-slate-800 text-slate-500 border border-slate-700'
+                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                      : 'bg-muted text-muted-foreground border border-border'
                   }`}
                 >
                   {rings[i] ? '✓ ' : ''}{label}
@@ -338,12 +338,12 @@ function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying'
             {/* Shield check icon */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative">
-                <ShieldCheck className="w-16 h-16 text-emerald-400" />
+                <ShieldCheck className="w-16 h-16 text-emerald-500 dark:text-emerald-400" />
                 {/* Sparkle effects */}
                 {[...Array(4)].map((_, i) => (
                   <div
                     key={i}
-                    className="absolute w-2 h-2 bg-emerald-400 rounded-full animate-ping"
+                    className="absolute w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full animate-ping"
                     style={{
                       top: `${-10 + Math.random() * 60}px`,
                       left: `${-10 + Math.random() * 80}px`,
@@ -357,8 +357,8 @@ function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying'
           </div>
           
           <div className="space-y-2">
-            <p className="text-emerald-400 font-bold text-xl">Accès autorisé</p>
-            <p className="text-slate-400 text-sm">Redirection vers votre espace...</p>
+            <p className="text-emerald-600 dark:text-emerald-400 font-bold text-xl">Accès autorisé</p>
+            <p className="text-muted-foreground text-sm">Redirection vers votre espace...</p>
           </div>
         </div>
       )}
