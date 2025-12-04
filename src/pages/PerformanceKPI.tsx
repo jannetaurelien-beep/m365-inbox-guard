@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw, X, Settings, Download, Filter as FilterIcon, Grid3x3, List, Building2, Users as UsersIcon, Globe, Plus, FileDown } from 'lucide-react';
+import { RefreshCw, X, Settings, Download, Filter as FilterIcon, Grid3x3, List, Building2, Users as UsersIcon, Globe, Plus, FileDown, Palette, UserPlus } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KPIFilters } from '@/components/kpi/KPIFilters';
@@ -19,15 +19,19 @@ import { GroupManagement } from '@/components/kpi/GroupManagement';
 import { GroupsView } from '@/components/kpi/GroupsView';
 import { GroupsComparison } from '@/components/kpi/GroupsComparison';
 import { GroupPerformanceView } from '@/components/kpi/GroupPerformanceView';
+import { GroupCustomization, getGroupColor, getGroupIcon } from '@/components/kpi/GroupCustomization';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { fetchTenantOverview, fetchUsersList, fetchUserDetail } from '@/lib/api/kpi-api';
 import { exportUsersToCSV, exportGroupsToCSV, exportGroupMembersToCSV } from '@/lib/export-utils';
 import { TenantOverviewResponse, UsersListResponse, UserDetailResponse, AccountFilterType, FocusFilterType, GroupByType, UserGroup, AgencyMetrics, DomainMetrics, GroupPerformance, MailUserMetricsSub } from '@/lib/types/kpi';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function PerformanceKPI() {
   const { toast } = useToast();
@@ -56,6 +60,9 @@ export default function PerformanceKPI() {
   const [groupFormName, setGroupFormName] = useState('');
   const [groupFormDescription, setGroupFormDescription] = useState('');
   const [groupFormUserIds, setGroupFormUserIds] = useState<string[]>([]);
+  const [groupFormIcon, setGroupFormIcon] = useState('users');
+  const [groupFormColor, setGroupFormColor] = useState('blue');
+  const [groupDialogTab, setGroupDialogTab] = useState<'customize' | 'members'>('customize');
 
   // Groupes d'utilisateurs
   const [userGroups, setUserGroups] = useState<UserGroup[]>([
@@ -505,6 +512,9 @@ export default function PerformanceKPI() {
     setGroupFormName('');
     setGroupFormDescription('');
     setGroupFormUserIds([]);
+    setGroupFormIcon('users');
+    setGroupFormColor('blue');
+    setGroupDialogTab('customize');
     setIsCreateGroupOpen(true);
   };
 
@@ -513,6 +523,9 @@ export default function PerformanceKPI() {
     setGroupFormName(group.name);
     setGroupFormDescription(group.description || '');
     setGroupFormUserIds([...group.userIds]);
+    setGroupFormIcon(group.icon || 'users');
+    setGroupFormColor(group.color || 'blue');
+    setGroupDialogTab('customize');
     setIsEditGroupOpen(true);
   };
 
@@ -521,13 +534,21 @@ export default function PerformanceKPI() {
       if (editingGroup) {
         setUserGroups(userGroups.map(g =>
           g.id === editingGroup.id
-            ? { ...g, name: groupFormName, description: groupFormDescription, userIds: groupFormUserIds, updatedAt: new Date().toISOString() }
+            ? { 
+                ...g, 
+                name: groupFormName, 
+                description: groupFormDescription, 
+                userIds: groupFormUserIds, 
+                icon: groupFormIcon,
+                color: groupFormColor,
+                updatedAt: new Date().toISOString() 
+              }
             : g
         ));
         toast({ title: 'Groupe modifié', description: `Le groupe "${groupFormName}" a été modifié avec succès.` });
         setIsEditGroupOpen(false);
       } else {
-        handleCreateGroup(groupFormName, groupFormDescription, groupFormUserIds);
+        handleCreateGroup(groupFormName, groupFormDescription, groupFormUserIds, groupFormIcon, groupFormColor);
         setIsCreateGroupOpen(false);
       }
       setEditingGroup(null);
@@ -955,57 +976,147 @@ export default function PerformanceKPI() {
 
       {/* Dialog création groupe */}
       <Dialog open={isCreateGroupOpen} onOpenChange={setIsCreateGroupOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Créer un groupe</DialogTitle>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
+          <DialogHeader className="pb-4 border-b">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg transition-all",
+                getGroupColor(groupFormColor).gradient
+              )}>
+                {(() => { const Icon = getGroupIcon(groupFormIcon); return <Icon className="h-6 w-6 text-white" />; })()}
+              </div>
+              <div>
+                <DialogTitle className="text-xl">Créer un nouveau groupe</DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">Personnalisez et ajoutez des membres à votre groupe</p>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="groupName">Nom du groupe</Label>
-              <Input
-                id="groupName"
-                value={groupFormName}
-                onChange={(e) => setGroupFormName(e.target.value)}
-                placeholder="Ex: Commerciaux TLS"
-              />
-            </div>
-            <div>
-              <Label htmlFor="groupDescription">Description (optionnelle)</Label>
-              <Input
-                id="groupDescription"
-                value={groupFormDescription}
-                onChange={(e) => setGroupFormDescription(e.target.value)}
-                placeholder="Ex: Équipe commerciale TLS"
-              />
-            </div>
-            <div>
-              <Label>Sélectionner les membres</Label>
-              <ScrollArea className="h-64 border rounded-md p-4 mt-2">
+          
+          <Tabs value={groupDialogTab} onValueChange={(v) => setGroupDialogTab(v as 'customize' | 'members')} className="mt-4">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="customize" className="gap-2">
+                <Palette className="h-4 w-4" />
+                Personnaliser
+              </TabsTrigger>
+              <TabsTrigger value="members" className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                Membres ({groupFormUserIds.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="customize" className="space-y-6 tab-content-enter">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  {usersData?.users.map((user) => (
-                    <div key={user.userId} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`user-${user.userId}`}
-                        checked={groupFormUserIds.includes(user.userId)}
-                        onCheckedChange={() => toggleUserInGroup(user.userId)}
-                      />
-                      <label
-                        htmlFor={`user-${user.userId}`}
-                        className="text-sm cursor-pointer flex-1"
-                      >
-                        {user.displayName} ({user.upn})
-                      </label>
-                    </div>
-                  ))}
+                  <Label htmlFor="groupName" className="text-sm font-medium">Nom du groupe *</Label>
+                  <Input
+                    id="groupName"
+                    value={groupFormName}
+                    onChange={(e) => setGroupFormName(e.target.value)}
+                    placeholder="Ex: Commerciaux TLS"
+                    className="h-11"
+                  />
                 </div>
-              </ScrollArea>
+                <div className="space-y-2">
+                  <Label htmlFor="groupDescription" className="text-sm font-medium">Description</Label>
+                  <Input
+                    id="groupDescription"
+                    value={groupFormDescription}
+                    onChange={(e) => setGroupFormDescription(e.target.value)}
+                    placeholder="Description optionnelle..."
+                    className="h-11"
+                  />
+                </div>
+              </div>
+              
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10">
+                <Label className="text-sm font-medium mb-4 block flex items-center gap-2">
+                  <Palette className="h-4 w-4 text-primary" />
+                  Apparence du groupe
+                </Label>
+                <GroupCustomization
+                  icon={groupFormIcon}
+                  color={groupFormColor}
+                  onIconChange={setGroupFormIcon}
+                  onColorChange={setGroupFormColor}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="members" className="tab-content-enter">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Sélectionner les membres</Label>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary">
+                    {groupFormUserIds.length} sélectionné{groupFormUserIds.length > 1 ? 's' : ''}
+                  </Badge>
+                </div>
+                <ScrollArea className="h-[350px] border rounded-xl p-4 bg-gradient-to-b from-background to-muted/20">
+                  <div className="space-y-2">
+                    {usersData?.users.map((user) => {
+                      const isSelected = groupFormUserIds.includes(user.userId);
+                      const sla = user.metrics.external.first_reply_within_sla || 0;
+                      return (
+                        <div 
+                          key={user.userId} 
+                          className={cn(
+                            "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
+                            isSelected 
+                              ? "bg-primary/5 border-primary/30" 
+                              : "hover:bg-muted/50 border-transparent hover:border-muted"
+                          )}
+                          onClick={() => toggleUserInGroup(user.userId)}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            className="pointer-events-none"
+                          />
+                          <Avatar className="h-10 w-10">
+                            <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white text-sm">
+                              {user.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{user.displayName}</p>
+                            <p className="text-xs text-muted-foreground truncate">{user.upn}</p>
+                          </div>
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "text-xs",
+                              sla >= 80 ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" :
+                              sla >= 60 ? "bg-amber-500/10 text-amber-600 border-amber-500/30" :
+                              "bg-red-500/10 text-red-600 border-red-500/30"
+                            )}
+                          >
+                            SLA {Math.round(sla)}%
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              </div>
+            </TabsContent>
+          </Tabs>
+          
+          <div className="flex items-center justify-between pt-4 border-t mt-4">
+            <div className="flex items-center gap-2">
+              {groupDialogTab === 'customize' && groupFormName.trim() && (
+                <Button variant="outline" onClick={() => setGroupDialogTab('members')}>
+                  Suivant: Membres →
+                </Button>
+              )}
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex gap-2">
               <Button variant="outline" onClick={() => setIsCreateGroupOpen(false)}>
                 Annuler
               </Button>
-              <Button onClick={handleSaveGroup} disabled={!groupFormName.trim()}>
-                Créer
+              <Button 
+                onClick={handleSaveGroup} 
+                disabled={!groupFormName.trim()}
+                className={cn("bg-gradient-to-r shadow-lg", getGroupColor(groupFormColor).gradient)}
+              >
+                Créer le groupe
               </Button>
             </div>
           </div>
@@ -1014,56 +1125,146 @@ export default function PerformanceKPI() {
 
       {/* Dialog édition groupe */}
       <Dialog open={isEditGroupOpen} onOpenChange={setIsEditGroupOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Modifier le groupe</DialogTitle>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
+          <DialogHeader className="pb-4 border-b">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg transition-all",
+                getGroupColor(groupFormColor).gradient
+              )}>
+                {(() => { const Icon = getGroupIcon(groupFormIcon); return <Icon className="h-6 w-6 text-white" />; })()}
+              </div>
+              <div>
+                <DialogTitle className="text-xl">Modifier le groupe</DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">Personnalisez et gérez les membres du groupe</p>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="editGroupName">Nom du groupe</Label>
-              <Input
-                id="editGroupName"
-                value={groupFormName}
-                onChange={(e) => setGroupFormName(e.target.value)}
-                placeholder="Ex: Commerciaux TLS"
-              />
-            </div>
-            <div>
-              <Label htmlFor="editGroupDescription">Description (optionnelle)</Label>
-              <Input
-                id="editGroupDescription"
-                value={groupFormDescription}
-                onChange={(e) => setGroupFormDescription(e.target.value)}
-                placeholder="Ex: Équipe commerciale TLS"
-              />
-            </div>
-            <div>
-              <Label>Sélectionner les membres</Label>
-              <ScrollArea className="h-64 border rounded-md p-4 mt-2">
+          
+          <Tabs value={groupDialogTab} onValueChange={(v) => setGroupDialogTab(v as 'customize' | 'members')} className="mt-4">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="customize" className="gap-2">
+                <Palette className="h-4 w-4" />
+                Personnaliser
+              </TabsTrigger>
+              <TabsTrigger value="members" className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                Membres ({groupFormUserIds.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="customize" className="space-y-6 tab-content-enter">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  {usersData?.users.map((user) => (
-                    <div key={user.userId} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`edit-user-${user.userId}`}
-                        checked={groupFormUserIds.includes(user.userId)}
-                        onCheckedChange={() => toggleUserInGroup(user.userId)}
-                      />
-                      <label
-                        htmlFor={`edit-user-${user.userId}`}
-                        className="text-sm cursor-pointer flex-1"
-                      >
-                        {user.displayName} ({user.upn})
-                      </label>
-                    </div>
-                  ))}
+                  <Label htmlFor="editGroupName" className="text-sm font-medium">Nom du groupe *</Label>
+                  <Input
+                    id="editGroupName"
+                    value={groupFormName}
+                    onChange={(e) => setGroupFormName(e.target.value)}
+                    placeholder="Ex: Commerciaux TLS"
+                    className="h-11"
+                  />
                 </div>
-              </ScrollArea>
+                <div className="space-y-2">
+                  <Label htmlFor="editGroupDescription" className="text-sm font-medium">Description</Label>
+                  <Input
+                    id="editGroupDescription"
+                    value={groupFormDescription}
+                    onChange={(e) => setGroupFormDescription(e.target.value)}
+                    placeholder="Description optionnelle..."
+                    className="h-11"
+                  />
+                </div>
+              </div>
+              
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10">
+                <Label className="text-sm font-medium mb-4 block flex items-center gap-2">
+                  <Palette className="h-4 w-4 text-primary" />
+                  Apparence du groupe
+                </Label>
+                <GroupCustomization
+                  icon={groupFormIcon}
+                  color={groupFormColor}
+                  onIconChange={setGroupFormIcon}
+                  onColorChange={setGroupFormColor}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="members" className="tab-content-enter">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Sélectionner les membres</Label>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary">
+                    {groupFormUserIds.length} sélectionné{groupFormUserIds.length > 1 ? 's' : ''}
+                  </Badge>
+                </div>
+                <ScrollArea className="h-[350px] border rounded-xl p-4 bg-gradient-to-b from-background to-muted/20">
+                  <div className="space-y-2">
+                    {usersData?.users.map((user) => {
+                      const isSelected = groupFormUserIds.includes(user.userId);
+                      const sla = user.metrics.external.first_reply_within_sla || 0;
+                      return (
+                        <div 
+                          key={user.userId} 
+                          className={cn(
+                            "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
+                            isSelected 
+                              ? "bg-primary/5 border-primary/30" 
+                              : "hover:bg-muted/50 border-transparent hover:border-muted"
+                          )}
+                          onClick={() => toggleUserInGroup(user.userId)}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            className="pointer-events-none"
+                          />
+                          <Avatar className="h-10 w-10">
+                            <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white text-sm">
+                              {user.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{user.displayName}</p>
+                            <p className="text-xs text-muted-foreground truncate">{user.upn}</p>
+                          </div>
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "text-xs",
+                              sla >= 80 ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" :
+                              sla >= 60 ? "bg-amber-500/10 text-amber-600 border-amber-500/30" :
+                              "bg-red-500/10 text-red-600 border-red-500/30"
+                            )}
+                          >
+                            SLA {Math.round(sla)}%
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              </div>
+            </TabsContent>
+          </Tabs>
+          
+          <div className="flex items-center justify-between pt-4 border-t mt-4">
+            <div className="flex items-center gap-2">
+              {groupDialogTab === 'customize' && groupFormName.trim() && (
+                <Button variant="outline" onClick={() => setGroupDialogTab('members')}>
+                  Suivant: Membres →
+                </Button>
+              )}
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex gap-2">
               <Button variant="outline" onClick={() => setIsEditGroupOpen(false)}>
                 Annuler
               </Button>
-              <Button onClick={handleSaveGroup} disabled={!groupFormName.trim()}>
+              <Button 
+                onClick={handleSaveGroup} 
+                disabled={!groupFormName.trim()}
+                className={cn("bg-gradient-to-r shadow-lg", getGroupColor(groupFormColor).gradient)}
+              >
                 Enregistrer
               </Button>
             </div>
