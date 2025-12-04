@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Shield, Lock, Mail, Fingerprint, CheckCircle2, Scan, KeyRound, Eye, EyeOff } from "lucide-react";
+import { Shield, Lock, Mail, CheckCircle2, KeyRound, Eye, EyeOff, Unlock, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
@@ -162,25 +162,6 @@ const Login = () => {
                 <KeyRound className="h-5 w-5 mr-2" />
                 Connexion sécurisée
               </Button>
-
-              {/* Biometric option */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-700/50"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-slate-900 px-3 text-slate-500">ou</span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12 border-slate-700/50 bg-slate-800/30 text-slate-300 hover:bg-slate-800/50 hover:text-white hover:border-indigo-500/50 transition-all group"
-              >
-                <Fingerprint className="h-5 w-5 mr-2 group-hover:text-indigo-400 transition-colors" />
-                Authentification biométrique
-              </Button>
             </form>
 
             {/* Security badge */}
@@ -204,38 +185,29 @@ const Login = () => {
   );
 };
 
-// Security Animation Component
+// Security Animation Component - Holographic Shield Unlock
 function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying' | 'success' }) {
-  const [scanProgress, setScanProgress] = useState(0);
-  const [codeLines, setCodeLines] = useState<string[]>([]);
+  const [progress, setProgress] = useState(0);
+  const [rings, setRings] = useState([false, false, false]);
 
   useEffect(() => {
     if (phase === 'scanning') {
       const interval = setInterval(() => {
-        setScanProgress(prev => Math.min(prev + 2, 100));
-      }, 20);
+        setProgress(prev => Math.min(prev + 1.5, 100));
+      }, 15);
       return () => clearInterval(interval);
     }
   }, [phase]);
 
   useEffect(() => {
     if (phase === 'verifying') {
-      const codes = [
-        'INIT_AUTH_PROTOCOL...',
-        'VERIFY_CREDENTIALS...',
-        'CHECK_2FA_STATUS...',
-        'ENCRYPT_SESSION...',
-        'GENERATE_TOKEN...',
-        'AUTH_SUCCESS ✓'
+      // Unlock rings one by one
+      const timers = [
+        setTimeout(() => setRings(prev => [true, prev[1], prev[2]]), 300),
+        setTimeout(() => setRings(prev => [prev[0], true, prev[2]]), 700),
+        setTimeout(() => setRings(prev => [prev[0], prev[1], true]), 1100),
       ];
-      let i = 0;
-      const interval = setInterval(() => {
-        if (i < codes.length) {
-          setCodeLines(prev => [...prev, codes[i]]);
-          i++;
-        }
-      }, 250);
-      return () => clearInterval(interval);
+      return () => timers.forEach(clearTimeout);
     }
   }, [phase]);
 
@@ -243,32 +215,54 @@ function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying'
     <div className="text-center p-8">
       {phase === 'scanning' && (
         <div className="space-y-6">
-          {/* Fingerprint scanner */}
-          <div className="relative w-32 h-32 mx-auto">
-            <div className="absolute inset-0 rounded-full border-4 border-indigo-500/30"></div>
-            <div 
-              className="absolute inset-0 rounded-full border-4 border-transparent border-t-indigo-500 animate-spin"
-              style={{ animationDuration: '1s' }}
-            ></div>
-            <div className="absolute inset-4 rounded-full bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 flex items-center justify-center">
-              <Fingerprint className="w-16 h-16 text-indigo-400 animate-pulse" />
-            </div>
-            {/* Scan line */}
-            <div 
-              className="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
-              style={{ 
-                top: `${16 + (scanProgress / 100) * 68}%`,
-                boxShadow: '0 0 20px rgba(34, 211, 238, 0.8)'
-              }}
-            ></div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-white font-semibold">Analyse en cours...</p>
-            <p className="text-slate-400 text-sm">Vérification de l'identité</p>
-            <div className="w-48 h-1.5 mx-auto bg-slate-800 rounded-full overflow-hidden">
+          {/* Shield with scanning effect */}
+          <div className="relative w-36 h-36 mx-auto">
+            {/* Outer rotating ring */}
+            <div className="absolute inset-0 rounded-full border-2 border-dashed border-indigo-500/40 animate-spin" style={{ animationDuration: '8s' }}></div>
+            
+            {/* Middle pulsing ring */}
+            <div className="absolute inset-3 rounded-full border border-cyan-500/50 animate-pulse"></div>
+            
+            {/* Inner shield container */}
+            <div className="absolute inset-6 rounded-full bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-indigo-500/30 flex items-center justify-center overflow-hidden">
+              {/* Scanning beam */}
               <div 
-                className="h-full bg-gradient-to-r from-indigo-500 to-cyan-500 transition-all duration-100"
-                style={{ width: `${scanProgress}%` }}
+                className="absolute w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
+                style={{ 
+                  top: `${progress}%`,
+                  boxShadow: '0 0 30px rgba(34, 211, 238, 0.8), 0 0 60px rgba(34, 211, 238, 0.4)'
+                }}
+              ></div>
+              
+              {/* Lock icon */}
+              <Lock className="w-10 h-10 text-indigo-400" />
+            </div>
+            
+            {/* Floating particles */}
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"
+                style={{
+                  left: `${50 + 45 * Math.cos((i * 60 + progress * 3) * Math.PI / 180)}%`,
+                  top: `${50 + 45 * Math.sin((i * 60 + progress * 3) * Math.PI / 180)}%`,
+                  transform: 'translate(-50%, -50%)',
+                  boxShadow: '0 0 10px rgba(34, 211, 238, 0.8)'
+                }}
+              ></div>
+            ))}
+          </div>
+          
+          <div className="space-y-3">
+            <p className="text-white font-semibold text-lg">Analyse des identifiants</p>
+            <p className="text-slate-400 text-sm">Chiffrement en cours...</p>
+            <div className="w-52 h-2 mx-auto bg-slate-800 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-indigo-500 via-cyan-500 to-indigo-500 transition-all duration-75"
+                style={{ 
+                  width: `${progress}%`,
+                  boxShadow: '0 0 20px rgba(99, 102, 241, 0.5)'
+                }}
               ></div>
             </div>
           </div>
@@ -277,41 +271,93 @@ function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying'
 
       {phase === 'verifying' && (
         <div className="space-y-6">
-          <div className="relative w-32 h-32 mx-auto">
-            <div className="absolute inset-0 rounded-2xl bg-slate-800/80 border border-slate-700/50 overflow-hidden">
-              <Scan className="absolute top-2 right-2 w-4 h-4 text-cyan-400 animate-pulse" />
-              <div className="p-3 font-mono text-xs text-left space-y-1">
-                {codeLines.map((line, i) => (
-                  <div 
-                    key={i} 
-                    className={`${line.includes('✓') ? 'text-emerald-400' : 'text-cyan-400'} animate-fade-in`}
-                    style={{ animationDelay: `${i * 0.1}s` }}
-                  >
-                    {line}
-                  </div>
-                ))}
-                <span className="animate-pulse">_</span>
+          {/* Unlocking rings animation */}
+          <div className="relative w-36 h-36 mx-auto">
+            {/* Three concentric rings that unlock */}
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className={`absolute rounded-full border-2 transition-all duration-500 ${
+                  rings[i] 
+                    ? 'border-emerald-500 scale-110' 
+                    : 'border-indigo-500/50'
+                }`}
+                style={{
+                  inset: `${i * 12}px`,
+                  transform: rings[i] ? `rotate(${120 * i}deg) scale(1.05)` : `rotate(${-60 * i}deg)`,
+                  boxShadow: rings[i] ? '0 0 20px rgba(16, 185, 129, 0.5)' : 'none'
+                }}
+              >
+                {/* Lock indicator on each ring */}
+                <div 
+                  className={`absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full transition-all duration-300 ${
+                    rings[i] ? 'bg-emerald-500' : 'bg-indigo-500/50'
+                  }`}
+                  style={{
+                    boxShadow: rings[i] ? '0 0 15px rgba(16, 185, 129, 0.8)' : 'none'
+                  }}
+                ></div>
               </div>
+            ))}
+            
+            {/* Center unlock icon */}
+            <div className="absolute inset-9 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+              <Unlock className={`w-8 h-8 transition-all duration-500 ${
+                rings.every(r => r) ? 'text-emerald-400 scale-110' : 'text-indigo-400'
+              }`} />
             </div>
           </div>
+          
           <div className="space-y-2">
-            <p className="text-white font-semibold">Vérification sécurisée</p>
-            <p className="text-slate-400 text-sm">Authentification multi-facteurs</p>
+            <p className="text-white font-semibold text-lg">Déverrouillage sécurisé</p>
+            <div className="flex justify-center gap-2">
+              {['Protocole', 'Certificat', 'Session'].map((label, i) => (
+                <span 
+                  key={label}
+                  className={`text-xs px-2 py-1 rounded-full transition-all duration-300 ${
+                    rings[i] 
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                      : 'bg-slate-800 text-slate-500 border border-slate-700'
+                  }`}
+                >
+                  {rings[i] ? '✓ ' : ''}{label}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {phase === 'success' && (
         <div className="space-y-6 animate-scale-in">
-          <div className="relative w-32 h-32 mx-auto">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/20 to-cyan-500/20"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-emerald-500 animate-pulse"></div>
+          <div className="relative w-36 h-36 mx-auto">
+            {/* Success glow effect */}
+            <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping"></div>
+            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-emerald-500/30 to-cyan-500/30"></div>
+            
+            {/* Shield check icon */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <CheckCircle2 className="w-16 h-16 text-emerald-400" />
+              <div className="relative">
+                <ShieldCheck className="w-16 h-16 text-emerald-400" />
+                {/* Sparkle effects */}
+                {[...Array(4)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute w-2 h-2 bg-emerald-400 rounded-full animate-ping"
+                    style={{
+                      top: `${-10 + Math.random() * 60}px`,
+                      left: `${-10 + Math.random() * 80}px`,
+                      animationDelay: `${i * 0.15}s`,
+                      animationDuration: '1s'
+                    }}
+                  ></div>
+                ))}
+              </div>
             </div>
           </div>
+          
           <div className="space-y-2">
-            <p className="text-emerald-400 font-bold text-lg">Authentifié</p>
+            <p className="text-emerald-400 font-bold text-xl">Accès autorisé</p>
             <p className="text-slate-400 text-sm">Redirection vers votre espace...</p>
           </div>
         </div>
