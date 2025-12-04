@@ -63,6 +63,8 @@ export default function PerformanceKPI() {
       id: 'group-1',
       name: 'Commerciaux TLS',
       description: 'Équipe commerciale TLS',
+      icon: 'briefcase',
+      color: 'blue',
       userIds: ['user-1', 'user-2', 'user-8'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -71,6 +73,8 @@ export default function PerformanceKPI() {
       id: 'group-2',
       name: 'Support Technique',
       description: 'Équipe support technique',
+      icon: 'headphones',
+      color: 'violet',
       userIds: ['user-3', 'user-5', 'user-9'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -79,6 +83,8 @@ export default function PerformanceKPI() {
       id: 'group-3',
       name: 'Direction Paris',
       description: 'Équipe de direction Paris',
+      icon: 'crown',
+      color: 'amber',
       userIds: ['user-4', 'user-6', 'user-10'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -87,6 +93,8 @@ export default function PerformanceKPI() {
       id: 'group-4',
       name: 'Service Client',
       description: 'Équipe service client',
+      icon: 'heart',
+      color: 'emerald',
       userIds: ['user-7', 'user-11', 'user-12', 'user-13'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -95,6 +103,8 @@ export default function PerformanceKPI() {
       id: 'group-5',
       name: 'Marketing',
       description: 'Équipe marketing et communication',
+      icon: 'rocket',
+      color: 'rose',
       userIds: ['user-14', 'user-15'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -103,6 +113,8 @@ export default function PerformanceKPI() {
       id: 'group-6',
       name: 'Comptabilité',
       description: 'Service comptabilité et finance',
+      icon: 'target',
+      color: 'indigo',
       userIds: ['user-16', 'user-17', 'user-18'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -455,11 +467,13 @@ export default function PerformanceKPI() {
   }, [usersData, search, departmentFilter, agencyFilter, jobTitleFilter, groupFilter, focusFilter]);
 
   // Handlers pour les groupes
-  const handleCreateGroup = (name: string, description: string, userIds: string[]) => {
+  const handleCreateGroup = (name: string, description: string, userIds: string[], icon?: string, color?: string) => {
     const newGroup: UserGroup = {
       id: `group-${Date.now()}`,
       name,
       description,
+      icon: icon || 'users',
+      color: color || 'blue',
       userIds,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -468,11 +482,17 @@ export default function PerformanceKPI() {
     toast({ title: 'Groupe créé', description: `Le groupe "${name}" a été créé avec succès.` });
   };
 
-  const handleUpdateGroup = (groupId: string, userIds: string[]) => {
+  const handleUpdateGroup = (groupId: string, userIds: string[], icon?: string, color?: string) => {
     setUserGroups(userGroups.map(g => 
-      g.id === groupId ? { ...g, userIds, updatedAt: new Date().toISOString() } : g
+      g.id === groupId ? { 
+        ...g, 
+        userIds, 
+        icon: icon || g.icon,
+        color: color || g.color,
+        updatedAt: new Date().toISOString() 
+      } : g
     ));
-    toast({ title: 'Groupe mis à jour', description: 'Les membres du groupe ont été mis à jour.' });
+    toast({ title: 'Groupe mis à jour', description: 'Le groupe a été mis à jour.' });
   };
 
   const handleDeleteGroup = (groupId: string) => {
@@ -689,7 +709,7 @@ export default function PerformanceKPI() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6 mt-6">
+          <TabsContent value="overview" className="space-y-6 mt-6 tab-content-enter">
             {/* Vue d'ensemble */}
             {loadingTenant && (
               <div className="grid gap-6">
@@ -786,7 +806,7 @@ export default function PerformanceKPI() {
             </div>
           </TabsContent>
 
-          <TabsContent value="domains" className="space-y-6 mt-6">
+          <TabsContent value="domains" className="space-y-6 mt-6 tab-content-enter">
             {loadingUsers ? (
               <div className="grid gap-4 md:grid-cols-2">
                 {[1, 2].map((i) => (
@@ -807,7 +827,7 @@ export default function PerformanceKPI() {
             )}
           </TabsContent>
 
-          <TabsContent value="agencies" className="space-y-6 mt-6">
+          <TabsContent value="agencies" className="space-y-6 mt-6 tab-content-enter">
             {loadingUsers ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {[1, 2, 3].map((i) => (
@@ -828,7 +848,7 @@ export default function PerformanceKPI() {
             )}
           </TabsContent>
 
-          <TabsContent value="groups" className="space-y-6 mt-6">
+          <TabsContent value="groups" className="space-y-6 mt-6 tab-content-enter">
             {usersData && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">

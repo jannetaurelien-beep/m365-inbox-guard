@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { UserGroup, MailUserSummary } from '@/lib/types/kpi';
-import { Users, ChevronDown, ChevronUp, Trash2, Edit, TrendingUp, FileDown, Mail, Send, Target, Inbox, Sparkles, BarChart3 } from 'lucide-react';
+import { Users, ChevronDown, Trash2, Edit, Mail, Send, Target, Inbox, Sparkles, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { exportGroupMembersToCSV } from '@/lib/export-utils';
 import { Progress } from '@/components/ui/progress';
+import { getGroupColor, getGroupIcon, groupColorPresets } from './GroupCustomization';
+import { FileDown } from 'lucide-react';
 
 interface GroupsViewProps {
   groups: UserGroup[];
@@ -17,15 +19,6 @@ interface GroupsViewProps {
   onDeleteGroup: (groupId: string) => void;
   onExportSuccess?: (message: string) => void;
 }
-
-const groupColors = [
-  { gradient: 'from-blue-500 to-cyan-500', bg: 'from-blue-500/10 to-cyan-500/10', border: 'border-blue-500/20', text: 'text-blue-600 dark:text-blue-400' },
-  { gradient: 'from-violet-500 to-purple-500', bg: 'from-violet-500/10 to-purple-500/10', border: 'border-violet-500/20', text: 'text-violet-600 dark:text-violet-400' },
-  { gradient: 'from-emerald-500 to-teal-500', bg: 'from-emerald-500/10 to-teal-500/10', border: 'border-emerald-500/20', text: 'text-emerald-600 dark:text-emerald-400' },
-  { gradient: 'from-amber-500 to-orange-500', bg: 'from-amber-500/10 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-600 dark:text-amber-400' },
-  { gradient: 'from-rose-500 to-pink-500', bg: 'from-rose-500/10 to-pink-500/10', border: 'border-rose-500/20', text: 'text-rose-600 dark:text-rose-400' },
-  { gradient: 'from-indigo-500 to-blue-500', bg: 'from-indigo-500/10 to-blue-500/10', border: 'border-indigo-500/20', text: 'text-indigo-600 dark:text-indigo-400' },
-];
 
 function getAvatarColor(name: string): string {
   const colors = [
@@ -99,31 +92,43 @@ export function GroupsView({ groups, users, onSelectGroup, onEditGroup, onDelete
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 stagger-fade-in">
       {groups.map((group, idx) => {
         const metrics = getGroupMetrics(group);
         const isExpanded = expandedGroups.has(group.id);
-        const color = groupColors[idx % groupColors.length];
+        const colorPreset = getGroupColor(group.color);
+        const GroupIcon = getGroupIcon(group.icon);
         const slaProgress = Math.round(metrics.avgSla);
+
+        // Get color classes based on group color
+        const colorClasses = {
+          gradient: colorPreset.gradient,
+          bg: `from-${colorPreset.value}-500/10 to-${colorPreset.value}-500/5`,
+          border: `border-${colorPreset.value}-500/20`,
+          text: `text-${colorPreset.value}-600 dark:text-${colorPreset.value}-400`,
+        };
 
         return (
           <Card 
             key={group.id} 
             className={cn(
               "overflow-hidden transition-all duration-300 border-2 hover:shadow-xl",
-              `bg-gradient-to-br ${color.bg} ${color.border}`
+              `bg-gradient-to-br ${colorClasses.bg} ${colorClasses.border}`
             )}
           >
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between gap-4">
                 {/* Info groupe */}
                 <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <div className={cn("w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center shrink-0 shadow-lg", color.gradient)}>
-                    <Users className="h-7 w-7 text-white" />
+                  <div className={cn(
+                    "w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center shrink-0 shadow-lg transition-transform hover:scale-105",
+                    colorPreset.gradient
+                  )}>
+                    <GroupIcon className="h-7 w-7 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <CardTitle className={cn("text-xl truncate", color.text)}>{group.name}</CardTitle>
+                      <CardTitle className={cn("text-xl truncate", colorClasses.text)}>{group.name}</CardTitle>
                       <Badge variant="secondary" className="gap-1.5 px-3 py-1 bg-background/60 border">
                         <Users className="h-3.5 w-3.5" />
                         <span className="font-semibold">{metrics.userCount}</span>
@@ -243,7 +248,7 @@ export function GroupsView({ groups, users, onSelectGroup, onEditGroup, onDelete
             </CardHeader>
 
             {isExpanded && (
-              <CardContent className="pt-0 border-t border-border/50">
+              <CardContent className="pt-0 border-t border-border/50 tab-slide-in">
                 {metrics.users.length === 0 ? (
                   <div className="text-center py-10 text-muted-foreground bg-background/30 rounded-xl mt-4">
                     <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
@@ -272,7 +277,7 @@ export function GroupsView({ groups, users, onSelectGroup, onEditGroup, onDelete
                         <Button
                           size="sm"
                           onClick={() => onSelectGroup(group.id)}
-                          className={cn("gap-2 bg-gradient-to-r shadow-lg", color.gradient)}
+                          className={cn("gap-2 bg-gradient-to-r shadow-lg", colorPreset.gradient)}
                         >
                           <BarChart3 className="h-4 w-4" />
                           Voir performances
