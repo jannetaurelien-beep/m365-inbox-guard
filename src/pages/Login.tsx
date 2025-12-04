@@ -185,85 +185,179 @@ const Login = () => {
   );
 };
 
-// Security Animation Component - Holographic Shield Unlock
+// Security Animation Component - DNA Helix & Hexagonal Authentication
 function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying' | 'success' }) {
   const [progress, setProgress] = useState(0);
-  const [rings, setRings] = useState([false, false, false]);
+  const [hexagons, setHexagons] = useState<boolean[]>(Array(7).fill(false));
+  const [codeChars, setCodeChars] = useState<string[]>([]);
+  const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
     if (phase === 'scanning') {
       const interval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 1.5, 100));
-      }, 15);
+        setProgress(prev => Math.min(prev + 1, 100));
+        setRotation(prev => prev + 2);
+      }, 20);
       return () => clearInterval(interval);
     }
   }, [phase]);
 
   useEffect(() => {
     if (phase === 'verifying') {
-      // Unlock rings one by one
-      const timers = [
-        setTimeout(() => setRings(prev => [true, prev[1], prev[2]]), 300),
-        setTimeout(() => setRings(prev => [prev[0], true, prev[2]]), 700),
-        setTimeout(() => setRings(prev => [prev[0], prev[1], true]), 1100),
-      ];
-      return () => timers.forEach(clearTimeout);
+      // Activate hexagons one by one
+      hexagons.forEach((_, i) => {
+        setTimeout(() => {
+          setHexagons(prev => {
+            const next = [...prev];
+            next[i] = true;
+            return next;
+          });
+        }, i * 180);
+      });
+
+      // Generate random code characters
+      const chars = 'ABCDEF0123456789';
+      const interval = setInterval(() => {
+        setCodeChars(prev => {
+          const newChar = chars[Math.floor(Math.random() * chars.length)];
+          return [...prev.slice(-12), newChar];
+        });
+      }, 80);
+      return () => clearInterval(interval);
     }
   }, [phase]);
 
   return (
-    <div className="text-center p-8">
+    <div className="text-center p-6">
       {phase === 'scanning' && (
         <div className="space-y-6">
-          {/* Shield with scanning effect */}
-          <div className="relative w-36 h-36 mx-auto">
-            {/* Outer rotating ring */}
-            <div className="absolute inset-0 rounded-full border-2 border-dashed border-indigo-500/40 animate-spin" style={{ animationDuration: '8s' }}></div>
+          {/* DNA Helix Scanner */}
+          <div className="relative w-44 h-44 mx-auto">
+            {/* Outer rotating hexagonal frame */}
+            <svg 
+              className="absolute inset-0 w-full h-full" 
+              viewBox="0 0 140 140"
+              style={{ transform: `rotate(${rotation * 0.5}deg)` }}
+            >
+              <polygon
+                points="70,10 120,35 120,95 70,120 20,95 20,35"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+                className="text-indigo-500/40"
+              />
+            </svg>
             
-            {/* Middle pulsing ring */}
-            <div className="absolute inset-3 rounded-full border border-cyan-500/50 animate-pulse"></div>
-            
-            {/* Inner shield container */}
-            <div className="absolute inset-6 rounded-full bg-gradient-to-br from-muted/80 to-muted border border-indigo-500/30 flex items-center justify-center overflow-hidden">
-              {/* Scanning beam */}
-              <div 
-                className="absolute w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
-                style={{ 
-                  top: `${progress}%`,
-                  boxShadow: '0 0 30px rgba(34, 211, 238, 0.8), 0 0 60px rgba(34, 211, 238, 0.4)'
-                }}
-              ></div>
-              
-              {/* Lock icon */}
-              <Lock className="w-10 h-10 text-indigo-500 dark:text-indigo-400" />
+            {/* Second rotating frame (opposite direction) */}
+            <svg 
+              className="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)]" 
+              viewBox="0 0 140 140"
+              style={{ transform: `rotate(${-rotation * 0.3}deg)` }}
+            >
+              <polygon
+                points="70,10 120,35 120,95 70,120 20,95 20,35"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeDasharray="8 4"
+                className="text-cyan-500/50"
+              />
+            </svg>
+
+            {/* DNA Helix strands */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative w-20 h-28">
+                {[...Array(8)].map((_, i) => {
+                  const yPos = (i / 7) * 100;
+                  const phase = (i + rotation * 0.03) * 0.9;
+                  const xOffset1 = Math.sin(phase) * 28;
+                  const xOffset2 = Math.sin(phase + Math.PI) * 28;
+                  const scale1 = 0.6 + Math.cos(phase) * 0.4;
+                  const scale2 = 0.6 + Math.cos(phase + Math.PI) * 0.4;
+                  
+                  return (
+                    <div key={i}>
+                      {/* Left strand node */}
+                      <div
+                        className="absolute rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 transition-all duration-100"
+                        style={{
+                          width: `${10 * scale1}px`,
+                          height: `${10 * scale1}px`,
+                          left: `calc(50% + ${xOffset1}px - ${5 * scale1}px)`,
+                          top: `${yPos}%`,
+                          boxShadow: `0 0 ${12 * scale1}px rgba(34, 211, 238, 0.8)`,
+                          zIndex: scale1 > 0.8 ? 10 : 5
+                        }}
+                      />
+                      {/* Right strand node */}
+                      <div
+                        className="absolute rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 transition-all duration-100"
+                        style={{
+                          width: `${10 * scale2}px`,
+                          height: `${10 * scale2}px`,
+                          left: `calc(50% + ${xOffset2}px - ${5 * scale2}px)`,
+                          top: `${yPos}%`,
+                          boxShadow: `0 0 ${12 * scale2}px rgba(139, 92, 246, 0.8)`,
+                          zIndex: scale2 > 0.8 ? 10 : 5
+                        }}
+                      />
+                      {/* Connection line */}
+                      {Math.abs(xOffset1 - xOffset2) > 5 && (
+                        <div
+                          className="absolute h-px bg-gradient-to-r from-cyan-400/60 via-white/40 to-violet-400/60"
+                          style={{
+                            left: `calc(50% + ${Math.min(xOffset1, xOffset2) + 5}px)`,
+                            width: `${Math.abs(xOffset1 - xOffset2) - 10}px`,
+                            top: `calc(${yPos}% + 4px)`,
+                            opacity: Math.min(scale1, scale2) + 0.2
+                          }}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Scanning pulse rings */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-32 h-32 rounded-full border border-cyan-500/20 animate-ping" style={{ animationDuration: '2s' }} />
             </div>
             
-            {/* Floating particles */}
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-1.5 h-1.5 bg-cyan-500 dark:bg-cyan-400 rounded-full animate-pulse"
-                style={{
-                  left: `${50 + 45 * Math.cos((i * 60 + progress * 3) * Math.PI / 180)}%`,
-                  top: `${50 + 45 * Math.sin((i * 60 + progress * 3) * Math.PI / 180)}%`,
-                  transform: 'translate(-50%, -50%)',
-                  boxShadow: '0 0 10px rgba(34, 211, 238, 0.8)'
-                }}
-              ></div>
-            ))}
+            {/* Orbiting particles */}
+            {[...Array(4)].map((_, i) => {
+              const angle = (rotation * 2 + i * 90) * Math.PI / 180;
+              return (
+                <div
+                  key={i}
+                  className="absolute w-2 h-2 rounded-full bg-cyan-400"
+                  style={{
+                    left: `calc(50% + ${Math.cos(angle) * 70}px - 4px)`,
+                    top: `calc(50% + ${Math.sin(angle) * 70}px - 4px)`,
+                    boxShadow: '0 0 10px rgba(34, 211, 238, 0.9), 0 0 20px rgba(34, 211, 238, 0.4)'
+                  }}
+                />
+              );
+            })}
           </div>
-          
+
           <div className="space-y-3">
-            <p className="text-foreground font-semibold text-lg">Analyse des identifiants</p>
-            <p className="text-muted-foreground text-sm">Chiffrement en cours...</p>
-            <div className="w-52 h-2 mx-auto bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-indigo-500 via-cyan-500 to-indigo-500 transition-all duration-75"
+            <p className="text-foreground font-semibold text-lg">Analyse biométrique</p>
+            <p className="text-muted-foreground text-sm font-mono tracking-wider">
+              SÉQUENÇAGE: {progress.toFixed(0)}%
+            </p>
+            <div className="w-56 h-2 mx-auto bg-muted rounded-full overflow-hidden relative">
+              <div
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-500 via-indigo-500 to-violet-500 rounded-full"
+                style={{ width: `${progress}%` }}
+              />
+              <div
+                className="absolute inset-y-0 w-12 bg-gradient-to-r from-transparent via-white/60 to-transparent"
                 style={{ 
-                  width: `${progress}%`,
-                  boxShadow: '0 0 20px rgba(99, 102, 241, 0.5)'
+                  left: `${Math.max(0, progress - 15)}%`,
+                  opacity: progress < 100 ? 1 : 0
                 }}
-              ></div>
+              />
             </div>
           </div>
         </div>
@@ -271,94 +365,176 @@ function SecurityAnimation({ phase }: { phase: 'idle' | 'scanning' | 'verifying'
 
       {phase === 'verifying' && (
         <div className="space-y-6">
-          {/* Unlocking rings animation */}
-          <div className="relative w-36 h-36 mx-auto">
-            {/* Three concentric rings that unlock */}
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className={`absolute rounded-full border-2 transition-all duration-500 ${
-                  rings[i] 
-                    ? 'border-emerald-500 scale-110' 
-                    : 'border-indigo-500/50'
-                }`}
-                style={{
-                  inset: `${i * 12}px`,
-                  transform: rings[i] ? `rotate(${120 * i}deg) scale(1.05)` : `rotate(${-60 * i}deg)`,
-                  boxShadow: rings[i] ? '0 0 20px rgba(16, 185, 129, 0.5)' : 'none'
-                }}
-              >
-                {/* Lock indicator on each ring */}
-                <div 
-                  className={`absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full transition-all duration-300 ${
-                    rings[i] ? 'bg-emerald-500' : 'bg-indigo-500/50'
+          {/* Hexagonal verification grid */}
+          <div className="relative w-44 h-44 mx-auto">
+            {/* Outer hexagons */}
+            {[0, 60, 120, 180, 240, 300].map((angle, i) => {
+              const x = 50 + Math.cos((angle - 90) * Math.PI / 180) * 38;
+              const y = 50 + Math.sin((angle - 90) * Math.PI / 180) * 38;
+              return (
+                <div
+                  key={i}
+                  className={`absolute w-10 h-10 transition-all duration-500 ${
+                    hexagons[i] ? 'scale-110' : 'scale-100'
                   }`}
-                  style={{
-                    boxShadow: rings[i] ? '0 0 15px rgba(16, 185, 129, 0.8)' : 'none'
-                  }}
-                ></div>
-              </div>
-            ))}
-            
-            {/* Center unlock icon */}
-            <div className="absolute inset-9 rounded-full bg-gradient-to-br from-muted to-muted/80 flex items-center justify-center">
-              <Unlock className={`w-8 h-8 transition-all duration-500 ${
-                rings.every(r => r) ? 'text-emerald-500 dark:text-emerald-400 scale-110' : 'text-indigo-500 dark:text-indigo-400'
-              }`} />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <p className="text-foreground font-semibold text-lg">Déverrouillage sécurisé</p>
-            <div className="flex justify-center gap-2">
-              {['Protocole', 'Certificat', 'Session'].map((label, i) => (
-                <span 
-                  key={label}
-                  className={`text-xs px-2 py-1 rounded-full transition-all duration-300 ${
-                    rings[i] 
-                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
-                      : 'bg-muted text-muted-foreground border border-border'
-                  }`}
+                  style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
                 >
-                  {rings[i] ? '✓ ' : ''}{label}
+                  <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <polygon
+                      points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5"
+                      fill={hexagons[i] ? 'rgba(16, 185, 129, 0.25)' : 'rgba(99, 102, 241, 0.1)'}
+                      stroke={hexagons[i] ? '#10b981' : '#6366f1'}
+                      strokeWidth="3"
+                      className="transition-all duration-500"
+                      style={{
+                        filter: hexagons[i] ? 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.8))' : 'none'
+                      }}
+                    />
+                  </svg>
+                  {hexagons[i] && (
+                    <div className="absolute inset-0 flex items-center justify-center text-emerald-400 font-bold text-sm animate-scale-in">
+                      ✓
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Center hexagon with lock */}
+            <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 transition-all duration-700 ${hexagons[6] ? 'scale-110' : ''}`}>
+              <svg viewBox="0 0 100 100" className="w-full h-full">
+                <polygon
+                  points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5"
+                  fill={hexagons[6] ? 'rgba(16, 185, 129, 0.35)' : 'rgba(99, 102, 241, 0.2)'}
+                  stroke={hexagons[6] ? '#10b981' : '#818cf8'}
+                  strokeWidth="2.5"
+                  className="transition-all duration-500"
+                  style={{
+                    filter: hexagons[6] ? 'drop-shadow(0 0 18px rgba(16, 185, 129, 0.9))' : 'drop-shadow(0 0 12px rgba(99, 102, 241, 0.5))'
+                  }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                {hexagons[6] ? (
+                  <Unlock className="w-7 h-7 text-emerald-400 animate-scale-in" />
+                ) : (
+                  <Lock className="w-7 h-7 text-indigo-400" />
+                )}
+              </div>
+            </div>
+
+            {/* Connection lines from center to outer hexagons */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+              {[0, 60, 120, 180, 240, 300].map((angle, i) => {
+                const x1 = 50 + Math.cos((angle - 90) * Math.PI / 180) * 18;
+                const y1 = 50 + Math.sin((angle - 90) * Math.PI / 180) * 18;
+                const x2 = 50 + Math.cos((angle - 90) * Math.PI / 180) * 30;
+                const y2 = 50 + Math.sin((angle - 90) * Math.PI / 180) * 30;
+                return (
+                  <line
+                    key={`line-${i}`}
+                    x1={`${x1}%`} y1={`${y1}%`}
+                    x2={`${x2}%`} y2={`${y2}%`}
+                    stroke={hexagons[i] ? '#10b981' : '#6366f180'}
+                    strokeWidth="2"
+                    className="transition-all duration-500"
+                    style={{
+                      filter: hexagons[i] ? 'drop-shadow(0 0 6px rgba(16, 185, 129, 0.8))' : 'none'
+                    }}
+                  />
+                );
+              })}
+            </svg>
+
+            {/* Rotating outer ring */}
+            <div className="absolute inset-0 rounded-full border border-dashed border-emerald-500/40 animate-spin" style={{ animationDuration: '12s' }} />
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-foreground font-semibold text-lg">Authentification multi-facteurs</p>
+            {/* Code display */}
+            <div className="flex justify-center gap-1 font-mono text-sm">
+              {codeChars.slice(-8).map((char, i) => (
+                <span
+                  key={i}
+                  className="w-6 h-7 flex items-center justify-center bg-muted/80 rounded text-emerald-500 dark:text-emerald-400 border border-emerald-500/30 font-bold"
+                  style={{ opacity: 0.4 + (i / 8) * 0.6 }}
+                >
+                  {char}
                 </span>
               ))}
             </div>
+            <p className="text-muted-foreground text-sm">
+              {hexagons.filter(Boolean).length}/7 protocoles validés
+            </p>
           </div>
         </div>
       )}
 
       {phase === 'success' && (
         <div className="space-y-6 animate-scale-in">
-          <div className="relative w-36 h-36 mx-auto">
-            {/* Success glow effect */}
-            <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping"></div>
-            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-emerald-500/30 to-cyan-500/30"></div>
-            
-            {/* Shield check icon */}
+          <div className="relative w-44 h-44 mx-auto">
+            {/* Success burst rays */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative">
-                <ShieldCheck className="w-16 h-16 text-emerald-500 dark:text-emerald-400" />
-                {/* Sparkle effects */}
-                {[...Array(4)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="absolute w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full animate-ping"
-                    style={{
-                      top: `${-10 + Math.random() * 60}px`,
-                      left: `${-10 + Math.random() * 80}px`,
-                      animationDelay: `${i * 0.15}s`,
-                      animationDuration: '1s'
-                    }}
-                  ></div>
-                ))}
+              {[...Array(12)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-1 h-12 bg-gradient-to-t from-emerald-500/80 to-transparent rounded-full"
+                  style={{
+                    transform: `rotate(${i * 30}deg) translateY(-45px)`,
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                    animationDelay: `${i * 0.08}s`
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Pulsing success rings */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-40 h-40 rounded-full border-2 border-emerald-500/40 animate-ping" style={{ animationDuration: '1.5s' }} />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-32 h-32 rounded-full border-2 border-emerald-400/50 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.2s' }} />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-24 h-24 rounded-full border-2 border-cyan-400/40 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.4s' }} />
+            </div>
+
+            {/* Central success icon */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500/40 to-cyan-500/40 flex items-center justify-center backdrop-blur-sm border-2 border-emerald-500/60 shadow-lg shadow-emerald-500/30">
+                <ShieldCheck className="w-10 h-10 text-emerald-400" />
               </div>
             </div>
+
+            {/* Floating success particles */}
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-2 h-2 rounded-full bg-emerald-400"
+                style={{
+                  left: `${25 + Math.random() * 50}%`,
+                  top: `${25 + Math.random() * 50}%`,
+                  animation: 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite',
+                  animationDelay: `${i * 0.15}s`,
+                  boxShadow: '0 0 8px rgba(52, 211, 153, 0.8)'
+                }}
+              />
+            ))}
           </div>
-          
-          <div className="space-y-2">
-            <p className="text-emerald-600 dark:text-emerald-400 font-bold text-xl">Accès autorisé</p>
-            <p className="text-muted-foreground text-sm">Redirection vers votre espace...</p>
+
+          <div className="space-y-3">
+            <p className="text-emerald-500 dark:text-emerald-400 font-bold text-xl">Accès Autorisé</p>
+            <p className="text-muted-foreground text-sm">Initialisation de votre session sécurisée...</p>
+            <div className="flex justify-center gap-2 mt-2">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-bounce"
+                  style={{ animationDelay: `${i * 0.15}s` }}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}
