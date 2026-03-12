@@ -444,7 +444,7 @@ export default function Dashboard() {
                 {storageData.map((s, i) => (
                   <div key={i} className="flex items-center justify-between text-sm group cursor-default">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-3 h-3 rounded-full ring-2 ring-offset-2 ring-offset-card" style={{ backgroundColor: s.color, ringColor: s.color }} />
+                      <div className="w-3 h-3 rounded-full ring-2 ring-offset-2 ring-offset-card" style={{ backgroundColor: s.color, }} />
                       <span className="text-muted-foreground group-hover:text-foreground transition-colors">{s.name}</span>
                     </div>
                     <span className="font-bold text-foreground">{s.value}%</span>
