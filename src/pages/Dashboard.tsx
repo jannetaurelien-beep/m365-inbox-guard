@@ -59,7 +59,7 @@ const item = {
   hidden: { opacity: 0, y: 24, scale: 0.96 },
   show: { 
     opacity: 1, y: 0, scale: 1,
-    transition: { type: 'spring', stiffness: 300, damping: 24 }
+    transition: { type: 'spring' as const, stiffness: 300, damping: 24 }
   }
 };
 
@@ -67,7 +67,7 @@ const slideUp = {
   hidden: { opacity: 0, y: 32 },
   show: { 
     opacity: 1, y: 0,
-    transition: { type: 'spring', stiffness: 200, damping: 20 }
+    transition: { type: 'spring' as const, stiffness: 200, damping: 20 }
   }
 };
 
