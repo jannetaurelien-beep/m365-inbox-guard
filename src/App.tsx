@@ -47,6 +47,7 @@ const App = () => (
                     <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/2fa" element={<TwoFactorAuth />} />
                     <Route path="/utilisateurs" element={<Users />} />
                     <Route path="/utilisateurs/:id" element={<UserDetail />} />
                     <Route path="/actions" element={<Actions />} />
