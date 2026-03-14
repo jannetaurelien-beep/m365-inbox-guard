@@ -25,6 +25,7 @@ import NotificationCenter from "./pages/NotificationCenter";
 import PerformanceKPI from "./pages/PerformanceKPI";
 import Leaderboard from "./pages/Leaderboard";
 import Login from "./pages/Login";
+import TwoFactorAuth from "./pages/TwoFactorAuth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
                     <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/2fa" element={<TwoFactorAuth />} />
                     <Route path="/utilisateurs" element={<Users />} />
                     <Route path="/utilisateurs/:id" element={<UserDetail />} />
                     <Route path="/actions" element={<Actions />} />
