@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw, X, Settings, Download, Filter as FilterIcon, Grid3x3, List, Building2, Users as UsersIcon, Globe, Plus, FileDown, Palette, UserPlus } from 'lucide-react';
+import { RefreshCw, Filter as FilterIcon, Grid3x3, List, Building2, Users as UsersIcon, Globe, Plus, FileDown, Palette, UserPlus, Activity, TrendingUp, Mail, Clock } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KPIFilters } from '@/components/kpi/KPIFilters';
@@ -15,7 +15,6 @@ import { AgencyComparison } from '@/components/kpi/AgencyComparison';
 import { AgencyDetail } from '@/components/kpi/AgencyDetail';
 import { DomainComparison } from '@/components/kpi/DomainComparison';
 import { DomainDetail } from '@/components/kpi/DomainDetail';
-import { GroupManagement } from '@/components/kpi/GroupManagement';
 import { GroupsView } from '@/components/kpi/GroupsView';
 import { GroupsComparison } from '@/components/kpi/GroupsComparison';
 import { GroupPerformanceView } from '@/components/kpi/GroupPerformanceView';
@@ -27,11 +26,87 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { fetchTenantOverview, fetchUsersList, fetchUserDetail } from '@/lib/api/kpi-api';
-import { exportUsersToCSV, exportGroupsToCSV, exportGroupMembersToCSV } from '@/lib/export-utils';
+import { exportUsersToCSV, exportGroupsToCSV } from '@/lib/export-utils';
 import { TenantOverviewResponse, UsersListResponse, UserDetailResponse, AccountFilterType, FocusFilterType, GroupByType, UserGroup, AgencyMetrics, DomainMetrics, GroupPerformance, MailUserMetricsSub } from '@/lib/types/kpi';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Mini stat card component
+function MiniStat({ icon: Icon, label, value, sub, color }: { icon: any; label: string; value: string; sub?: string; color: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "relative overflow-hidden rounded-2xl border border-border/50 bg-card p-5",
+        "hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+      )}
+    >
+      <div className="flex items-start justify-between">
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="text-2xl font-bold tracking-tight text-foreground">{value}</p>
+          {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+        </div>
+        <div className={cn("rounded-xl p-2.5", color)}>
+          <Icon className="h-5 w-5 text-primary-foreground" />
+        </div>
+      </div>
+      <div className={cn("absolute bottom-0 left-0 right-0 h-1", color, "opacity-60")} />
+    </motion.div>
+  );
+}
+
+// Group member dialog (shared between create/edit)
+function GroupMemberList({ users, selectedIds, onToggle }: { users: any[]; selectedIds: string[]; onToggle: (id: string) => void }) {
+  return (
+    <ScrollArea className="h-[350px] rounded-xl border bg-card/50 p-3">
+      <div className="space-y-1.5">
+        {users.map((user) => {
+          const isSelected = selectedIds.includes(user.userId);
+          const sla = user.metrics.external.first_reply_within_sla || 0;
+          return (
+            <div
+              key={user.userId}
+              className={cn(
+                "flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200",
+                isSelected
+                  ? "bg-primary/8 border border-primary/20 shadow-sm"
+                  : "hover:bg-muted/50 border border-transparent"
+              )}
+              onClick={() => onToggle(user.userId)}
+            >
+              <Checkbox checked={isSelected} className="pointer-events-none" />
+              <Avatar className="h-9 w-9">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                  {user.displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{user.displayName}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.upn}</p>
+              </div>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-xs font-mono",
+                  sla >= 80 ? "text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-800" :
+                  sla >= 60 ? "text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800" :
+                  "text-destructive border-destructive/20 bg-destructive/5"
+                )}
+              >
+                {Math.round(sla)}%
+              </Badge>
+            </div>
+          );
+        })}
+      </div>
+    </ScrollArea>
+  );
+}
 
 export default function PerformanceKPI() {
   const { toast } = useToast();
@@ -39,7 +114,7 @@ export default function PerformanceKPI() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeTab, setActiveTab] = useState('overview');
 
-  // État des filtres
+  // Filters
   const [periodDays, setPeriodDays] = useState(30);
   const [accountFilter, setAccountFilter] = useState<AccountFilterType>('all');
   const [domainFilter, setDomainFilter] = useState<string | null>(null);
@@ -52,8 +127,8 @@ export default function PerformanceKPI() {
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
   const [selectedAgency, setSelectedAgency] = useState<string | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
-  
-  // Dialog states for groups
+
+  // Group dialogs
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<UserGroup | null>(null);
@@ -64,96 +139,35 @@ export default function PerformanceKPI() {
   const [groupFormColor, setGroupFormColor] = useState('blue');
   const [groupDialogTab, setGroupDialogTab] = useState<'customize' | 'members'>('customize');
 
-  // Groupes d'utilisateurs
+  // Groups
   const [userGroups, setUserGroups] = useState<UserGroup[]>([
-    {
-      id: 'group-1',
-      name: 'Commerciaux TLS',
-      description: 'Équipe commerciale TLS',
-      icon: 'briefcase',
-      color: 'blue',
-      userIds: ['user-1', 'user-2', 'user-8'],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'group-2',
-      name: 'Support Technique',
-      description: 'Équipe support technique',
-      icon: 'headphones',
-      color: 'violet',
-      userIds: ['user-3', 'user-5', 'user-9'],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'group-3',
-      name: 'Direction Paris',
-      description: 'Équipe de direction Paris',
-      icon: 'crown',
-      color: 'amber',
-      userIds: ['user-4', 'user-6', 'user-10'],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'group-4',
-      name: 'Service Client',
-      description: 'Équipe service client',
-      icon: 'heart',
-      color: 'emerald',
-      userIds: ['user-7', 'user-11', 'user-12', 'user-13'],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'group-5',
-      name: 'Marketing',
-      description: 'Équipe marketing et communication',
-      icon: 'rocket',
-      color: 'rose',
-      userIds: ['user-14', 'user-15'],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'group-6',
-      name: 'Comptabilité',
-      description: 'Service comptabilité et finance',
-      icon: 'target',
-      color: 'indigo',
-      userIds: ['user-16', 'user-17', 'user-18'],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
+    { id: 'group-1', name: 'Commerciaux TLS', description: 'Équipe commerciale TLS', icon: 'briefcase', color: 'blue', userIds: ['user-1', 'user-2', 'user-8'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'group-2', name: 'Support Technique', description: 'Équipe support technique', icon: 'headphones', color: 'violet', userIds: ['user-3', 'user-5', 'user-9'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'group-3', name: 'Direction Paris', description: 'Équipe de direction Paris', icon: 'crown', color: 'amber', userIds: ['user-4', 'user-6', 'user-10'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'group-4', name: 'Service Client', description: 'Équipe service client', icon: 'heart', color: 'emerald', userIds: ['user-7', 'user-11', 'user-12', 'user-13'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'group-5', name: 'Marketing', description: 'Équipe marketing et communication', icon: 'rocket', color: 'rose', userIds: ['user-14', 'user-15'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    { id: 'group-6', name: 'Comptabilité', description: 'Service comptabilité et finance', icon: 'target', color: 'indigo', userIds: ['user-16', 'user-17', 'user-18'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
   ]);
 
-  // Données
+  // Data
   const [tenantData, setTenantData] = useState<TenantOverviewResponse | null>(null);
   const [usersData, setUsersData] = useState<UsersListResponse | null>(null);
   const [userDetailData, setUserDetailData] = useState<UserDetailResponse | null>(null);
-
-  // Loading states
   const [loadingTenant, setLoadingTenant] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingUserDetail, setLoadingUserDetail] = useState(false);
-
-  // Errors
   const [tenantError, setTenantError] = useState<string | null>(null);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [userDetailError, setUserDetailError] = useState<string | null>(null);
 
-  // User sélectionné
   const selectedUserId = searchParams.get('userId');
 
-  // Conversion accountFilter -> accountType pour l'API
   const getAccountType = (): string | null => {
     if (accountFilter === 'user') return 'Utilisateur';
     if (accountFilter === 'shared') return 'Boîte partagée';
     return null;
   };
 
-  // Fetch tenant overview
   const loadTenantOverview = async () => {
     setLoadingTenant(true);
     setTenantError(null);
@@ -163,17 +177,12 @@ export default function PerformanceKPI() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erreur inconnue';
       setTenantError(message);
-      toast({
-        title: 'Erreur',
-        description: `Impossible de charger les données: ${message}`,
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: `Impossible de charger les données: ${message}`, variant: 'destructive' });
     } finally {
       setLoadingTenant(false);
     }
   };
 
-  // Fetch users list
   const loadUsersList = async () => {
     setLoadingUsers(true);
     setUsersError(null);
@@ -183,17 +192,12 @@ export default function PerformanceKPI() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erreur inconnue';
       setUsersError(message);
-      toast({
-        title: 'Erreur',
-        description: `Impossible de charger les utilisateurs: ${message}`,
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: `Impossible de charger les utilisateurs: ${message}`, variant: 'destructive' });
     } finally {
       setLoadingUsers(false);
     }
   };
 
-  // Fetch user detail
   const loadUserDetail = async (userId: string) => {
     setLoadingUserDetail(true);
     setUserDetailError(null);
@@ -203,1074 +207,505 @@ export default function PerformanceKPI() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erreur inconnue';
       setUserDetailError(message);
-      toast({
-        title: 'Erreur',
-        description: `Impossible de charger les détails: ${message}`,
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: `Impossible de charger les détails: ${message}`, variant: 'destructive' });
     } finally {
       setLoadingUserDetail(false);
     }
   };
 
-  // Initial load
+  useEffect(() => { loadTenantOverview(); loadUsersList(); }, [periodDays, accountFilter, domainFilter]);
   useEffect(() => {
-    loadTenantOverview();
-    loadUsersList();
-  }, [periodDays, accountFilter, domainFilter]);
-
-  // Load user detail si userId présent
-  useEffect(() => {
-    if (selectedUserId) {
-      loadUserDetail(selectedUserId);
-    } else {
-      setUserDetailData(null);
-    }
+    if (selectedUserId) loadUserDetail(selectedUserId);
+    else setUserDetailData(null);
   }, [selectedUserId, periodDays, groupBy]);
 
-  // Extraire les départements et agences uniques
   const departments = useMemo(() => {
     if (!usersData) return [];
-    const depts = new Set<string>();
-    usersData.users.forEach((u) => {
-      if (u.department) depts.add(u.department);
-    });
-    return Array.from(depts).sort();
+    return Array.from(new Set(usersData.users.map(u => u.department).filter(Boolean) as string[])).sort();
   }, [usersData]);
 
   const agencies = useMemo(() => {
     if (!usersData) return [];
-    const agcs = new Set<string>();
-    usersData.users.forEach((u) => {
-      if (u.agency) agcs.add(u.agency);
-    });
-    return Array.from(agcs).sort();
+    return Array.from(new Set(usersData.users.map(u => u.agency).filter(Boolean) as string[])).sort();
   }, [usersData]);
 
   const jobTitles = useMemo(() => {
     if (!usersData) return [];
-    const jobs = new Set<string>();
-    usersData.users.forEach((u) => {
-      if (u.jobTitle) jobs.add(u.jobTitle);
-    });
-    return Array.from(jobs).sort();
+    return Array.from(new Set(usersData.users.map(u => u.jobTitle).filter(Boolean) as string[])).sort();
   }, [usersData]);
 
-  // Calculer les métriques par domaine
+  // Aggregate metrics helpers
+  const aggregateMetrics = (users: typeof usersData extends { users: infer U } ? U : never[]) => {
+    const metrics = {
+      total: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 } as MailUserMetricsSub,
+      external: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 } as MailUserMetricsSub,
+      internal: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 } as MailUserMetricsSub,
+    };
+    (users as any[]).forEach((user: any) => {
+      (['total', 'external', 'internal'] as const).forEach(type => {
+        const um = user.metrics[type];
+        const gm = metrics[type];
+        gm.received += um.received;
+        gm.sent += um.sent;
+        gm.backlog_total += um.backlog_total || 0;
+        gm.backlog_unread = (gm.backlog_unread || 0) + (um.backlog_unread || 0);
+        gm.backlog_flagged = (gm.backlog_flagged || 0) + (um.backlog_flagged || 0);
+      });
+    });
+    return metrics;
+  };
+
+  const computeScore = (users: any[], metrics: any) => {
+    const count = users.length;
+    if (!count) return 0;
+    const avgSla = users.reduce((s: number, u: any) => s + (u.metrics.external.first_reply_within_sla || 0), 0) / count;
+    const avgBacklog = metrics.external.backlog_total / count;
+    metrics.external.first_reply_within_sla = avgSla;
+    return avgSla * 0.6 + Math.max(0, 100 - (avgBacklog / 50) * 100) * 0.4;
+  };
+
   const domainMetrics = useMemo((): DomainMetrics[] => {
     if (!usersData) return [];
-
-    const metricsMap = new Map<string, {
-      users: typeof usersData.users;
-      metrics: { total: MailUserMetricsSub; external: MailUserMetricsSub; internal: MailUserMetricsSub };
-    }>();
-
-    usersData.users.forEach((user) => {
-      const domain = user.upn.split('@')[1] || 'unknown';
-      if (!metricsMap.has(domain)) {
-        metricsMap.set(domain, {
-          users: [],
-          metrics: {
-            total: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
-            external: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
-            internal: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
-          },
-        });
-      }
-
-      const domainData = metricsMap.get(domain)!;
-      domainData.users.push(user);
-
-      // Agréger les métriques
-      ['total', 'external', 'internal'].forEach((type) => {
-        const metricType = type as 'total' | 'external' | 'internal';
-        const userMetrics = user.metrics[metricType];
-        const domainMetrics = domainData.metrics[metricType];
-
-        domainMetrics.received += userMetrics.received;
-        domainMetrics.sent += userMetrics.sent;
-        domainMetrics.backlog_total += userMetrics.backlog_total || 0;
-        domainMetrics.backlog_unread += userMetrics.backlog_unread || 0;
-        domainMetrics.backlog_flagged += userMetrics.backlog_flagged || 0;
-      });
+    const map = new Map<string, any[]>();
+    usersData.users.forEach(u => {
+      const d = u.upn.split('@')[1] || 'unknown';
+      if (!map.has(d)) map.set(d, []);
+      map.get(d)!.push(u);
     });
-
-    // Calculer les moyennes et scores
-    return Array.from(metricsMap.entries()).map(([domain, data]) => {
-      const userCount = data.users.length;
-      const avgSla = data.users.reduce((sum, u) => sum + (u.metrics.external.first_reply_within_sla || 0), 0) / userCount;
-      const avgBacklog = data.metrics.external.backlog_total / userCount;
-      
-      // Score basé sur SLA et backlog
-      const slaScore = avgSla;
-      const backlogScore = Math.max(0, 100 - (avgBacklog / 50) * 100);
-      const avgScore = (slaScore * 0.6 + backlogScore * 0.4);
-
-      // Calculer la moyenne pour first_reply_within_sla
-      data.metrics.external.first_reply_within_sla = avgSla;
-
-      return {
-        domain,
-        userCount,
-        metrics: data.metrics,
-        avgScore,
-      };
+    return Array.from(map.entries()).map(([domain, users]) => {
+      const metrics = aggregateMetrics(users);
+      return { domain, userCount: users.length, metrics, avgScore: computeScore(users, metrics) };
     });
   }, [usersData]);
 
-  // Calculer les métriques par agence
   const agencyMetrics = useMemo((): AgencyMetrics[] => {
     if (!usersData) return [];
-
-    const metricsMap = new Map<string, {
-      users: typeof usersData.users;
-      metrics: { total: MailUserMetricsSub; external: MailUserMetricsSub; internal: MailUserMetricsSub };
-    }>();
-
-    usersData.users.forEach((user) => {
-      const agency = user.agency || 'Non assigné';
-      if (!metricsMap.has(agency)) {
-        metricsMap.set(agency, {
-          users: [],
-          metrics: {
-            total: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
-            external: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
-            internal: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
-          },
-        });
-      }
-
-      const agencyData = metricsMap.get(agency)!;
-      agencyData.users.push(user);
-
-      // Agréger les métriques
-      ['total', 'external', 'internal'].forEach((type) => {
-        const metricType = type as 'total' | 'external' | 'internal';
-        const userMetrics = user.metrics[metricType];
-        const agencyMetrics = agencyData.metrics[metricType];
-
-        agencyMetrics.received += userMetrics.received;
-        agencyMetrics.sent += userMetrics.sent;
-        agencyMetrics.backlog_total += userMetrics.backlog_total || 0;
-        agencyMetrics.backlog_unread += userMetrics.backlog_unread || 0;
-        agencyMetrics.backlog_flagged += userMetrics.backlog_flagged || 0;
-      });
+    const map = new Map<string, any[]>();
+    usersData.users.forEach(u => {
+      const a = u.agency || 'Non assigné';
+      if (!map.has(a)) map.set(a, []);
+      map.get(a)!.push(u);
     });
-
-    // Calculer les moyennes et scores
-    return Array.from(metricsMap.entries()).map(([agency, data]) => {
-      const userCount = data.users.length;
-      const avgSla = data.users.reduce((sum, u) => sum + (u.metrics.external.first_reply_within_sla || 0), 0) / userCount;
-      const avgBacklog = data.metrics.external.backlog_total / userCount;
-      
-      // Score basé sur SLA et backlog
-      const slaScore = avgSla;
-      const backlogScore = Math.max(0, 100 - (avgBacklog / 50) * 100);
-      const avgScore = (slaScore * 0.6 + backlogScore * 0.4);
-
-      // Calculer la moyenne pour first_reply_within_sla
-      data.metrics.external.first_reply_within_sla = avgSla;
-
-      return {
-        agency,
-        userCount,
-        metrics: data.metrics,
-        avgScore,
-      };
+    return Array.from(map.entries()).map(([agency, users]) => {
+      const metrics = aggregateMetrics(users);
+      return { agency, userCount: users.length, metrics, avgScore: computeScore(users, metrics) };
     });
   }, [usersData]);
 
-  // Calculer la performance d'un groupe
   const getGroupPerformance = (groupId: string): GroupPerformance | null => {
     const group = userGroups.find(g => g.id === groupId);
     if (!group || !usersData) return null;
-
     const groupUsers = usersData.users.filter(u => group.userIds.includes(u.userId));
-    if (groupUsers.length === 0) return null;
-
-    const metrics = {
-      total: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
-      external: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
-      internal: { received: 0, sent: 0, backlog_total: 0, backlog_unread: 0, backlog_flagged: 0, first_reply_p50_min: 0, first_reply_p90_min: 0, first_reply_within_sla: 0, samples: 0 },
-    };
-
-    groupUsers.forEach((user) => {
-      ['total', 'external', 'internal'].forEach((type) => {
-        const metricType = type as 'total' | 'external' | 'internal';
-        const userMetrics = user.metrics[metricType];
-        const groupMetrics = metrics[metricType];
-
-        groupMetrics.received += userMetrics.received;
-        groupMetrics.sent += userMetrics.sent;
-        groupMetrics.backlog_total += userMetrics.backlog_total || 0;
-        groupMetrics.backlog_unread += userMetrics.backlog_unread || 0;
-        groupMetrics.backlog_flagged += userMetrics.backlog_flagged || 0;
-      });
-    });
-
-    const avgSla = groupUsers.reduce((sum, u) => sum + (u.metrics.external.first_reply_within_sla || 0), 0) / groupUsers.length;
-    metrics.external.first_reply_within_sla = avgSla;
-
-    const avgBacklog = metrics.external.backlog_total / groupUsers.length;
-    const slaScore = avgSla;
-    const backlogScore = Math.max(0, 100 - (avgBacklog / 50) * 100);
-    const avgScore = (slaScore * 0.6 + backlogScore * 0.4);
-
-    return {
-      group,
-      metrics,
-      users: groupUsers,
-      avgScore,
-    };
+    if (!groupUsers.length) return null;
+    const metrics = aggregateMetrics(groupUsers);
+    return { group, metrics, users: groupUsers, avgScore: computeScore(groupUsers, metrics) };
   };
 
-  // Filtrer les users localement
   const filteredUsers = useMemo(() => {
     if (!usersData) return [];
-    
     let filtered = [...usersData.users];
-
     if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(
-        (u) =>
-          u.displayName.toLowerCase().includes(searchLower) ||
-          u.upn.toLowerCase().includes(searchLower)
-      );
+      const s = search.toLowerCase();
+      filtered = filtered.filter(u => u.displayName.toLowerCase().includes(s) || u.upn.toLowerCase().includes(s));
     }
-
-    if (departmentFilter) {
-      filtered = filtered.filter((u) => u.department === departmentFilter);
-    }
-
-    if (agencyFilter) {
-      filtered = filtered.filter((u) => u.agency === agencyFilter);
-    }
-
-    if (jobTitleFilter) {
-      filtered = filtered.filter((u) => u.jobTitle === jobTitleFilter);
-    }
-
+    if (departmentFilter) filtered = filtered.filter(u => u.department === departmentFilter);
+    if (agencyFilter) filtered = filtered.filter(u => u.agency === agencyFilter);
+    if (jobTitleFilter) filtered = filtered.filter(u => u.jobTitle === jobTitleFilter);
     if (groupFilter) {
       const group = userGroups.find(g => g.id === groupFilter);
-      if (group) {
-        filtered = filtered.filter((u) => group.userIds.includes(u.userId));
-      }
+      if (group) filtered = filtered.filter(u => group.userIds.includes(u.userId));
     }
-
     if (focusFilter !== 'all') {
-      filtered = filtered.filter((u) => {
+      filtered = filtered.filter(u => {
         const backlog = u.metrics.external.backlog_total || 0;
         const sla = u.metrics.external.first_reply_within_sla || 0;
-
         if (focusFilter === 'high-backlog') return backlog >= 30;
         if (focusFilter === 'low-sla') return sla <= 70;
         if (focusFilter === 'anomalies') return backlog >= 50 || sla <= 60;
         return true;
       });
     }
-
     return filtered;
   }, [usersData, search, departmentFilter, agencyFilter, jobTitleFilter, groupFilter, focusFilter]);
 
-  // Handlers pour les groupes
+  // Group handlers
   const handleCreateGroup = (name: string, description: string, userIds: string[], icon?: string, color?: string) => {
-    const newGroup: UserGroup = {
-      id: `group-${Date.now()}`,
-      name,
-      description,
-      icon: icon || 'users',
-      color: color || 'blue',
-      userIds,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setUserGroups([...userGroups, newGroup]);
-    toast({ title: 'Groupe créé', description: `Le groupe "${name}" a été créé avec succès.` });
-  };
-
-  const handleUpdateGroup = (groupId: string, userIds: string[], icon?: string, color?: string) => {
-    setUserGroups(userGroups.map(g => 
-      g.id === groupId ? { 
-        ...g, 
-        userIds, 
-        icon: icon || g.icon,
-        color: color || g.color,
-        updatedAt: new Date().toISOString() 
-      } : g
-    ));
-    toast({ title: 'Groupe mis à jour', description: 'Le groupe a été mis à jour.' });
+    setUserGroups([...userGroups, {
+      id: `group-${Date.now()}`, name, description, icon: icon || 'users', color: color || 'blue',
+      userIds, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    }]);
+    toast({ title: 'Groupe créé', description: `Le groupe "${name}" a été créé.` });
   };
 
   const handleDeleteGroup = (groupId: string) => {
     setUserGroups(userGroups.filter(g => g.id !== groupId));
     if (groupFilter === groupId) setGroupFilter(null);
-    toast({ title: 'Groupe supprimé', description: 'Le groupe a été supprimé.' });
+    toast({ title: 'Groupe supprimé' });
   };
 
   const openCreateGroupDialog = () => {
-    setGroupFormName('');
-    setGroupFormDescription('');
-    setGroupFormUserIds([]);
-    setGroupFormIcon('users');
-    setGroupFormColor('blue');
-    setGroupDialogTab('customize');
+    setGroupFormName(''); setGroupFormDescription(''); setGroupFormUserIds([]);
+    setGroupFormIcon('users'); setGroupFormColor('blue'); setGroupDialogTab('customize');
     setIsCreateGroupOpen(true);
   };
 
   const openEditGroupDialog = (group: UserGroup) => {
-    setEditingGroup(group);
-    setGroupFormName(group.name);
-    setGroupFormDescription(group.description || '');
-    setGroupFormUserIds([...group.userIds]);
-    setGroupFormIcon(group.icon || 'users');
-    setGroupFormColor(group.color || 'blue');
-    setGroupDialogTab('customize');
-    setIsEditGroupOpen(true);
+    setEditingGroup(group); setGroupFormName(group.name);
+    setGroupFormDescription(group.description || ''); setGroupFormUserIds([...group.userIds]);
+    setGroupFormIcon(group.icon || 'users'); setGroupFormColor(group.color || 'blue');
+    setGroupDialogTab('customize'); setIsEditGroupOpen(true);
   };
 
   const handleSaveGroup = () => {
-    if (groupFormName.trim()) {
-      if (editingGroup) {
-        setUserGroups(userGroups.map(g =>
-          g.id === editingGroup.id
-            ? { 
-                ...g, 
-                name: groupFormName, 
-                description: groupFormDescription, 
-                userIds: groupFormUserIds, 
-                icon: groupFormIcon,
-                color: groupFormColor,
-                updatedAt: new Date().toISOString() 
-              }
-            : g
-        ));
-        toast({ title: 'Groupe modifié', description: `Le groupe "${groupFormName}" a été modifié avec succès.` });
-        setIsEditGroupOpen(false);
-      } else {
-        handleCreateGroup(groupFormName, groupFormDescription, groupFormUserIds, groupFormIcon, groupFormColor);
-        setIsCreateGroupOpen(false);
-      }
-      setEditingGroup(null);
+    if (!groupFormName.trim()) return;
+    if (editingGroup) {
+      setUserGroups(userGroups.map(g => g.id === editingGroup.id
+        ? { ...g, name: groupFormName, description: groupFormDescription, userIds: groupFormUserIds, icon: groupFormIcon, color: groupFormColor, updatedAt: new Date().toISOString() }
+        : g
+      ));
+      toast({ title: 'Groupe modifié' });
+      setIsEditGroupOpen(false);
+    } else {
+      handleCreateGroup(groupFormName, groupFormDescription, groupFormUserIds, groupFormIcon, groupFormColor);
+      setIsCreateGroupOpen(false);
     }
+    setEditingGroup(null);
   };
 
   const toggleUserInGroup = (userId: string) => {
-    setGroupFormUserIds(prev =>
-      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
-    );
+    setGroupFormUserIds(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
   };
 
-  // Handlers
-  const handleSelectUser = (userId: string) => {
-    setSearchParams({ userId });
-  };
+  const handleSelectUser = (userId: string) => setSearchParams({ userId });
+  const handleClearUser = () => setSearchParams({});
 
-  const handleClearUser = () => {
-    setSearchParams({});
-  };
+  // Quick stats from tenant data
+  const totalReceived = tenantData?.totals.received || 0;
+  const totalSent = tenantData?.totals.sent || 0;
+  const avgSla = tenantData?.external.within_sla || 0;
+  const avgReplyMin = tenantData?.external.first_reply_p50_min || 0;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      {/* Header avec gradient coloré */}
-      <div className="sticky top-0 z-50 border-b border-primary/10 bg-gradient-to-r from-background/95 via-background/98 to-primary/5 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-xl blur-lg opacity-40 animate-pulse" />
-                  <div className="relative w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg">
-                    <Globe className="h-6 w-6 text-primary-foreground" />
-                  </div>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
-                    Performance KPI
-                  </h1>
-                  <p className="text-xs text-muted-foreground">Analyse en temps réel</p>
-                </div>
+  const tabs = [
+    { id: 'overview', label: 'Vue d\'ensemble', icon: Activity },
+    { id: 'domains', label: 'Domaines', icon: Globe },
+    { id: 'agencies', label: 'Agences', icon: Building2 },
+    { id: 'groups', label: 'Groupes', icon: UsersIcon },
+  ];
+
+  // Group dialog content (shared)
+  const renderGroupDialog = (isOpen: boolean, onClose: (v: boolean) => void, title: string, actionLabel: string) => (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl">
+        <DialogHeader className="pb-4 border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <div className={cn("w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center", getGroupColor(groupFormColor).gradient)}>
+              {(() => { const Icon = getGroupIcon(groupFormIcon); return <Icon className="h-5 w-5 text-primary-foreground" />; })()}
+            </div>
+            <div>
+              <DialogTitle>{title}</DialogTitle>
+              <p className="text-sm text-muted-foreground mt-0.5">Personnalisez et ajoutez des membres</p>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <Tabs value={groupDialogTab} onValueChange={(v) => setGroupDialogTab(v as any)} className="mt-3">
+          <TabsList className="grid w-full grid-cols-2 h-10">
+            <TabsTrigger value="customize" className="gap-2 text-xs"><Palette className="h-3.5 w-3.5" />Personnaliser</TabsTrigger>
+            <TabsTrigger value="members" className="gap-2 text-xs"><UserPlus className="h-3.5 w-3.5" />Membres ({groupFormUserIds.length})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="customize" className="space-y-4 mt-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Nom *</Label>
+                <Input value={groupFormName} onChange={(e) => setGroupFormName(e.target.value)} placeholder="Ex: Commerciaux TLS" className="h-10" />
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Live</span>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Description</Label>
+                <Input value={groupFormDescription} onChange={(e) => setGroupFormDescription(e.target.value)} placeholder="Description optionnelle..." className="h-10" />
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+              <Label className="text-xs font-medium mb-3 block">Apparence</Label>
+              <GroupCustomization icon={groupFormIcon} color={groupFormColor} onIconChange={setGroupFormIcon} onColorChange={setGroupFormColor} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="members" className="mt-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium">Sélectionner les membres</Label>
+                <Badge variant="secondary" className="text-xs">{groupFormUserIds.length} sélectionné{groupFormUserIds.length > 1 ? 's' : ''}</Badge>
+              </div>
+              {usersData && <GroupMemberList users={usersData.users} selectedIds={groupFormUserIds} onToggle={toggleUserInGroup} />}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex justify-end gap-2 pt-3 border-t border-border/50 mt-3">
+          <Button variant="outline" size="sm" onClick={() => onClose(false)}>Annuler</Button>
+          <Button size="sm" onClick={handleSaveGroup} disabled={!groupFormName.trim()}>{actionLabel}</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Clean header */}
+      <div className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+        <div className="container mx-auto px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                  <Activity className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold text-foreground">Performance</h1>
+                  <p className="text-[11px] text-muted-foreground">{periodDays}j • {filteredUsers.length} boîtes</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-accent/10 rounded-full">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent" />
+                </span>
+                <span className="text-[11px] font-medium text-accent">Live</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5">
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 hover:border-primary/40 hover:bg-primary/10 transition-all">
-                    <FilterIcon className="h-4 w-4 mr-2 text-primary" />
-                    Filtres
+                  <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                    <FilterIcon className="h-3.5 w-3.5" />Filtres
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="bg-gradient-to-b from-background to-primary/5">
-                  <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2">
-                      <FilterIcon className="h-5 w-5 text-primary" />
-                      Filtres avancés
-                    </SheetTitle>
-                  </SheetHeader>
+                <SheetContent>
+                  <SheetHeader><SheetTitle>Filtres avancés</SheetTitle></SheetHeader>
                   <div className="mt-6">
                     <KPIFilters
-                      periodDays={periodDays}
-                      onPeriodChange={setPeriodDays}
-                      accountFilter={accountFilter}
-                      onAccountFilterChange={setAccountFilter}
-                      domains={tenantData?.tenant.domains || []}
-                      domainFilter={domainFilter}
-                      onDomainFilterChange={setDomainFilter}
-                      search={search}
-                      onSearchChange={setSearch}
-                      departments={departments}
-                      departmentFilter={departmentFilter}
-                      onDepartmentFilterChange={setDepartmentFilter}
-                      agencies={agencies}
-                      agencyFilter={agencyFilter}
-                      onAgencyFilterChange={setAgencyFilter}
-                      jobTitles={jobTitles}
-                      jobTitleFilter={jobTitleFilter}
-                      onJobTitleFilterChange={setJobTitleFilter}
-                      focusFilter={focusFilter}
-                      onFocusFilterChange={setFocusFilter}
-                      groups={userGroups}
-                      groupFilter={groupFilter}
-                      onGroupFilterChange={setGroupFilter}
+                      periodDays={periodDays} onPeriodChange={setPeriodDays}
+                      accountFilter={accountFilter} onAccountFilterChange={setAccountFilter}
+                      domains={tenantData?.tenant.domains || []} domainFilter={domainFilter} onDomainFilterChange={setDomainFilter}
+                      search={search} onSearchChange={setSearch}
+                      departments={departments} departmentFilter={departmentFilter} onDepartmentFilterChange={setDepartmentFilter}
+                      agencies={agencies} agencyFilter={agencyFilter} onAgencyFilterChange={setAgencyFilter}
+                      jobTitles={jobTitles} jobTitleFilter={jobTitleFilter} onJobTitleFilterChange={setJobTitleFilter}
+                      focusFilter={focusFilter} onFocusFilterChange={setFocusFilter}
+                      groups={userGroups} groupFilter={groupFilter} onGroupFilterChange={setGroupFilter}
                     />
                   </div>
                 </SheetContent>
               </Sheet>
-              <Button variant="outline" size="sm" className="bg-gradient-to-r from-accent/5 to-primary/5 border-accent/20 hover:border-accent/40 hover:bg-accent/10 transition-all">
-                <Download className="h-4 w-4 mr-2 text-accent" />
-                Export
-              </Button>
-              <div className="flex items-center border border-primary/20 rounded-lg overflow-hidden bg-background/50">
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                  className={`rounded-none ${viewMode === 'grid' ? 'bg-gradient-to-r from-primary to-primary/80' : ''}`}
-                >
-                  <Grid3x3 className="h-4 w-4" />
+
+              <div className="flex items-center border border-border/60 rounded-lg overflow-hidden">
+                <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="sm" className="h-8 w-8 p-0 rounded-none" onClick={() => setViewMode('grid')}>
+                  <Grid3x3 className="h-3.5 w-3.5" />
                 </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className={`rounded-none ${viewMode === 'list' ? 'bg-gradient-to-r from-primary to-primary/80' : ''}`}
-                >
-                  <List className="h-4 w-4" />
+                <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" className="h-8 w-8 p-0 rounded-none" onClick={() => setViewMode('list')}>
+                  <List className="h-3.5 w-3.5" />
                 </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadTenantOverview}
-                disabled={loadingTenant}
-                className="border-primary/20 hover:border-primary/40 hover:bg-primary/10"
-              >
-                <RefreshCw className={`h-4 w-4 text-primary ${loadingTenant ? 'animate-spin' : ''}`} />
-              </Button>
-              <Button variant="outline" size="sm" className="border-primary/20 hover:border-primary/40 hover:bg-primary/10">
-                <Settings className="h-4 w-4 text-primary" />
+
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={loadTenantOverview} disabled={loadingTenant}>
+                <RefreshCw className={cn("h-3.5 w-3.5", loadingTenant && "animate-spin")} />
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Contenu principal */}
-      <div className="container mx-auto px-6 py-6 space-y-6">
+      <div className="container mx-auto px-6 py-5 space-y-5">
+        {/* Quick Stats Row */}
+        {tenantData && !loadingTenant && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <MiniStat icon={Mail} label="Reçus" value={totalReceived.toLocaleString()} sub={`${periodDays} derniers jours`} color="bg-primary" />
+            <MiniStat icon={TrendingUp} label="Envoyés" value={totalSent.toLocaleString()} sub={`Ratio ${totalSent ? (totalReceived / totalSent).toFixed(1) : '0'}:1`} color="bg-accent" />
+            <MiniStat icon={Clock} label="SLA moyen" value={`${Math.round(avgSla)}%`} sub="Réponse dans les délais" color={avgSla >= 75 ? "bg-accent" : "bg-warning"} />
+            <MiniStat icon={Activity} label="Réponse P50" value={`${Math.round(avgReplyMin)}min`} sub="Temps médian" color="bg-primary" />
+          </div>
+        )}
+
+        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(val) => {
           setActiveTab(val);
-          // Reset group filter when leaving groups tab
-          if (val !== 'groups') {
-            setGroupFilter(null);
-          }
+          if (val !== 'groups') setGroupFilter(null);
         }}>
-          <TabsList className="bg-gradient-to-r from-primary/5 via-background to-accent/5 border border-primary/10 p-1 h-auto">
-            <TabsTrigger 
-              value="overview" 
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all"
-            >
-              <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center mr-2">
-                <Globe className="h-3.5 w-3.5 text-primary" />
-              </div>
-              Vue d'ensemble
-            </TabsTrigger>
-            <TabsTrigger 
-              value="domains"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-violet-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
-            >
-              <div className="w-6 h-6 rounded-md bg-violet-500/10 flex items-center justify-center mr-2">
-                <Globe className="h-3.5 w-3.5 text-violet-500" />
-              </div>
-              Domaines
-            </TabsTrigger>
-            <TabsTrigger 
-              value="agencies"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
-            >
-              <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center mr-2">
-                <Building2 className="h-3.5 w-3.5 text-amber-500" />
-              </div>
-              Agences
-            </TabsTrigger>
-            <TabsTrigger 
-              value="groups"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
-            >
-              <div className="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center mr-2">
-                <UsersIcon className="h-3.5 w-3.5 text-emerald-500" />
-              </div>
-              Groupes
-            </TabsTrigger>
+          <TabsList className="h-10 bg-muted/50 p-0.5">
+            {tabs.map(tab => (
+              <TabsTrigger
+                key={tab.id}
+                value={tab.id}
+                className="gap-2 text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              >
+                <tab.icon className="h-3.5 w-3.5" />
+                {tab.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6 mt-6 tab-content-enter">
-            {/* Vue d'ensemble */}
-            {loadingTenant && (
-              <div className="grid gap-6">
-                <Skeleton className="h-48 w-full" />
-              </div>
-            )}
-            {tenantError && (
-              <Alert variant="destructive">
-                <AlertDescription>{tenantError}</AlertDescription>
-              </Alert>
-            )}
-            {!loadingTenant && !tenantError && tenantData && (
-              <TenantOverview 
-                data={tenantData} 
-                groups={userGroups}
-                users={usersData?.users || []}
-                onSelectGroup={(groupId) => {
-                  setActiveTab('groups');
-                  setGroupFilter(groupId);
-                }}
-              />
-            )}
-
-            {/* Liste des boîtes mail */}
-            <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">Boîtes mail</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {filteredUsers.length} boîte{filteredUsers.length > 1 ? 's' : ''} • {periodDays} derniers jours
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (usersData) {
-                    exportUsersToCSV(filteredUsers, `utilisateurs-kpi-${new Date().toISOString().split('T')[0]}.csv`);
-                    toast({ title: 'Export réussi', description: `${filteredUsers.length} utilisateurs exportés` });
-                  }
-                }}
-                disabled={!usersData || filteredUsers.length === 0}
-              >
-                <FileDown className="h-4 w-4 mr-2" />
-                Exporter CSV
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadUsersList}
-                disabled={loadingUsers}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${loadingUsers ? 'animate-spin' : ''}`} />
-                Actualiser
-              </Button>
-            </div>
-          </div>
-
-          {loadingUsers && (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Skeleton key={i} className="h-48 w-full" />
-              ))}
-            </div>
-          )}
-
-          {usersError && (
-            <Alert variant="destructive">
-              <AlertDescription>{usersError}</AlertDescription>
-            </Alert>
-          )}
-
-          {!loadingUsers && !usersError && filteredUsers.length === 0 && (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                  <FilterIcon className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <p className="text-lg font-medium">Aucune boîte mail trouvée</p>
-                <p className="text-sm text-muted-foreground mt-1">Essayez de modifier vos filtres</p>
-              </CardContent>
-            </Card>
-          )}
-
-            {!loadingUsers && !usersError && filteredUsers.length > 0 && (
-              <UsersList
-                users={filteredUsers}
-                selectedUserId={selectedUserId}
-                onSelectUser={handleSelectUser}
-                viewMode={viewMode}
-              />
-            )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="domains" className="space-y-6 mt-6 tab-content-enter">
-            {loadingUsers ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                {[1, 2].map((i) => (
-                  <Skeleton key={i} className="h-64 w-full" />
-                ))}
-              </div>
-            ) : selectedDomain ? (
-              <DomainDetail 
-                domain={selectedDomain}
-                users={usersData?.users.filter(u => u.upn.endsWith(`@${selectedDomain}`)) || []}
-                onBack={() => setSelectedDomain(null)}
-              />
-            ) : (
-              <DomainComparison 
-                domains={domainMetrics}
-                onSelectDomain={setSelectedDomain}
-              />
-            )}
-          </TabsContent>
-
-          <TabsContent value="agencies" className="space-y-6 mt-6 tab-content-enter">
-            {loadingUsers ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-64 w-full" />
-                ))}
-              </div>
-            ) : selectedAgency ? (
-              <AgencyDetail 
-                agency={selectedAgency}
-                users={usersData?.users.filter(u => u.agency === selectedAgency) || []}
-                onBack={() => setSelectedAgency(null)}
-              />
-            ) : (
-              <AgencyComparison 
-                agencies={agencyMetrics}
-                onSelectAgency={setSelectedAgency}
-              />
-            )}
-          </TabsContent>
-
-          <TabsContent value="groups" className="space-y-6 mt-6 tab-content-enter">
-            {usersData && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-semibold">Groupes d'utilisateurs</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Organisez vos utilisateurs en groupes et suivez leurs performances collectives
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        exportGroupsToCSV(userGroups, usersData.users, `groupes-kpi-${new Date().toISOString().split('T')[0]}.csv`);
-                        toast({ title: 'Export réussi', description: `${userGroups.length} groupes exportés` });
-                      }}
-                      disabled={userGroups.length === 0}
-                    >
-                      <FileDown className="h-4 w-4 mr-2" />
-                      Exporter groupes
-                    </Button>
-                    <Button onClick={openCreateGroupDialog}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Nouveau groupe
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Graphiques de comparaison */}
-                {userGroups.length > 0 && (
-                  <GroupsComparison 
-                    groups={userGroups} 
-                    users={usersData.users}
-                    onExportSuccess={(message) => {
-                      toast({ title: 'Export réussi', description: message });
-                    }}
+          <AnimatePresence mode="wait">
+            <TabsContent value="overview" className="space-y-5 mt-5">
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                {loadingTenant && <Skeleton className="h-48 w-full rounded-2xl" />}
+                {tenantError && <Alert variant="destructive"><AlertDescription>{tenantError}</AlertDescription></Alert>}
+                {!loadingTenant && !tenantError && tenantData && (
+                  <TenantOverview
+                    data={tenantData} groups={userGroups} users={usersData?.users || []}
+                    onSelectGroup={(groupId) => { setActiveTab('groups'); setGroupFilter(groupId); }}
                   />
                 )}
+              </motion.div>
 
-                <GroupsView
-                  groups={userGroups}
-                  users={usersData.users}
-                  onSelectGroup={(groupId) => {
-                    setGroupFilter(groupId);
-                  }}
-                  onEditGroup={openEditGroupDialog}
-                  onDeleteGroup={handleDeleteGroup}
-                  onExportSuccess={(message) => {
-                    toast({ title: 'Export réussi', description: message });
-                  }}
-                />
-
-                {groupFilter && getGroupPerformance(groupFilter) && (
-                  <div className="mt-6">
-                    <Button
-                      variant="outline"
-                      onClick={() => setGroupFilter(null)}
-                      className="mb-4"
+              {/* Users section */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }} className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold">Boîtes mail</h2>
+                    <p className="text-xs text-muted-foreground">{filteredUsers.length} résultat{filteredUsers.length > 1 ? 's' : ''}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+                      onClick={() => {
+                        if (usersData) {
+                          exportUsersToCSV(filteredUsers, `utilisateurs-kpi-${new Date().toISOString().split('T')[0]}.csv`);
+                          toast({ title: 'Export réussi', description: `${filteredUsers.length} utilisateurs exportés` });
+                        }
+                      }}
+                      disabled={!usersData || filteredUsers.length === 0}
                     >
-                      ← Retour aux groupes
+                      <FileDown className="h-3.5 w-3.5" />CSV
                     </Button>
-                    <GroupPerformanceView groupPerformance={getGroupPerformance(groupFilter)!} />
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={loadUsersList} disabled={loadingUsers}>
+                      <RefreshCw className={cn("h-3.5 w-3.5", loadingUsers && "animate-spin")} />
+                    </Button>
+                  </div>
+                </div>
+
+                {loadingUsers && (
+                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3' : 'space-y-2'}>
+                    {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-40 w-full rounded-xl" />)}
                   </div>
                 )}
-              </div>
-            )}
-          </TabsContent>
+                {usersError && <Alert variant="destructive"><AlertDescription>{usersError}</AlertDescription></Alert>}
+                {!loadingUsers && !usersError && filteredUsers.length === 0 && (
+                  <Card className="rounded-2xl border-dashed">
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                        <FilterIcon className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <p className="font-medium text-sm">Aucun résultat</p>
+                      <p className="text-xs text-muted-foreground mt-1">Modifiez vos filtres</p>
+                    </CardContent>
+                  </Card>
+                )}
+                {!loadingUsers && !usersError && filteredUsers.length > 0 && (
+                  <UsersList users={filteredUsers} selectedUserId={selectedUserId} onSelectUser={handleSelectUser} viewMode={viewMode} />
+                )}
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent value="domains" className="space-y-5 mt-5">
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                {loadingUsers ? (
+                  <div className="grid gap-3 md:grid-cols-2">{[1, 2].map(i => <Skeleton key={i} className="h-56 rounded-xl" />)}</div>
+                ) : selectedDomain ? (
+                  <DomainDetail domain={selectedDomain} users={usersData?.users.filter(u => u.upn.endsWith(`@${selectedDomain}`)) || []} onBack={() => setSelectedDomain(null)} />
+                ) : (
+                  <DomainComparison domains={domainMetrics} onSelectDomain={setSelectedDomain} />
+                )}
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent value="agencies" className="space-y-5 mt-5">
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                {loadingUsers ? (
+                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-56 rounded-xl" />)}</div>
+                ) : selectedAgency ? (
+                  <AgencyDetail agency={selectedAgency} users={usersData?.users.filter(u => u.agency === selectedAgency) || []} onBack={() => setSelectedAgency(null)} />
+                ) : (
+                  <AgencyComparison agencies={agencyMetrics} onSelectAgency={setSelectedAgency} />
+                )}
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent value="groups" className="space-y-5 mt-5">
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                {usersData && (
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-base font-semibold">Groupes</h2>
+                        <p className="text-xs text-muted-foreground">{userGroups.length} groupe{userGroups.length > 1 ? 's' : ''} configuré{userGroups.length > 1 ? 's' : ''}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+                          onClick={() => {
+                            exportGroupsToCSV(userGroups, usersData.users, `groupes-kpi-${new Date().toISOString().split('T')[0]}.csv`);
+                            toast({ title: 'Export réussi' });
+                          }}
+                          disabled={userGroups.length === 0}
+                        >
+                          <FileDown className="h-3.5 w-3.5" />Export
+                        </Button>
+                        <Button size="sm" className="h-8 text-xs gap-1.5" onClick={openCreateGroupDialog}>
+                          <Plus className="h-3.5 w-3.5" />Nouveau
+                        </Button>
+                      </div>
+                    </div>
+
+                    {userGroups.length > 0 && (
+                      <GroupsComparison
+                        groups={userGroups} users={usersData.users}
+                        onExportSuccess={(message) => toast({ title: 'Export réussi', description: message })}
+                      />
+                    )}
+
+                    <GroupsView
+                      groups={userGroups} users={usersData.users}
+                      onSelectGroup={(groupId) => setGroupFilter(groupId)}
+                      onEditGroup={openEditGroupDialog}
+                      onDeleteGroup={handleDeleteGroup}
+                      onExportSuccess={(message) => toast({ title: 'Export réussi', description: message })}
+                    />
+
+                    {groupFilter && getGroupPerformance(groupFilter) && (
+                      <div className="mt-4">
+                        <Button variant="outline" size="sm" onClick={() => setGroupFilter(null)} className="mb-3 h-8 text-xs">
+                          ← Retour
+                        </Button>
+                        <GroupPerformanceView groupPerformance={getGroupPerformance(groupFilter)!} />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            </TabsContent>
+          </AnimatePresence>
         </Tabs>
       </div>
 
-      {/* Modal de détail utilisateur */}
+      {/* User detail sheet */}
       {selectedUserId && (
         <Sheet open={!!selectedUserId} onOpenChange={(open) => !open && handleClearUser()}>
           <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Analyse détaillée</SheetTitle>
-            </SheetHeader>
+            <SheetHeader><SheetTitle>Analyse détaillée</SheetTitle></SheetHeader>
             <div className="mt-6">
-              {loadingUserDetail && (
-                <div className="space-y-4">
-                  <Skeleton className="h-32 w-full" />
-                  <Skeleton className="h-64 w-full" />
-                  <Skeleton className="h-64 w-full" />
-                </div>
-              )}
-
-              {userDetailError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{userDetailError}</AlertDescription>
-                </Alert>
-              )}
-
+              {loadingUserDetail && <div className="space-y-3"><Skeleton className="h-28 w-full rounded-xl" /><Skeleton className="h-56 w-full rounded-xl" /></div>}
+              {userDetailError && <Alert variant="destructive"><AlertDescription>{userDetailError}</AlertDescription></Alert>}
               {!loadingUserDetail && !userDetailError && userDetailData && (
-                <UserDetail
-                  data={userDetailData}
-                  groupBy={groupBy}
-                  onGroupByChange={setGroupBy}
-                />
+                <UserDetail data={userDetailData} groupBy={groupBy} onGroupByChange={setGroupBy} />
               )}
             </div>
           </SheetContent>
         </Sheet>
       )}
 
-      {/* Dialog création groupe */}
-      <Dialog open={isCreateGroupOpen} onOpenChange={setIsCreateGroupOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
-          <DialogHeader className="pb-4 border-b">
-            <div className="flex items-center gap-3">
-              <div className={cn(
-                "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg transition-all",
-                getGroupColor(groupFormColor).gradient
-              )}>
-                {(() => { const Icon = getGroupIcon(groupFormIcon); return <Icon className="h-6 w-6 text-white" />; })()}
-              </div>
-              <div>
-                <DialogTitle className="text-xl">Créer un nouveau groupe</DialogTitle>
-                <p className="text-sm text-muted-foreground mt-1">Personnalisez et ajoutez des membres à votre groupe</p>
-              </div>
-            </div>
-          </DialogHeader>
-          
-          <Tabs value={groupDialogTab} onValueChange={(v) => setGroupDialogTab(v as 'customize' | 'members')} className="mt-4">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="customize" className="gap-2">
-                <Palette className="h-4 w-4" />
-                Personnaliser
-              </TabsTrigger>
-              <TabsTrigger value="members" className="gap-2">
-                <UserPlus className="h-4 w-4" />
-                Membres ({groupFormUserIds.length})
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="customize" className="space-y-6 tab-content-enter">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="groupName" className="text-sm font-medium">Nom du groupe *</Label>
-                  <Input
-                    id="groupName"
-                    value={groupFormName}
-                    onChange={(e) => setGroupFormName(e.target.value)}
-                    placeholder="Ex: Commerciaux TLS"
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="groupDescription" className="text-sm font-medium">Description</Label>
-                  <Input
-                    id="groupDescription"
-                    value={groupFormDescription}
-                    onChange={(e) => setGroupFormDescription(e.target.value)}
-                    placeholder="Description optionnelle..."
-                    className="h-11"
-                  />
-                </div>
-              </div>
-              
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10">
-                <Label className="text-sm font-medium mb-4 block flex items-center gap-2">
-                  <Palette className="h-4 w-4 text-primary" />
-                  Apparence du groupe
-                </Label>
-                <GroupCustomization
-                  icon={groupFormIcon}
-                  color={groupFormColor}
-                  onIconChange={setGroupFormIcon}
-                  onColorChange={setGroupFormColor}
-                />
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="members" className="tab-content-enter">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Sélectionner les membres</Label>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary">
-                    {groupFormUserIds.length} sélectionné{groupFormUserIds.length > 1 ? 's' : ''}
-                  </Badge>
-                </div>
-                <ScrollArea className="h-[350px] border rounded-xl p-4 bg-gradient-to-b from-background to-muted/20">
-                  <div className="space-y-2">
-                    {usersData?.users.map((user) => {
-                      const isSelected = groupFormUserIds.includes(user.userId);
-                      const sla = user.metrics.external.first_reply_within_sla || 0;
-                      return (
-                        <div 
-                          key={user.userId} 
-                          className={cn(
-                            "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
-                            isSelected 
-                              ? "bg-primary/5 border-primary/30" 
-                              : "hover:bg-muted/50 border-transparent hover:border-muted"
-                          )}
-                          onClick={() => toggleUserInGroup(user.userId)}
-                        >
-                          <Checkbox
-                            checked={isSelected}
-                            className="pointer-events-none"
-                          />
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white text-sm">
-                              {user.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{user.displayName}</p>
-                            <p className="text-xs text-muted-foreground truncate">{user.upn}</p>
-                          </div>
-                          <Badge 
-                            variant="outline" 
-                            className={cn(
-                              "text-xs",
-                              sla >= 80 ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" :
-                              sla >= 60 ? "bg-amber-500/10 text-amber-600 border-amber-500/30" :
-                              "bg-red-500/10 text-red-600 border-red-500/30"
-                            )}
-                          >
-                            SLA {Math.round(sla)}%
-                          </Badge>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              </div>
-            </TabsContent>
-          </Tabs>
-          
-          <div className="flex items-center justify-between pt-4 border-t mt-4">
-            <div className="flex items-center gap-2">
-              {groupDialogTab === 'customize' && groupFormName.trim() && (
-                <Button variant="outline" onClick={() => setGroupDialogTab('members')}>
-                  Suivant: Membres →
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setIsCreateGroupOpen(false)}>
-                Annuler
-              </Button>
-              <Button 
-                onClick={handleSaveGroup} 
-                disabled={!groupFormName.trim()}
-                className={cn("bg-gradient-to-r shadow-lg", getGroupColor(groupFormColor).gradient)}
-              >
-                Créer le groupe
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog édition groupe */}
-      <Dialog open={isEditGroupOpen} onOpenChange={setIsEditGroupOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
-          <DialogHeader className="pb-4 border-b">
-            <div className="flex items-center gap-3">
-              <div className={cn(
-                "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg transition-all",
-                getGroupColor(groupFormColor).gradient
-              )}>
-                {(() => { const Icon = getGroupIcon(groupFormIcon); return <Icon className="h-6 w-6 text-white" />; })()}
-              </div>
-              <div>
-                <DialogTitle className="text-xl">Modifier le groupe</DialogTitle>
-                <p className="text-sm text-muted-foreground mt-1">Personnalisez et gérez les membres du groupe</p>
-              </div>
-            </div>
-          </DialogHeader>
-          
-          <Tabs value={groupDialogTab} onValueChange={(v) => setGroupDialogTab(v as 'customize' | 'members')} className="mt-4">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="customize" className="gap-2">
-                <Palette className="h-4 w-4" />
-                Personnaliser
-              </TabsTrigger>
-              <TabsTrigger value="members" className="gap-2">
-                <UserPlus className="h-4 w-4" />
-                Membres ({groupFormUserIds.length})
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="customize" className="space-y-6 tab-content-enter">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="editGroupName" className="text-sm font-medium">Nom du groupe *</Label>
-                  <Input
-                    id="editGroupName"
-                    value={groupFormName}
-                    onChange={(e) => setGroupFormName(e.target.value)}
-                    placeholder="Ex: Commerciaux TLS"
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="editGroupDescription" className="text-sm font-medium">Description</Label>
-                  <Input
-                    id="editGroupDescription"
-                    value={groupFormDescription}
-                    onChange={(e) => setGroupFormDescription(e.target.value)}
-                    placeholder="Description optionnelle..."
-                    className="h-11"
-                  />
-                </div>
-              </div>
-              
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10">
-                <Label className="text-sm font-medium mb-4 block flex items-center gap-2">
-                  <Palette className="h-4 w-4 text-primary" />
-                  Apparence du groupe
-                </Label>
-                <GroupCustomization
-                  icon={groupFormIcon}
-                  color={groupFormColor}
-                  onIconChange={setGroupFormIcon}
-                  onColorChange={setGroupFormColor}
-                />
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="members" className="tab-content-enter">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Sélectionner les membres</Label>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary">
-                    {groupFormUserIds.length} sélectionné{groupFormUserIds.length > 1 ? 's' : ''}
-                  </Badge>
-                </div>
-                <ScrollArea className="h-[350px] border rounded-xl p-4 bg-gradient-to-b from-background to-muted/20">
-                  <div className="space-y-2">
-                    {usersData?.users.map((user) => {
-                      const isSelected = groupFormUserIds.includes(user.userId);
-                      const sla = user.metrics.external.first_reply_within_sla || 0;
-                      return (
-                        <div 
-                          key={user.userId} 
-                          className={cn(
-                            "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
-                            isSelected 
-                              ? "bg-primary/5 border-primary/30" 
-                              : "hover:bg-muted/50 border-transparent hover:border-muted"
-                          )}
-                          onClick={() => toggleUserInGroup(user.userId)}
-                        >
-                          <Checkbox
-                            checked={isSelected}
-                            className="pointer-events-none"
-                          />
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white text-sm">
-                              {user.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{user.displayName}</p>
-                            <p className="text-xs text-muted-foreground truncate">{user.upn}</p>
-                          </div>
-                          <Badge 
-                            variant="outline" 
-                            className={cn(
-                              "text-xs",
-                              sla >= 80 ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" :
-                              sla >= 60 ? "bg-amber-500/10 text-amber-600 border-amber-500/30" :
-                              "bg-red-500/10 text-red-600 border-red-500/30"
-                            )}
-                          >
-                            SLA {Math.round(sla)}%
-                          </Badge>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              </div>
-            </TabsContent>
-          </Tabs>
-          
-          <div className="flex items-center justify-between pt-4 border-t mt-4">
-            <div className="flex items-center gap-2">
-              {groupDialogTab === 'customize' && groupFormName.trim() && (
-                <Button variant="outline" onClick={() => setGroupDialogTab('members')}>
-                  Suivant: Membres →
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setIsEditGroupOpen(false)}>
-                Annuler
-              </Button>
-              <Button 
-                onClick={handleSaveGroup} 
-                disabled={!groupFormName.trim()}
-                className={cn("bg-gradient-to-r shadow-lg", getGroupColor(groupFormColor).gradient)}
-              >
-                Enregistrer
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Group dialogs */}
+      {renderGroupDialog(isCreateGroupOpen, setIsCreateGroupOpen, 'Nouveau groupe', 'Créer')}
+      {renderGroupDialog(isEditGroupOpen, setIsEditGroupOpen, 'Modifier le groupe', 'Enregistrer')}
     </div>
   );
 }
