@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { mockUsers, User } from '@/lib/mock-data';
-import { Progress } from '@/components/ui/progress';
 import { exportService } from '@/lib/services';
 
 // Couleurs pour les avatars
