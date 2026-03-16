@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Download, MoreVertical, Plus, Users as UsersIcon, Mail, Building2, Shield, HardDrive, TrendingUp, Sparkles, Eye, Edit, RefreshCw, UserX, ChevronRight } from 'lucide-react';
+import { Search, Download, MoreVertical, Plus, Users as UsersIcon, Mail, Building2, Shield, TrendingUp, Sparkles, Eye, Edit, RefreshCw, UserX, ChevronRight } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
