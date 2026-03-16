@@ -206,14 +206,29 @@ export default function Users() {
         </div>
       </Card>
 
-      {/* Liste des utilisateurs */}
-      <div className="grid grid-cols-1 gap-4">
-        {filteredUsers.map((user, index) => (
-          <UserCard key={user.id} user={user} colorIndex={index} />
-        ))}
-      </div>
-
-      {filteredUsers.length === 0 && (
+      {/* Table des utilisateurs */}
+      {filteredUsers.length > 0 ? (
+        <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-xl overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableHead className="w-[280px]">Utilisateur</TableHead>
+                <TableHead>Métier</TableHead>
+                <TableHead>Agence</TableHead>
+                <TableHead>Licence</TableHead>
+                <TableHead>Stockage</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.map((user, index) => (
+                <UserRow key={user.id} user={user} colorIndex={index} />
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      ) : (
         <Card className="p-12 text-center bg-card/80 backdrop-blur-sm border-border/50">
           <div className="p-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 inline-block mb-4">
             <UsersIcon className="h-8 w-8 text-white" />
@@ -226,147 +241,129 @@ export default function Users() {
   );
 }
 
-function UserCard({ user, colorIndex }: { user: User; colorIndex: number }) {
+function UserRow({ user, colorIndex }: { user: User; colorIndex: number }) {
   const navigate = useNavigate();
   const storagePercent = (user.stockage.utiliseGo / user.stockage.quotaGo) * 100;
   const avatarColor = avatarColors[colorIndex % avatarColors.length];
-  
+
   const getStorageColor = () => {
-    if (storagePercent >= 90) return 'from-rose-500 to-red-600';
-    if (storagePercent >= 70) return 'from-amber-500 to-orange-600';
-    return 'from-emerald-500 to-teal-600';
+    if (storagePercent >= 90) return 'bg-destructive';
+    if (storagePercent >= 70) return 'bg-chart-4';
+    return 'bg-primary';
   };
 
   return (
-    <Card
-      className="group p-6 bg-card/80 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-primary/30"
+    <TableRow
+      className="group cursor-pointer hover:bg-muted/40 transition-colors"
       onClick={() => navigate(`/utilisateurs/${user.id}`)}
     >
-      <div className="flex items-start gap-5">
-        {/* Avatar avec gradient */}
-        <div className="relative">
-          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${avatarColor} flex items-center justify-center text-white font-bold text-xl shadow-lg`}>
-            {user.prenom.charAt(0)}{user.nom.charAt(0)}
-          </div>
-          <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-3 border-card ${user.status === 'active' ? 'bg-emerald-500' : 'bg-muted'} shadow-md`}></div>
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              {/* Nom et badges */}
-              <div className="flex items-center gap-3 flex-wrap mb-2">
-                <h3 className="text-lg font-bold group-hover:text-primary transition-colors">
-                  {user.prenom} {user.nom}
-                </h3>
-                <Badge 
-                  variant={user.status === 'active' ? 'default' : 'secondary'}
-                  className={user.status === 'active' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-sm' : ''}
-                >
-                  {user.status === 'active' ? 'Actif' : 'Inactif'}
-                </Badge>
-                <Badge 
-                  variant="outline"
-                  className={user.typeBoite === 'partagee' ? 'border-violet-300 text-violet-700 bg-violet-50' : 'border-blue-300 text-blue-700 bg-blue-50'}
-                >
-                  {user.typeBoite === 'nominative' ? 'Nominative' : 'Partagée'}
-                </Badge>
-              </div>
-              
-              {/* Infos en grille */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                  <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="truncate font-medium">{user.email}</span>
-                </div>
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                  <Sparkles className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="truncate">{user.metier}</span>
-                </div>
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                  <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="truncate">{user.agence}</span>
-                </div>
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                  <Shield className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="truncate">{user.licence.label.replace('Microsoft 365 ', '')}</span>
-                </div>
-              </div>
-
-              {/* Barre de stockage */}
-              <div className="mt-4 p-3 rounded-xl bg-muted/30">
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <div className="flex items-center gap-2">
-                    <HardDrive className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Stockage</span>
-                  </div>
-                  <span className="font-bold">
-                    {user.stockage.utiliseGo} Go / {user.stockage.quotaGo} Go
-                  </span>
-                </div>
-                <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full bg-gradient-to-r ${getStorageColor()} rounded-full transition-all duration-500`}
-                    style={{ width: `${Math.min(storagePercent, 100)}%` }}
-                  ></div>
-                </div>
-                {storagePercent >= 90 && (
-                  <p className="text-xs text-rose-500 mt-1 font-medium">⚠️ Stockage critique</p>
-                )}
-              </div>
+      {/* Avatar + Nom + Email */}
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="relative flex-shrink-0">
+            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${avatarColor} flex items-center justify-center text-white font-semibold text-sm shadow-sm`}>
+              {user.prenom.charAt(0)}{user.nom.charAt(0)}
             </div>
+            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card ${user.status === 'active' ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`}></div>
+          </div>
+          <div className="min-w-0">
+            <p className="font-semibold text-sm group-hover:text-primary transition-colors truncate">
+              {user.prenom} {user.nom}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+          </div>
+        </div>
+      </TableCell>
 
-            {/* Actions */}
-            <div className="flex items-center gap-2">
+      {/* Métier */}
+      <TableCell>
+        <span className="text-sm text-muted-foreground">{user.metier}</span>
+      </TableCell>
+
+      {/* Agence */}
+      <TableCell>
+        <div className="flex items-center gap-1.5">
+          <Building2 className="h-3.5 w-3.5 text-muted-foreground/60" />
+          <span className="text-sm">{user.agence}</span>
+        </div>
+      </TableCell>
+
+      {/* Licence */}
+      <TableCell>
+        <Badge variant="outline" className="font-normal text-xs">
+          {user.licence.label.replace('Microsoft 365 ', '')}
+        </Badge>
+      </TableCell>
+
+      {/* Stockage */}
+      <TableCell>
+        <div className="w-28">
+          <div className="flex items-center justify-between text-xs mb-1">
+            <span className="text-muted-foreground">{user.stockage.utiliseGo} Go</span>
+            <span className="text-muted-foreground/60">/ {user.stockage.quotaGo}</span>
+          </div>
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className={`h-full ${getStorageColor()} rounded-full transition-all duration-500`}
+              style={{ width: `${Math.min(storagePercent, 100)}%` }}
+            ></div>
+          </div>
+        </div>
+      </TableCell>
+
+      {/* Statut + Type */}
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Badge
+            variant={user.status === 'active' ? 'default' : 'secondary'}
+            className={`text-xs ${user.status === 'active' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20' : ''}`}
+          >
+            {user.status === 'active' ? 'Actif' : 'Inactif'}
+          </Badge>
+          {user.typeBoite === 'partagee' && (
+            <Badge variant="outline" className="text-xs border-accent text-accent-foreground/70">
+              Partagée
+            </Badge>
+          )}
+        </div>
+      </TableCell>
+
+      {/* Actions */}
+      <TableCell>
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/utilisateurs/${user.id}`);
-                }}
+                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                <Eye className="h-4 w-4" />
+                <MoreVertical className="h-4 w-4" />
               </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => e.stopPropagation()}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuItem onClick={() => navigate(`/utilisateurs/${user.id}`)}>
-                    <Eye className="h-4 w-4 mr-2" />
-                    Voir la fiche
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Modifier
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Changer licence
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive">
-                    <UserX className="h-4 w-4 mr-2" />
-                    Désactiver
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-            </div>
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => navigate(`/utilisateurs/${user.id}`)}>
+                <Eye className="h-4 w-4 mr-2" />
+                Voir la fiche
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Edit className="h-4 w-4 mr-2" />
+                Modifier
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Changer licence
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive">
+                <UserX className="h-4 w-4 mr-2" />
+                Désactiver
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
         </div>
-      </div>
-    </Card>
+      </TableCell>
+    </TableRow>
   );
 }
