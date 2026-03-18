@@ -24,6 +24,7 @@ import SharePointPermissions from "./pages/SharePointPermissions";
 import NotificationCenter from "./pages/NotificationCenter";
 import PerformanceKPI from "./pages/PerformanceKPI";
 import Leaderboard from "./pages/Leaderboard";
+import CyberSecurity from "./pages/CyberSecurity";
 import Login from "./pages/Login";
 import TwoFactorAuth from "./pages/TwoFactorAuth";
 import NotFound from "./pages/NotFound";
