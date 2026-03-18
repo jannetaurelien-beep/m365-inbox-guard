@@ -65,6 +65,7 @@ const App = () => (
                     <Route path="/notifications" element={<NotificationCenter />} />
                     <Route path="/performance-kpi" element={<PerformanceKPI />} />
                     <Route path="/classement" element={<Leaderboard />} />
+                    <Route path="/cybersecurite" element={<CyberSecurity />} />
                     <Route path="/parametres" element={<div className="p-8 text-center text-muted-foreground">Paramètres (à venir)</div>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

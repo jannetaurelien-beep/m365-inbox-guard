@@ -25,6 +25,7 @@ const menuItems = [
   { title: 'Notifications', url: '/notifications', icon: Bell },
   { title: 'Performance', url: '/performance-kpi', icon: TrendingUp },
   { title: 'Classement', url: '/classement', icon: Trophy },
+  { title: 'Cybersécurité', url: '/cybersecurite', icon: Shield },
   { title: 'Paramètres', url: '/parametres', icon: Settings },
 ];
 
