@@ -6,6 +6,7 @@ interface ScoreRingProps {
   strokeWidth?: number;
   label?: string;
   className?: string;
+  loading?: boolean;
 }
 
 function getScoreColor(score: number): string {
@@ -29,13 +30,12 @@ function getScoreLabel(score: number): string {
   return 'Critique';
 }
 
-export function ScoreRing({ score, size = 160, strokeWidth = 10, label, className = '' }: ScoreRingProps) {
+export function ScoreRing({ score, size = 160, strokeWidth = 10, label, className = '', loading = false }: ScoreRingProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
-  const color = getScoreColor(score);
+  const color = loading ? 'hsl(var(--primary))' : getScoreColor(score);
 
-  // Tick marks for the gauge
   const tickCount = 40;
   const ticks = Array.from({ length: tickCount }, (_, i) => {
     const angle = (i / tickCount) * 360 - 90;
@@ -59,7 +59,12 @@ export function ScoreRing({ score, size = 160, strokeWidth = 10, label, classNam
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
     >
-      <svg width={size} height={size} className="-rotate-90" style={{ filter: `drop-shadow(${getScoreGlow(score)})` }}>
+      <svg
+        width={size}
+        height={size}
+        className="-rotate-90"
+        style={{ filter: loading ? undefined : `drop-shadow(${getScoreGlow(score)})` }}
+      >
         {/* Background track */}
         <circle
           cx={size / 2}
@@ -70,8 +75,8 @@ export function ScoreRing({ score, size = 160, strokeWidth = 10, label, classNam
           strokeWidth={strokeWidth}
           opacity={0.3}
         />
-        {/* Tick marks */}
-        {ticks.map((t, i) => (
+        {/* Tick marks - hidden during loading */}
+        {!loading && ticks.map((t, i) => (
           <line
             key={i}
             x1={t.x1}
@@ -83,38 +88,90 @@ export function ScoreRing({ score, size = 160, strokeWidth = 10, label, classNam
             opacity={t.active ? 0.8 : 0.15}
           />
         ))}
-        {/* Score arc */}
-        <motion.circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.8, ease: 'easeOut', delay: 0.3 }}
-        />
+        {/* Score arc or loading spinner */}
+        {loading ? (
+          <>
+            <motion.circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeDasharray={`${circumference * 0.25} ${circumference * 0.75}`}
+              style={{ transformOrigin: 'center' }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+            />
+            <motion.circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth={strokeWidth * 0.6}
+              strokeLinecap="round"
+              strokeDasharray={`${circumference * 0.15} ${circumference * 0.85}`}
+              opacity={0.4}
+              style={{ transformOrigin: 'center' }}
+              animate={{ rotate: -360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+            />
+          </>
+        ) : (
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1.8, ease: 'easeOut', delay: 0.3 }}
+          />
+        )}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center rotate-0">
-        <motion.span
-          className="text-4xl font-black text-foreground tracking-tight"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-        >
-          {score}
-        </motion.span>
-        <motion.span
-          className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-        >
-          {label || getScoreLabel(score)}
-        </motion.span>
+        {loading ? (
+          <>
+            <motion.div
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <span className="text-2xl font-black text-foreground tracking-tight">…</span>
+            </motion.div>
+            <motion.span
+              className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              Analyse
+            </motion.span>
+          </>
+        ) : (
+          <>
+            <motion.span
+              className="text-4xl font-black text-foreground tracking-tight"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+            >
+              {score}
+            </motion.span>
+            <motion.span
+              className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+            >
+              {label || getScoreLabel(score)}
+            </motion.span>
+          </>
+        )}
       </div>
     </motion.div>
   );
