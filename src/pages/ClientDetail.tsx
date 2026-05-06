@@ -61,14 +61,15 @@ const utilisateursClient = [
   { id: 'u5', nom: 'Julie Garnier', email: 'j.garnier@acme.fr', role: 'RH', agence: 'Paris', status: 'inactive', licence: 'E1' },
 ];
 
-const parcInformatique: AppareilParc[] = [
-  { id: 'd1', nom: 'PC-MARIE-01', type: 'laptop', utilisateur: 'Marie Dubois', os: 'Windows 11 Pro', modele: 'Dell XPS 15', numeroSerie: 'SN-DXP15-001', status: 'actif', dernierVu: 'il y a 2 min' },
-  { id: 'd2', nom: 'PC-THOMAS-02', type: 'laptop', utilisateur: 'Thomas Bernard', os: 'Windows 11 Pro', modele: 'HP EliteBook', numeroSerie: 'SN-HP-EB-042', status: 'actif', dernierVu: 'il y a 12 min' },
-  { id: 'd3', nom: 'SERVER-AD-01', type: 'server', os: 'Windows Server 2022', modele: 'Dell PowerEdge R750', numeroSerie: 'SN-PER-750-A', status: 'actif', dernierVu: 'en ligne' },
-  { id: 'd4', nom: 'NAS-FILES-01', type: 'server', os: 'Synology DSM 7', modele: 'Synology RS1221+', numeroSerie: 'SN-RS1221-X', status: 'actif', dernierVu: 'en ligne' },
-  { id: 'd5', nom: 'IPHONE-SOPHIE', type: 'mobile', utilisateur: 'Sophie Lemoine', os: 'iOS 17', modele: 'iPhone 15', numeroSerie: 'SN-IP15-008', status: 'actif', dernierVu: 'il y a 1h' },
-  { id: 'd6', nom: 'PRINTER-PARIS-01', type: 'printer', os: '—', modele: 'HP LaserJet Pro', numeroSerie: 'SN-HPLJ-211', status: 'maintenance', dernierVu: 'il y a 3h' },
-  { id: 'd7', nom: 'SWITCH-CORE-01', type: 'network', os: 'Cisco IOS', modele: 'Cisco Catalyst 9300', numeroSerie: 'SN-C9300-A', status: 'actif', dernierVu: 'en ligne' },
+const parcInformatique: (AppareilParc & { agence: string })[] = [
+  { id: 'd1', nom: 'PC-MARIE-01', type: 'laptop', utilisateur: 'Marie Dubois', os: 'Windows 11 Pro', modele: 'Dell XPS 15', numeroSerie: 'SN-DXP15-001', status: 'actif', dernierVu: 'il y a 2 min', agence: 'Paris' },
+  { id: 'd2', nom: 'PC-THOMAS-02', type: 'laptop', utilisateur: 'Thomas Bernard', os: 'Windows 11 Pro', modele: 'HP EliteBook', numeroSerie: 'SN-HP-EB-042', status: 'actif', dernierVu: 'il y a 12 min', agence: 'Lyon' },
+  { id: 'd3', nom: 'SERVER-AD-01', type: 'server', os: 'Windows Server 2022', modele: 'Dell PowerEdge R750', numeroSerie: 'SN-PER-750-A', status: 'actif', dernierVu: 'en ligne', agence: 'Paris' },
+  { id: 'd4', nom: 'NAS-FILES-01', type: 'server', os: 'Synology DSM 7', modele: 'Synology RS1221+', numeroSerie: 'SN-RS1221-X', status: 'actif', dernierVu: 'en ligne', agence: 'Paris' },
+  { id: 'd5', nom: 'IPHONE-SOPHIE', type: 'mobile', utilisateur: 'Sophie Lemoine', os: 'iOS 17', modele: 'iPhone 15', numeroSerie: 'SN-IP15-008', status: 'actif', dernierVu: 'il y a 1h', agence: 'Paris' },
+  { id: 'd6', nom: 'PRINTER-PARIS-01', type: 'printer', os: '—', modele: 'HP LaserJet Pro', numeroSerie: 'SN-HPLJ-211', status: 'maintenance', dernierVu: 'il y a 3h', agence: 'Paris' },
+  { id: 'd7', nom: 'SWITCH-LYON-01', type: 'network', os: 'Cisco IOS', modele: 'Cisco Catalyst 9300', numeroSerie: 'SN-C9300-A', status: 'actif', dernierVu: 'en ligne', agence: 'Lyon' },
+  { id: 'd8', nom: 'PC-PIERRE-04', type: 'laptop', utilisateur: 'Pierre Roux', os: 'Windows 11 Pro', modele: 'Lenovo ThinkPad', numeroSerie: 'SN-LTP-088', status: 'actif', dernierVu: 'il y a 5 min', agence: 'Marseille' },
 ];
 
 const ficherClient = [
