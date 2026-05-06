@@ -55,7 +55,7 @@ export default function Clients() {
   const filtered = useMemo(() => mockClients.filter(c => {
     const s = search.toLowerCase();
     const matchSearch = !s || c.nom.toLowerCase().includes(s) || c.ville.toLowerCase().includes(s) || c.email.toLowerCase().includes(s) || c.codePostal.includes(s);
-    return matchSearch && (statusFilter === 'all' || c.status === statusFilter) && (contratFilter === 'all' || c.contrat === contratFilter);
+    return matchSearch && (statusFilter === 'all' || c.status === statusFilter) && (contratFilter === 'all' || c.contrats?.includes(contratFilter as ContratType));
   }), [search, statusFilter, contratFilter]);
 
   const totalCa = mockClients.reduce((s, c) => s + c.ca, 0);
