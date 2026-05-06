@@ -6,7 +6,7 @@ import {
   TrendingUp, Briefcase, Edit, Star, MoreVertical, Plus, Monitor, Laptop, Smartphone,
   Server, Network, FileText, Calendar, Activity, Shield, MessageSquare, Paperclip,
   CheckCircle2, AlertTriangle, Clock, ChevronRight, Trash2, Download, Search,
-  HardDrive, Wifi, Printer, Cpu, FolderOpen, Sparkles
+  HardDrive, Wifi, Printer, Cpu, FolderOpen, Sparkles, PhoneCall, Bell, Router, Tv, Camera
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mockClients, Client } from '@/lib/mock-data/clients';
 import { toast } from 'sonner';
 
@@ -33,17 +34,35 @@ interface Agence {
   telephone: string;
 }
 
+type ParcCategorie = 'serveur' | 'poste' | 'mobile' | 'telephonie' | 'alarme' | 'reseau' | 'lien-internet' | 'imprimante' | 'videosurveillance' | 'autre';
+
 interface AppareilParc {
   id: string;
   nom: string;
-  type: 'laptop' | 'desktop' | 'mobile' | 'server' | 'printer' | 'network';
+  categorie: ParcCategorie;
   utilisateur?: string;
   os: string;
   modele: string;
   numeroSerie: string;
   status: 'actif' | 'maintenance' | 'hors-service';
   dernierVu: string;
+  fournisseur?: string;
+  contrat?: string;
+  notes?: string;
 }
+
+const CATEGORIES: { value: ParcCategorie; label: string; icon: any; color: string }[] = [
+  { value: 'serveur', label: 'Serveurs', icon: Server, color: 'from-violet-500 to-purple-600' },
+  { value: 'poste', label: 'Postes utilisateurs', icon: Laptop, color: 'from-blue-500 to-indigo-600' },
+  { value: 'mobile', label: 'Mobiles & tablettes', icon: Smartphone, color: 'from-emerald-500 to-teal-600' },
+  { value: 'telephonie', label: 'Téléphonie', icon: PhoneCall, color: 'from-cyan-500 to-sky-600' },
+  { value: 'alarme', label: 'Alarme & sécurité', icon: Bell, color: 'from-rose-500 to-red-600' },
+  { value: 'videosurveillance', label: 'Vidéosurveillance', icon: Camera, color: 'from-fuchsia-500 to-pink-600' },
+  { value: 'reseau', label: 'Réseau & switch', icon: Network, color: 'from-amber-500 to-orange-600' },
+  { value: 'lien-internet', label: 'Liens internet', icon: Wifi, color: 'from-lime-500 to-emerald-600' },
+  { value: 'imprimante', label: 'Impression', icon: Printer, color: 'from-slate-500 to-zinc-600' },
+  { value: 'autre', label: 'Autre', icon: HardDrive, color: 'from-stone-500 to-neutral-600' },
+];
 
 const initialAgences: Record<string, Agence[]> = {
   c1: [
@@ -61,16 +80,23 @@ const utilisateursClient = [
   { id: 'u5', nom: 'Julie Garnier', email: 'j.garnier@acme.fr', role: 'RH', agence: 'Paris', status: 'inactive', licence: 'E1' },
 ];
 
-const parcInformatique: (AppareilParc & { agence: string })[] = [
-  { id: 'd1', nom: 'PC-MARIE-01', type: 'laptop', utilisateur: 'Marie Dubois', os: 'Windows 11 Pro', modele: 'Dell XPS 15', numeroSerie: 'SN-DXP15-001', status: 'actif', dernierVu: 'il y a 2 min', agence: 'Paris' },
-  { id: 'd2', nom: 'PC-THOMAS-02', type: 'laptop', utilisateur: 'Thomas Bernard', os: 'Windows 11 Pro', modele: 'HP EliteBook', numeroSerie: 'SN-HP-EB-042', status: 'actif', dernierVu: 'il y a 12 min', agence: 'Lyon' },
-  { id: 'd3', nom: 'SERVER-AD-01', type: 'server', os: 'Windows Server 2022', modele: 'Dell PowerEdge R750', numeroSerie: 'SN-PER-750-A', status: 'actif', dernierVu: 'en ligne', agence: 'Paris' },
-  { id: 'd4', nom: 'NAS-FILES-01', type: 'server', os: 'Synology DSM 7', modele: 'Synology RS1221+', numeroSerie: 'SN-RS1221-X', status: 'actif', dernierVu: 'en ligne', agence: 'Paris' },
-  { id: 'd5', nom: 'IPHONE-SOPHIE', type: 'mobile', utilisateur: 'Sophie Lemoine', os: 'iOS 17', modele: 'iPhone 15', numeroSerie: 'SN-IP15-008', status: 'actif', dernierVu: 'il y a 1h', agence: 'Paris' },
-  { id: 'd6', nom: 'PRINTER-PARIS-01', type: 'printer', os: '—', modele: 'HP LaserJet Pro', numeroSerie: 'SN-HPLJ-211', status: 'maintenance', dernierVu: 'il y a 3h', agence: 'Paris' },
-  { id: 'd7', nom: 'SWITCH-LYON-01', type: 'network', os: 'Cisco IOS', modele: 'Cisco Catalyst 9300', numeroSerie: 'SN-C9300-A', status: 'actif', dernierVu: 'en ligne', agence: 'Lyon' },
-  { id: 'd8', nom: 'PC-PIERRE-04', type: 'laptop', utilisateur: 'Pierre Roux', os: 'Windows 11 Pro', modele: 'Lenovo ThinkPad', numeroSerie: 'SN-LTP-088', status: 'actif', dernierVu: 'il y a 5 min', agence: 'Marseille' },
+const initialParc: (AppareilParc & { agence: string })[] = [
+  { id: 'd1', nom: 'PC-MARIE-01', categorie: 'poste', utilisateur: 'Marie Dubois', os: 'Windows 11 Pro', modele: 'Dell XPS 15', numeroSerie: 'SN-DXP15-001', status: 'actif', dernierVu: 'il y a 2 min', agence: 'Paris', fournisseur: 'Dell' },
+  { id: 'd2', nom: 'PC-THOMAS-02', categorie: 'poste', utilisateur: 'Thomas Bernard', os: 'Windows 11 Pro', modele: 'HP EliteBook', numeroSerie: 'SN-HP-EB-042', status: 'actif', dernierVu: 'il y a 12 min', agence: 'Lyon', fournisseur: 'HP' },
+  { id: 'd3', nom: 'SERVER-AD-01', categorie: 'serveur', os: 'Windows Server 2022', modele: 'Dell PowerEdge R750', numeroSerie: 'SN-PER-750-A', status: 'actif', dernierVu: 'en ligne', agence: 'Paris', fournisseur: 'Dell', contrat: 'ProSupport 24/7' },
+  { id: 'd4', nom: 'NAS-FILES-01', categorie: 'serveur', os: 'Synology DSM 7', modele: 'Synology RS1221+', numeroSerie: 'SN-RS1221-X', status: 'actif', dernierVu: 'en ligne', agence: 'Paris', fournisseur: 'Synology' },
+  { id: 'd5', nom: 'IPHONE-SOPHIE', categorie: 'mobile', utilisateur: 'Sophie Lemoine', os: 'iOS 17', modele: 'iPhone 15', numeroSerie: 'SN-IP15-008', status: 'actif', dernierVu: 'il y a 1h', agence: 'Paris', fournisseur: 'Apple' },
+  { id: 'd6', nom: 'PRINTER-PARIS-01', categorie: 'imprimante', os: '—', modele: 'HP LaserJet Pro', numeroSerie: 'SN-HPLJ-211', status: 'maintenance', dernierVu: 'il y a 3h', agence: 'Paris', fournisseur: 'HP' },
+  { id: 'd7', nom: 'SWITCH-LYON-01', categorie: 'reseau', os: 'Cisco IOS', modele: 'Cisco Catalyst 9300', numeroSerie: 'SN-C9300-A', status: 'actif', dernierVu: 'en ligne', agence: 'Lyon', fournisseur: 'Cisco' },
+  { id: 'd8', nom: 'PC-PIERRE-04', categorie: 'poste', utilisateur: 'Pierre Roux', os: 'Windows 11 Pro', modele: 'Lenovo ThinkPad', numeroSerie: 'SN-LTP-088', status: 'actif', dernierVu: 'il y a 5 min', agence: 'Marseille', fournisseur: 'Lenovo' },
+  { id: 'd9', nom: 'TEL-STD-PARIS', categorie: 'telephonie', os: '3CX v20', modele: 'Yealink T54W (12 postes)', numeroSerie: 'SN-Y54-PAR', status: 'actif', dernierVu: 'en ligne', agence: 'Paris', fournisseur: 'Yealink', contrat: 'IPBX hébergé' },
+  { id: 'd10', nom: 'ALARME-SIEGE', categorie: 'alarme', os: '—', modele: 'Verisure Pro', numeroSerie: 'SN-VS-9921', status: 'actif', dernierVu: 'OK', agence: 'Paris', fournisseur: 'Verisure', contrat: 'Télésurveillance 24/7' },
+  { id: 'd11', nom: 'CCTV-LYON-EXT', categorie: 'videosurveillance', os: 'Hik-Connect', modele: 'Hikvision NVR 8ch', numeroSerie: 'SN-HIK-NVR8', status: 'actif', dernierVu: 'en ligne', agence: 'Lyon', fournisseur: 'Hikvision' },
+  { id: 'd12', nom: 'FIBRE-PARIS-1G', categorie: 'lien-internet', os: '—', modele: 'Orange Pro Fibre 1Gb/s', numeroSerie: 'OF-PAR-77821', status: 'actif', dernierVu: '99,98% SLA', agence: 'Paris', fournisseur: 'Orange', contrat: 'GTR 4h' },
+  { id: 'd13', nom: 'SDSL-LYON-BACKUP', categorie: 'lien-internet', os: '—', modele: 'SFR SDSL 20Mb backup', numeroSerie: 'SFR-LYO-3320', status: 'actif', dernierVu: 'OK', agence: 'Lyon', fournisseur: 'SFR' },
 ];
+
+const parcInformatique = initialParc;
 
 const ficherClient = [
   { id: 'f1', nom: 'Contrat-cadre-2024.pdf', taille: '1.2 Mo', date: '12/03/2024', type: 'Contrat' },
@@ -87,9 +113,7 @@ const activites = [
   { id: 'ac5', icon: CreditCard, color: 'text-cyan-500', titre: 'Renouvellement contrat Premium', date: 'Il y a 2 semaines', user: 'Commercial' },
 ];
 
-const deviceIcons: Record<AppareilParc['type'], any> = {
-  laptop: Laptop, desktop: Monitor, mobile: Smartphone, server: Server, printer: Printer, network: Network,
-};
+const categoryMap = Object.fromEntries(CATEGORIES.map(c => [c.value, c])) as Record<ParcCategorie, typeof CATEGORIES[number]>;
 
 const statusStyles: Record<Client['status'], string> = {
   actif: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30',
@@ -109,17 +133,21 @@ export default function ClientDetail() {
   const [searchDevice, setSearchDevice] = useState('');
   const [selectedAgence, setSelectedAgence] = useState<Agence | null>(null);
   const [showPicker, setShowPicker] = useState(true);
+  const [categorieFilter, setCategorieFilter] = useState<ParcCategorie | 'all'>('all');
+  const [parc, setParc] = useState(initialParc);
+  const [deviceDialog, setDeviceDialog] = useState(false);
+  const [newDevice, setNewDevice] = useState<Partial<AppareilParc & { agence: string }>>({ categorie: 'poste', status: 'actif' });
 
   const agenceFilter = selectedAgence?.ville;
   const scopedUsers = agenceFilter ? utilisateursClient.filter(u => u.agence === agenceFilter) : utilisateursClient;
-  const scopedDevices = agenceFilter ? parcInformatique.filter(d => d.agence === agenceFilter) : parcInformatique;
+  const scopedDevices = agenceFilter ? parc.filter(d => d.agence === agenceFilter) : parc;
 
   const filteredUsers = useMemo(
     () => scopedUsers.filter(u => u.nom.toLowerCase().includes(searchUser.toLowerCase()) || u.email.toLowerCase().includes(searchUser.toLowerCase())),
     [searchUser, scopedUsers]
   );
   const filteredDevices = useMemo(
-    () => scopedDevices.filter(d => d.nom.toLowerCase().includes(searchDevice.toLowerCase()) || (d.utilisateur || '').toLowerCase().includes(searchDevice.toLowerCase())),
+    () => scopedDevices.filter(d => (categorieFilter === 'all' || d.categorie === categorieFilter) && (d.nom.toLowerCase().includes(searchDevice.toLowerCase()) || (d.utilisateur || '').toLowerCase().includes(searchDevice.toLowerCase()))),
     [searchDevice, scopedDevices]
   );
 
@@ -488,59 +516,139 @@ export default function ClientDetail() {
 
             {/* PARC IT */}
             <TabsContent value="parc" className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[
-                  { icon: Laptop, label: 'Postes', value: parcInformatique.filter(d => d.type === 'laptop' || d.type === 'desktop').length, color: 'from-blue-500 to-indigo-600' },
-                  { icon: Server, label: 'Serveurs', value: parcInformatique.filter(d => d.type === 'server').length, color: 'from-violet-500 to-purple-600' },
-                  { icon: Smartphone, label: 'Mobiles', value: parcInformatique.filter(d => d.type === 'mobile').length, color: 'from-emerald-500 to-teal-600' },
-                  { icon: Network, label: 'Réseau', value: parcInformatique.filter(d => d.type === 'network' || d.type === 'printer').length, color: 'from-amber-500 to-orange-600' },
-                ].map((s, i) => (
-                  <Card key={i} className="p-4 bg-card/80 backdrop-blur-sm border-border/50">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center mb-2`}><s.icon className="h-5 w-5 text-white" /></div>
-                    <p className="text-2xl font-bold">{s.value}</p>
-                    <p className="text-xs text-muted-foreground">{s.label}</p>
-                  </Card>
-                ))}
+              {/* Catégories cards (cliquables = filtre) */}
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+                <button
+                  onClick={() => setCategorieFilter('all')}
+                  className={`p-4 rounded-xl border text-left transition-all ${categorieFilter === 'all' ? 'border-primary bg-primary/5 shadow-md' : 'border-border/50 bg-card/80 hover:border-primary/40 hover:-translate-y-0.5'}`}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-zinc-600 flex items-center justify-center mb-2">
+                    <Cpu className="h-5 w-5 text-white" />
+                  </div>
+                  <p className="text-2xl font-bold">{scopedDevices.length}</p>
+                  <p className="text-xs text-muted-foreground">Tous équipements</p>
+                </button>
+                {CATEGORIES.map(c => {
+                  const count = scopedDevices.filter(d => d.categorie === c.value).length;
+                  const Icon = c.icon;
+                  const active = categorieFilter === c.value;
+                  return (
+                    <button
+                      key={c.value}
+                      onClick={() => setCategorieFilter(c.value)}
+                      className={`p-4 rounded-xl border text-left transition-all ${active ? 'border-primary bg-primary/5 shadow-md' : 'border-border/50 bg-card/80 hover:border-primary/40 hover:-translate-y-0.5'}`}
+                    >
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${c.color} flex items-center justify-center mb-2`}>
+                        <Icon className="h-5 w-5 text-white" />
+                      </div>
+                      <p className="text-2xl font-bold">{count}</p>
+                      <p className="text-xs text-muted-foreground">{c.label}</p>
+                    </button>
+                  );
+                })}
               </div>
 
               <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
-                <div className="flex items-center justify-between mb-4 gap-3">
+                <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
                   <div>
-                    <h3 className="text-lg font-semibold">Inventaire du parc</h3>
-                    <p className="text-sm text-muted-foreground">{filteredDevices.length} appareil(s)</p>
+                    <h3 className="text-lg font-semibold">
+                      Inventaire {categorieFilter !== 'all' && <span className="text-primary">· {categoryMap[categorieFilter].label}</span>}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{filteredDevices.length} équipement(s){agenceFilter ? ` · ${agenceFilter}` : ''}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <div className="relative w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Rechercher..." value={searchDevice} onChange={e => setSearchDevice(e.target.value)} className="pl-9" /></div>
-                    <Button><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
+                    {categorieFilter !== 'all' && <Button variant="outline" onClick={() => setCategorieFilter('all')}>Réinitialiser</Button>}
+                    <Dialog open={deviceDialog} onOpenChange={setDeviceDialog}>
+                      <DialogTrigger asChild>
+                        <Button><Plus className="h-4 w-4 mr-2" />Ajouter un équipement</Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-xl">
+                        <DialogHeader><DialogTitle>Nouvel équipement</DialogTitle></DialogHeader>
+                        <div className="grid grid-cols-2 gap-3 py-2">
+                          <div className="col-span-2">
+                            <Label>Catégorie *</Label>
+                            <Select value={newDevice.categorie} onValueChange={v => setNewDevice({ ...newDevice, categorie: v as ParcCategorie })}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div><Label>Nom / Identifiant *</Label><Input value={newDevice.nom || ''} onChange={e => setNewDevice({ ...newDevice, nom: e.target.value })} placeholder="PC-DUPONT-01" /></div>
+                          <div><Label>Modèle</Label><Input value={newDevice.modele || ''} onChange={e => setNewDevice({ ...newDevice, modele: e.target.value })} placeholder="Dell XPS 15" /></div>
+                          <div><Label>OS / Firmware</Label><Input value={newDevice.os || ''} onChange={e => setNewDevice({ ...newDevice, os: e.target.value })} placeholder="Windows 11 Pro" /></div>
+                          <div><Label>N° série</Label><Input value={newDevice.numeroSerie || ''} onChange={e => setNewDevice({ ...newDevice, numeroSerie: e.target.value })} /></div>
+                          <div><Label>Utilisateur</Label><Input value={newDevice.utilisateur || ''} onChange={e => setNewDevice({ ...newDevice, utilisateur: e.target.value })} placeholder="Optionnel" /></div>
+                          <div>
+                            <Label>Agence</Label>
+                            <Select value={newDevice.agence} onValueChange={v => setNewDevice({ ...newDevice, agence: v })}>
+                              <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                              <SelectContent>
+                                {agences.map(a => <SelectItem key={a.id} value={a.ville}>{a.nom}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div><Label>Fournisseur</Label><Input value={newDevice.fournisseur || ''} onChange={e => setNewDevice({ ...newDevice, fournisseur: e.target.value })} /></div>
+                          <div className="col-span-2"><Label>Contrat / SLA</Label><Input value={newDevice.contrat || ''} onChange={e => setNewDevice({ ...newDevice, contrat: e.target.value })} placeholder="GTR 4h, télésurveillance, ProSupport..." /></div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setDeviceDialog(false)}>Annuler</Button>
+                          <Button onClick={() => {
+                            if (!newDevice.nom || !newDevice.categorie) { toast.error('Nom et catégorie obligatoires'); return; }
+                            const d = {
+                              id: `d-${Date.now()}`, nom: newDevice.nom!, categorie: newDevice.categorie!,
+                              utilisateur: newDevice.utilisateur, os: newDevice.os || '—', modele: newDevice.modele || '—',
+                              numeroSerie: newDevice.numeroSerie || '—', status: (newDevice.status as any) || 'actif',
+                              dernierVu: 'à l\'instant', agence: newDevice.agence || (agences[0]?.ville || '—'),
+                              fournisseur: newDevice.fournisseur, contrat: newDevice.contrat,
+                            };
+                            setParc([d, ...parc]);
+                            setNewDevice({ categorie: 'poste', status: 'actif' });
+                            setDeviceDialog(false);
+                            toast.success('Équipement ajouté');
+                          }}>Ajouter</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
                 <Table>
-                  <TableHeader><TableRow><TableHead>Appareil</TableHead><TableHead>Modèle / OS</TableHead><TableHead>Utilisateur</TableHead><TableHead>N° série</TableHead><TableHead>Statut</TableHead><TableHead>Dernière connexion</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>Équipement</TableHead><TableHead>Catégorie</TableHead><TableHead>Modèle / OS</TableHead><TableHead>Utilisateur</TableHead><TableHead>Agence</TableHead><TableHead>Fournisseur</TableHead><TableHead>Statut</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {filteredDevices.map(d => {
-                      const Icon = deviceIcons[d.type];
+                      const cat = categoryMap[d.categorie];
+                      const Icon = cat.icon;
                       return (
                         <TableRow key={d.id} className="hover:bg-muted/40">
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <div className="p-1.5 rounded-md bg-muted"><Icon className="h-4 w-4 text-muted-foreground" /></div>
-                              <span className="text-sm font-medium">{d.nom}</span>
+                              <div className={`p-1.5 rounded-md bg-gradient-to-br ${cat.color}`}><Icon className="h-4 w-4 text-white" /></div>
+                              <div>
+                                <span className="text-sm font-medium block">{d.nom}</span>
+                                <code className="text-[10px] text-muted-foreground">{d.numeroSerie}</code>
+                              </div>
                             </div>
                           </TableCell>
+                          <TableCell><Badge variant="outline" className="text-xs">{cat.label}</Badge></TableCell>
                           <TableCell><div className="text-sm">{d.modele}</div><div className="text-xs text-muted-foreground">{d.os}</div></TableCell>
                           <TableCell className="text-sm">{d.utilisateur || <span className="text-muted-foreground italic">—</span>}</TableCell>
-                          <TableCell><code className="text-xs bg-muted px-1.5 py-0.5 rounded">{d.numeroSerie}</code></TableCell>
+                          <TableCell className="text-sm">{d.agence}</TableCell>
+                          <TableCell className="text-sm">{d.fournisseur || '—'}{d.contrat && <div className="text-[10px] text-muted-foreground">{d.contrat}</div>}</TableCell>
                           <TableCell>
                             <Badge className={`text-xs ${
                               d.status === 'actif' ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30' :
                               d.status === 'maintenance' ? 'bg-amber-500/15 text-amber-700 border-amber-500/30' :
                               'bg-destructive/15 text-destructive border-destructive/30'
                             }`}>{d.status}</Badge>
+                            <div className="text-[10px] text-muted-foreground mt-0.5">{d.dernierVu}</div>
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{d.dernierVu}</TableCell>
                         </TableRow>
                       );
                     })}
+                    {filteredDevices.length === 0 && (
+                      <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">Aucun équipement dans cette catégorie</TableCell></TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </Card>
