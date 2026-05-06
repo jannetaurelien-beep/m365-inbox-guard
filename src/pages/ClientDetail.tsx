@@ -6,7 +6,7 @@ import {
   TrendingUp, Briefcase, Edit, Star, MoreVertical, Plus, Monitor, Laptop, Smartphone,
   Server, Network, FileText, Calendar, Activity, Shield, MessageSquare, Paperclip,
   CheckCircle2, AlertTriangle, Clock, ChevronRight, Trash2, Download, Search,
-  HardDrive, Wifi, Printer, Cpu, FolderOpen, Sparkles
+  HardDrive, Wifi, Printer, Cpu, FolderOpen, Sparkles, PhoneCall, Bell, Router, Tv, Camera
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
