@@ -180,9 +180,9 @@ export default function Clients() {
                   </DropdownMenu>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <Badge variant="outline" className={`text-xs ${statusStyles[client.status]}`}>{client.status}</Badge>
-                  <Badge variant="outline" className={`text-xs ${contratStyles[client.contrat]}`}>{client.contrat}</Badge>
+                  <ContratBadges contrats={client.contrats} max={4} />
                   {client.tags.slice(0, 1).map(t => <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>)}
                 </div>
 
