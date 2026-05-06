@@ -22,6 +22,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mockClients, Client } from '@/lib/mock-data/clients';
 import { toast } from 'sonner';
+import { enrichedParc, type EnrichedDevice } from '@/lib/mock-data/parc-details';
+import { DeviceDetailSheet } from '@/components/clients/DeviceDetailSheet';
 
 interface Agence {
   id: string;
@@ -80,21 +82,7 @@ const utilisateursClient = [
   { id: 'u5', nom: 'Julie Garnier', email: 'j.garnier@acme.fr', role: 'RH', agence: 'Paris', status: 'inactive', licence: 'E1' },
 ];
 
-const initialParc: (AppareilParc & { agence: string })[] = [
-  { id: 'd1', nom: 'PC-MARIE-01', categorie: 'poste', utilisateur: 'Marie Dubois', os: 'Windows 11 Pro', modele: 'Dell XPS 15', numeroSerie: 'SN-DXP15-001', status: 'actif', dernierVu: 'il y a 2 min', agence: 'Paris', fournisseur: 'Dell' },
-  { id: 'd2', nom: 'PC-THOMAS-02', categorie: 'poste', utilisateur: 'Thomas Bernard', os: 'Windows 11 Pro', modele: 'HP EliteBook', numeroSerie: 'SN-HP-EB-042', status: 'actif', dernierVu: 'il y a 12 min', agence: 'Lyon', fournisseur: 'HP' },
-  { id: 'd3', nom: 'SERVER-AD-01', categorie: 'serveur', os: 'Windows Server 2022', modele: 'Dell PowerEdge R750', numeroSerie: 'SN-PER-750-A', status: 'actif', dernierVu: 'en ligne', agence: 'Paris', fournisseur: 'Dell', contrat: 'ProSupport 24/7' },
-  { id: 'd4', nom: 'NAS-FILES-01', categorie: 'serveur', os: 'Synology DSM 7', modele: 'Synology RS1221+', numeroSerie: 'SN-RS1221-X', status: 'actif', dernierVu: 'en ligne', agence: 'Paris', fournisseur: 'Synology' },
-  { id: 'd5', nom: 'IPHONE-SOPHIE', categorie: 'mobile', utilisateur: 'Sophie Lemoine', os: 'iOS 17', modele: 'iPhone 15', numeroSerie: 'SN-IP15-008', status: 'actif', dernierVu: 'il y a 1h', agence: 'Paris', fournisseur: 'Apple' },
-  { id: 'd6', nom: 'PRINTER-PARIS-01', categorie: 'imprimante', os: '—', modele: 'HP LaserJet Pro', numeroSerie: 'SN-HPLJ-211', status: 'maintenance', dernierVu: 'il y a 3h', agence: 'Paris', fournisseur: 'HP' },
-  { id: 'd7', nom: 'SWITCH-LYON-01', categorie: 'reseau', os: 'Cisco IOS', modele: 'Cisco Catalyst 9300', numeroSerie: 'SN-C9300-A', status: 'actif', dernierVu: 'en ligne', agence: 'Lyon', fournisseur: 'Cisco' },
-  { id: 'd8', nom: 'PC-PIERRE-04', categorie: 'poste', utilisateur: 'Pierre Roux', os: 'Windows 11 Pro', modele: 'Lenovo ThinkPad', numeroSerie: 'SN-LTP-088', status: 'actif', dernierVu: 'il y a 5 min', agence: 'Marseille', fournisseur: 'Lenovo' },
-  { id: 'd9', nom: 'TEL-STD-PARIS', categorie: 'telephonie', os: '3CX v20', modele: 'Yealink T54W (12 postes)', numeroSerie: 'SN-Y54-PAR', status: 'actif', dernierVu: 'en ligne', agence: 'Paris', fournisseur: 'Yealink', contrat: 'IPBX hébergé' },
-  { id: 'd10', nom: 'ALARME-SIEGE', categorie: 'alarme', os: '—', modele: 'Verisure Pro', numeroSerie: 'SN-VS-9921', status: 'actif', dernierVu: 'OK', agence: 'Paris', fournisseur: 'Verisure', contrat: 'Télésurveillance 24/7' },
-  { id: 'd11', nom: 'CCTV-LYON-EXT', categorie: 'videosurveillance', os: 'Hik-Connect', modele: 'Hikvision NVR 8ch', numeroSerie: 'SN-HIK-NVR8', status: 'actif', dernierVu: 'en ligne', agence: 'Lyon', fournisseur: 'Hikvision' },
-  { id: 'd12', nom: 'FIBRE-PARIS-1G', categorie: 'lien-internet', os: '—', modele: 'Orange Pro Fibre 1Gb/s', numeroSerie: 'OF-PAR-77821', status: 'actif', dernierVu: '99,98% SLA', agence: 'Paris', fournisseur: 'Orange', contrat: 'GTR 4h' },
-  { id: 'd13', nom: 'SDSL-LYON-BACKUP', categorie: 'lien-internet', os: '—', modele: 'SFR SDSL 20Mb backup', numeroSerie: 'SFR-LYO-3320', status: 'actif', dernierVu: 'OK', agence: 'Lyon', fournisseur: 'SFR' },
-];
+const initialParc: EnrichedDevice[] = enrichedParc;
 
 const parcInformatique = initialParc;
 
@@ -134,9 +122,11 @@ export default function ClientDetail() {
   const [selectedAgence, setSelectedAgence] = useState<Agence | null>(null);
   const [showPicker, setShowPicker] = useState(true);
   const [categorieFilter, setCategorieFilter] = useState<ParcCategorie | 'all'>('all');
-  const [parc, setParc] = useState(initialParc);
+  const [parc, setParc] = useState<EnrichedDevice[]>(initialParc);
   const [deviceDialog, setDeviceDialog] = useState(false);
-  const [newDevice, setNewDevice] = useState<Partial<AppareilParc & { agence: string }>>({ categorie: 'poste', status: 'actif' });
+  const [newDevice, setNewDevice] = useState<Partial<EnrichedDevice>>({ categorie: 'poste', status: 'actif' });
+  const [selectedDevice, setSelectedDevice] = useState<EnrichedDevice | null>(null);
+  const [deviceSheet, setDeviceSheet] = useState(false);
 
   const agenceFilter = selectedAgence?.ville;
   const scopedUsers = agenceFilter ? utilisateursClient.filter(u => u.agence === agenceFilter) : utilisateursClient;
@@ -661,7 +651,7 @@ export default function ClientDetail() {
                       const cat = categoryMap[d.categorie];
                       const Icon = cat.icon;
                       return (
-                        <TableRow key={d.id} className="hover:bg-muted/40">
+                        <TableRow key={d.id} className="hover:bg-muted/40 cursor-pointer" onClick={() => { setSelectedDevice(d); setDeviceSheet(true); }}>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <div className={`p-1.5 rounded-md bg-gradient-to-br ${cat.color}`}><Icon className="h-4 w-4 text-white" /></div>
@@ -773,6 +763,8 @@ export default function ClientDetail() {
         </div>
       </div>
       )}
+
+      <DeviceDetailSheet device={selectedDevice} open={deviceSheet} onOpenChange={setDeviceSheet} />
     </div>
   );
 }
