@@ -262,7 +262,7 @@ export default function Clients() {
                     <div className="text-xs text-muted-foreground">{client.contact.role}</div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={`text-xs ${contratStyles[client.contrat]}`}>{client.contrat}</Badge>
+                    <ContratBadges contrats={client.contrats} max={4} />
                   </TableCell>
                   <TableCell className="text-right font-medium">{client.utilisateurs}</TableCell>
                   <TableCell className="text-right font-medium">{(client.ca / 1000).toFixed(1)}k€</TableCell>
