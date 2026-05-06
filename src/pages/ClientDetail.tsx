@@ -713,22 +713,13 @@ export default function ClientDetail() {
               </Card>
             </TabsContent>
 
-            {/* ACTIVITÉ */}
-            <TabsContent value="activity" className="space-y-4">
-              <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
-                <h3 className="text-lg font-semibold mb-4">Journal d'activité</h3>
-                <div className="space-y-3">
-                  {activites.map((a, i) => (
-                    <motion.div key={a.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/40">
-                      <div className="p-2 rounded-lg bg-muted"><a.icon className={`h-4 w-4 ${a.color}`} /></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{a.titre}</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-2"><Clock className="h-3 w-3" />{a.date} · par {a.user}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </Card>
+            {/* SUPERVISION */}
+            <TabsContent value="supervision" className="space-y-4">
+              <SupervisionPanel
+                devices={scopedDevices}
+                scopeLabel={agenceFilter ? `Agence ${agenceFilter}` : `Tous les équipements de ${client.nom}`}
+                onDeviceClick={(d) => { setSelectedDevice(d); setDeviceSheet(true); }}
+              />
             </TabsContent>
 
             {/* CONTRATS */}
