@@ -747,9 +747,11 @@ export default function ClientDetail() {
                 <h3 className="text-lg font-semibold mb-4">Contrat & facturation</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
-                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">Contrat actuel</p>
-                    <p className="text-2xl font-bold">{client.contrat}</p>
-                    <p className="text-sm text-muted-foreground mt-2">Renouvellement automatique annuel</p>
+                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-2">Contrats actifs</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {client.contrats?.map(c => <Badge key={c} variant="outline" className="text-xs">{c}</Badge>) || <span className="text-sm text-muted-foreground">Aucun</span>}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-3">Renouvellement automatique annuel</p>
                   </div>
                   <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
                     <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">Chiffre d'affaires</p>
