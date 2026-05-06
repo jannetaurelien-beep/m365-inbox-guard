@@ -402,7 +402,7 @@ export default function ClientDetail() {
               <TabsTrigger value="users"><UsersIcon className="h-4 w-4 mr-1.5" />Utilisateurs</TabsTrigger>
               <TabsTrigger value="parc"><Monitor className="h-4 w-4 mr-1.5" />Parc IT</TabsTrigger>
               <TabsTrigger value="files"><FolderOpen className="h-4 w-4 mr-1.5" />Fichiers</TabsTrigger>
-              <TabsTrigger value="activity"><Activity className="h-4 w-4 mr-1.5" />Activité</TabsTrigger>
+              <TabsTrigger value="supervision"><Activity className="h-4 w-4 mr-1.5" />Supervision</TabsTrigger>
               <TabsTrigger value="contracts"><FileText className="h-4 w-4 mr-1.5" />Contrats</TabsTrigger>
             </TabsList>
 
