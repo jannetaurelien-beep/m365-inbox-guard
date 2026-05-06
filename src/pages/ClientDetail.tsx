@@ -61,14 +61,15 @@ const utilisateursClient = [
   { id: 'u5', nom: 'Julie Garnier', email: 'j.garnier@acme.fr', role: 'RH', agence: 'Paris', status: 'inactive', licence: 'E1' },
 ];
 
-const parcInformatique: AppareilParc[] = [
-  { id: 'd1', nom: 'PC-MARIE-01', type: 'laptop', utilisateur: 'Marie Dubois', os: 'Windows 11 Pro', modele: 'Dell XPS 15', numeroSerie: 'SN-DXP15-001', status: 'actif', dernierVu: 'il y a 2 min' },
-  { id: 'd2', nom: 'PC-THOMAS-02', type: 'laptop', utilisateur: 'Thomas Bernard', os: 'Windows 11 Pro', modele: 'HP EliteBook', numeroSerie: 'SN-HP-EB-042', status: 'actif', dernierVu: 'il y a 12 min' },
-  { id: 'd3', nom: 'SERVER-AD-01', type: 'server', os: 'Windows Server 2022', modele: 'Dell PowerEdge R750', numeroSerie: 'SN-PER-750-A', status: 'actif', dernierVu: 'en ligne' },
-  { id: 'd4', nom: 'NAS-FILES-01', type: 'server', os: 'Synology DSM 7', modele: 'Synology RS1221+', numeroSerie: 'SN-RS1221-X', status: 'actif', dernierVu: 'en ligne' },
-  { id: 'd5', nom: 'IPHONE-SOPHIE', type: 'mobile', utilisateur: 'Sophie Lemoine', os: 'iOS 17', modele: 'iPhone 15', numeroSerie: 'SN-IP15-008', status: 'actif', dernierVu: 'il y a 1h' },
-  { id: 'd6', nom: 'PRINTER-PARIS-01', type: 'printer', os: '—', modele: 'HP LaserJet Pro', numeroSerie: 'SN-HPLJ-211', status: 'maintenance', dernierVu: 'il y a 3h' },
-  { id: 'd7', nom: 'SWITCH-CORE-01', type: 'network', os: 'Cisco IOS', modele: 'Cisco Catalyst 9300', numeroSerie: 'SN-C9300-A', status: 'actif', dernierVu: 'en ligne' },
+const parcInformatique: (AppareilParc & { agence: string })[] = [
+  { id: 'd1', nom: 'PC-MARIE-01', type: 'laptop', utilisateur: 'Marie Dubois', os: 'Windows 11 Pro', modele: 'Dell XPS 15', numeroSerie: 'SN-DXP15-001', status: 'actif', dernierVu: 'il y a 2 min', agence: 'Paris' },
+  { id: 'd2', nom: 'PC-THOMAS-02', type: 'laptop', utilisateur: 'Thomas Bernard', os: 'Windows 11 Pro', modele: 'HP EliteBook', numeroSerie: 'SN-HP-EB-042', status: 'actif', dernierVu: 'il y a 12 min', agence: 'Lyon' },
+  { id: 'd3', nom: 'SERVER-AD-01', type: 'server', os: 'Windows Server 2022', modele: 'Dell PowerEdge R750', numeroSerie: 'SN-PER-750-A', status: 'actif', dernierVu: 'en ligne', agence: 'Paris' },
+  { id: 'd4', nom: 'NAS-FILES-01', type: 'server', os: 'Synology DSM 7', modele: 'Synology RS1221+', numeroSerie: 'SN-RS1221-X', status: 'actif', dernierVu: 'en ligne', agence: 'Paris' },
+  { id: 'd5', nom: 'IPHONE-SOPHIE', type: 'mobile', utilisateur: 'Sophie Lemoine', os: 'iOS 17', modele: 'iPhone 15', numeroSerie: 'SN-IP15-008', status: 'actif', dernierVu: 'il y a 1h', agence: 'Paris' },
+  { id: 'd6', nom: 'PRINTER-PARIS-01', type: 'printer', os: '—', modele: 'HP LaserJet Pro', numeroSerie: 'SN-HPLJ-211', status: 'maintenance', dernierVu: 'il y a 3h', agence: 'Paris' },
+  { id: 'd7', nom: 'SWITCH-LYON-01', type: 'network', os: 'Cisco IOS', modele: 'Cisco Catalyst 9300', numeroSerie: 'SN-C9300-A', status: 'actif', dernierVu: 'en ligne', agence: 'Lyon' },
+  { id: 'd8', nom: 'PC-PIERRE-04', type: 'laptop', utilisateur: 'Pierre Roux', os: 'Windows 11 Pro', modele: 'Lenovo ThinkPad', numeroSerie: 'SN-LTP-088', status: 'actif', dernierVu: 'il y a 5 min', agence: 'Marseille' },
 ];
 
 const ficherClient = [
@@ -106,14 +107,20 @@ export default function ClientDetail() {
   const [newAgence, setNewAgence] = useState<Partial<Agence>>({});
   const [searchUser, setSearchUser] = useState('');
   const [searchDevice, setSearchDevice] = useState('');
+  const [selectedAgence, setSelectedAgence] = useState<Agence | null>(null);
+  const [showPicker, setShowPicker] = useState(true);
+
+  const agenceFilter = selectedAgence?.ville;
+  const scopedUsers = agenceFilter ? utilisateursClient.filter(u => u.agence === agenceFilter) : utilisateursClient;
+  const scopedDevices = agenceFilter ? parcInformatique.filter(d => d.agence === agenceFilter) : parcInformatique;
 
   const filteredUsers = useMemo(
-    () => utilisateursClient.filter(u => u.nom.toLowerCase().includes(searchUser.toLowerCase()) || u.email.toLowerCase().includes(searchUser.toLowerCase())),
-    [searchUser]
+    () => scopedUsers.filter(u => u.nom.toLowerCase().includes(searchUser.toLowerCase()) || u.email.toLowerCase().includes(searchUser.toLowerCase())),
+    [searchUser, scopedUsers]
   );
   const filteredDevices = useMemo(
-    () => parcInformatique.filter(d => d.nom.toLowerCase().includes(searchDevice.toLowerCase()) || (d.utilisateur || '').toLowerCase().includes(searchDevice.toLowerCase())),
-    [searchDevice]
+    () => scopedDevices.filter(d => d.nom.toLowerCase().includes(searchDevice.toLowerCase()) || (d.utilisateur || '').toLowerCase().includes(searchDevice.toLowerCase())),
+    [searchDevice, scopedDevices]
   );
 
   if (!client) {
@@ -234,7 +241,88 @@ export default function ClientDetail() {
         </div>
       </motion.div>
 
+      {/* Sélecteur d'agence (vue d'entrée) */}
+      {showPicker && agences.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
+            <div className="flex items-start justify-between mb-5 gap-3 flex-wrap">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="p-1.5 rounded-lg bg-primary/10"><Building2 className="h-4 w-4 text-primary" /></div>
+                  <h2 className="text-lg font-semibold">Choisissez une agence</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">Filtrez les utilisateurs et le parc IT par agence, ou accédez directement aux ressources globales du client.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => { setShowPicker(false); setSelectedAgence(null); }}>
+                  <FolderOpen className="h-4 w-4 mr-2" />Voir toutes les ressources
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/utilisateurs')}>
+                  <UsersIcon className="h-4 w-4 mr-2" />Tous les utilisateurs
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/fichiers-serveur')}>
+                  <HardDrive className="h-4 w-4 mr-2" />Fichiers serveur
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {agences.map(a => {
+                const usersCount = utilisateursClient.filter(u => u.agence === a.ville).length;
+                const devicesCount = parcInformatique.filter(d => d.agence === a.ville).length;
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => { setSelectedAgence(a); setShowPicker(false); }}
+                    className="group relative text-left p-5 rounded-2xl border border-border/50 bg-gradient-to-br from-card to-muted/30 hover:border-primary/50 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
+                        <Building2 className="h-5 w-5 text-white" />
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                    </div>
+                    <h3 className="font-semibold">{a.nom}</h3>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><MapPin className="h-3 w-3" />{a.codePostal} {a.ville}</p>
+                    <div className="flex gap-4 mt-4 pt-3 border-t border-border/50 text-xs">
+                      <div><span className="font-bold text-base">{usersCount}</span> <span className="text-muted-foreground">utilisateurs</span></div>
+                      <div><span className="font-bold text-base">{devicesCount}</span> <span className="text-muted-foreground">appareils</span></div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Bandeau filtre actif */}
+      {!showPicker && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-between gap-3 p-3 px-4 rounded-xl bg-primary/5 border border-primary/20">
+          <div className="flex items-center gap-3 text-sm">
+            {selectedAgence ? (
+              <>
+                <Badge className="bg-primary/15 text-primary border-primary/30">
+                  <Building2 className="h-3 w-3 mr-1" />Agence : {selectedAgence.nom}
+                </Badge>
+                <span className="text-muted-foreground">Les onglets Utilisateurs et Parc IT sont filtrés sur cette agence.</span>
+              </>
+            ) : (
+              <>
+                <Badge variant="outline" className="border-border">
+                  <FolderOpen className="h-3 w-3 mr-1" />Vue globale du client
+                </Badge>
+                <span className="text-muted-foreground">Toutes les ressources sont affichées.</span>
+              </>
+            )}
+          </div>
+          <Button variant="outline" size="sm" onClick={() => { setShowPicker(true); setSelectedAgence(null); }}>
+            <Building2 className="h-3.5 w-3.5 mr-1.5" />Changer d'agence
+          </Button>
+        </motion.div>
+      )}
+
       {/* Main grid : sidebar + tabs */}
+      {!showPicker && (
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
         {/* Sidebar info */}
         <div className="space-y-4">
@@ -533,6 +621,7 @@ export default function ClientDetail() {
           </Tabs>
         </div>
       </div>
+      )}
     </div>
   );
 }
