@@ -33,17 +33,35 @@ interface Agence {
   telephone: string;
 }
 
+type ParcCategorie = 'serveur' | 'poste' | 'mobile' | 'telephonie' | 'alarme' | 'reseau' | 'lien-internet' | 'imprimante' | 'videosurveillance' | 'autre';
+
 interface AppareilParc {
   id: string;
   nom: string;
-  type: 'laptop' | 'desktop' | 'mobile' | 'server' | 'printer' | 'network';
+  categorie: ParcCategorie;
   utilisateur?: string;
   os: string;
   modele: string;
   numeroSerie: string;
   status: 'actif' | 'maintenance' | 'hors-service';
   dernierVu: string;
+  fournisseur?: string;
+  contrat?: string;
+  notes?: string;
 }
+
+const CATEGORIES: { value: ParcCategorie; label: string; icon: any; color: string }[] = [
+  { value: 'serveur', label: 'Serveurs', icon: Server, color: 'from-violet-500 to-purple-600' },
+  { value: 'poste', label: 'Postes utilisateurs', icon: Laptop, color: 'from-blue-500 to-indigo-600' },
+  { value: 'mobile', label: 'Mobiles & tablettes', icon: Smartphone, color: 'from-emerald-500 to-teal-600' },
+  { value: 'telephonie', label: 'Téléphonie', icon: PhoneCall, color: 'from-cyan-500 to-sky-600' },
+  { value: 'alarme', label: 'Alarme & sécurité', icon: Bell, color: 'from-rose-500 to-red-600' },
+  { value: 'videosurveillance', label: 'Vidéosurveillance', icon: Camera, color: 'from-fuchsia-500 to-pink-600' },
+  { value: 'reseau', label: 'Réseau & switch', icon: Network, color: 'from-amber-500 to-orange-600' },
+  { value: 'lien-internet', label: 'Liens internet', icon: Wifi, color: 'from-lime-500 to-emerald-600' },
+  { value: 'imprimante', label: 'Impression', icon: Printer, color: 'from-slate-500 to-zinc-600' },
+  { value: 'autre', label: 'Autre', icon: HardDrive, color: 'from-stone-500 to-neutral-600' },
+];
 
 const initialAgences: Record<string, Agence[]> = {
   c1: [
