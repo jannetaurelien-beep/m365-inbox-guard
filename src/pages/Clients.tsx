@@ -134,9 +134,7 @@ export default function Clients() {
               <SelectTrigger className="w-40"><CreditCard className="h-4 w-4 mr-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous contrats</SelectItem>
-                <SelectItem value="Premium">Premium</SelectItem>
-                <SelectItem value="Business">Business</SelectItem>
-                <SelectItem value="Essentiel">Essentiel</SelectItem>
+                {CONTRAT_TYPES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
             <div className="flex rounded-md border border-border bg-background/50 p-1">
