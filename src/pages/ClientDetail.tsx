@@ -651,7 +651,7 @@ export default function ClientDetail() {
                       const cat = categoryMap[d.categorie];
                       const Icon = cat.icon;
                       return (
-                        <TableRow key={d.id} className="hover:bg-muted/40">
+                        <TableRow key={d.id} className="hover:bg-muted/40 cursor-pointer" onClick={() => { setSelectedDevice(d); setDeviceSheet(true); }}>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <div className={`p-1.5 rounded-md bg-gradient-to-br ${cat.color}`}><Icon className="h-4 w-4 text-white" /></div>
