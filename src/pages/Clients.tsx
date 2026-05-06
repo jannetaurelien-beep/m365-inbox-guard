@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { mockClients, Client } from '@/lib/mock-data/clients';
+
 
 const statusStyles: Record<Client['status'], string> = {
   actif: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30',
@@ -16,11 +16,24 @@ const statusStyles: Record<Client['status'], string> = {
   inactif: 'bg-muted text-muted-foreground border-border',
 };
 
-const contratStyles: Record<Client['contrat'], string> = {
-  Premium: 'bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 text-violet-700 dark:text-violet-300 border-violet-500/30',
-  Business: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',
-  Essentiel: 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30',
-};
+import { mockClients, Client, CONTRAT_TYPES, ContratType } from '@/lib/mock-data/clients';
+
+const contratMap = Object.fromEntries(CONTRAT_TYPES.map(c => [c.value, c])) as Record<ContratType, typeof CONTRAT_TYPES[number]>;
+
+function ContratBadges({ contrats, max = 3 }: { contrats: ContratType[]; max?: number }) {
+  if (!contrats?.length) return <Badge variant="outline" className="text-xs text-muted-foreground">Aucun contrat</Badge>;
+  const visible = contrats.slice(0, max);
+  const rest = contrats.length - visible.length;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {visible.map(c => {
+        const meta = contratMap[c];
+        return <Badge key={c} variant="outline" className={`text-[10px] h-5 px-1.5 ${meta.color}`}>{meta.short}</Badge>;
+      })}
+      {rest > 0 && <Badge variant="outline" className="text-[10px] h-5 px-1.5">+{rest}</Badge>}
+    </div>
+  );
+}
 
 function ClientLogo({ client, size = 'md' }: { client: Client; size?: 'sm' | 'md' | 'lg' }) {
   const sizes = { sm: 'w-10 h-10 text-sm', md: 'w-12 h-12 text-base', lg: 'w-16 h-16 text-xl' };
@@ -42,7 +55,7 @@ export default function Clients() {
   const filtered = useMemo(() => mockClients.filter(c => {
     const s = search.toLowerCase();
     const matchSearch = !s || c.nom.toLowerCase().includes(s) || c.ville.toLowerCase().includes(s) || c.email.toLowerCase().includes(s) || c.codePostal.includes(s);
-    return matchSearch && (statusFilter === 'all' || c.status === statusFilter) && (contratFilter === 'all' || c.contrat === contratFilter);
+    return matchSearch && (statusFilter === 'all' || c.status === statusFilter) && (contratFilter === 'all' || c.contrats?.includes(contratFilter as ContratType));
   }), [search, statusFilter, contratFilter]);
 
   const totalCa = mockClients.reduce((s, c) => s + c.ca, 0);
@@ -121,9 +134,7 @@ export default function Clients() {
               <SelectTrigger className="w-40"><CreditCard className="h-4 w-4 mr-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous contrats</SelectItem>
-                <SelectItem value="Premium">Premium</SelectItem>
-                <SelectItem value="Business">Business</SelectItem>
-                <SelectItem value="Essentiel">Essentiel</SelectItem>
+                {CONTRAT_TYPES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
             <div className="flex rounded-md border border-border bg-background/50 p-1">
@@ -169,9 +180,9 @@ export default function Clients() {
                   </DropdownMenu>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <Badge variant="outline" className={`text-xs ${statusStyles[client.status]}`}>{client.status}</Badge>
-                  <Badge variant="outline" className={`text-xs ${contratStyles[client.contrat]}`}>{client.contrat}</Badge>
+                  <ContratBadges contrats={client.contrats} max={4} />
                   {client.tags.slice(0, 1).map(t => <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>)}
                 </div>
 
@@ -251,7 +262,7 @@ export default function Clients() {
                     <div className="text-xs text-muted-foreground">{client.contact.role}</div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={`text-xs ${contratStyles[client.contrat]}`}>{client.contrat}</Badge>
+                    <ContratBadges contrats={client.contrats} max={4} />
                   </TableCell>
                   <TableCell className="text-right font-medium">{client.utilisateurs}</TableCell>
                   <TableCell className="text-right font-medium">{(client.ca / 1000).toFixed(1)}k€</TableCell>
