@@ -197,75 +197,74 @@ export default function ClientDetail() {
         <span className="text-foreground font-medium">{client.nom}</span>
       </div>
 
-      {/* Hero header */}
+      {/* Hero header (compact) */}
       <motion.div
         initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 p-8 text-white"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600 p-4 text-white"
       >
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-cyan-300/20 rounded-full blur-3xl" />
+        <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-cyan-300/20 rounded-full blur-3xl" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${client.logoColor} flex items-center justify-center text-white font-bold text-2xl shadow-2xl ring-4 ring-white/20`}>
+        <div className="relative z-10 flex items-center gap-4 flex-wrap">
+          {/* Identité */}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${client.logoColor} flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-white/20 flex-shrink-0`}>
               {initials}
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Badge variant="outline" className={`text-xs ${statusStyles[client.status]} border-white/20 bg-white/10 text-white`}>
-                  {client.status}
-                </Badge>
-                <Badge variant="outline" className="text-xs bg-white/10 text-white border-white/20">{client.contrat}</Badge>
-                <span className="text-xs text-white/70">Client depuis {new Date(client.depuis).toLocaleDateString('fr-FR')}</span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold truncate">{client.nom}</h1>
+                <Badge variant="outline" className="text-[10px] h-5 bg-white/15 text-white border-white/25">{client.contrat}</Badge>
+                <Badge variant="outline" className="text-[10px] h-5 bg-white/15 text-white border-white/25 capitalize">{client.status}</Badge>
               </div>
-              <h1 className="text-4xl font-bold">{client.nom}</h1>
-              <p className="text-white/70 text-lg flex items-center gap-2">
-                <Briefcase className="h-4 w-4" /> {client.secteur}
-                <span className="mx-2">·</span>
-                <MapPin className="h-4 w-4" /> {client.ville}
+              <p className="text-xs text-white/70 flex items-center gap-1.5 mt-0.5">
+                <Briefcase className="h-3 w-3" />{client.secteur}
+                <span>·</span>
+                <MapPin className="h-3 w-3" />{client.ville}
+                <span>·</span>
+                Depuis {new Date(client.depuis).toLocaleDateString('fr-FR')}
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm">
-              <Edit className="h-4 w-4 mr-2" /> Modifier
-            </Button>
-            <Button variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-              <Star className="h-4 w-4 mr-2" /> Favori
+          {/* KPI inline */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {[
+              { icon: UsersIcon, label: 'Users', value: client.utilisateurs },
+              { icon: CreditCard, label: 'Lic.', value: client.licences },
+              { icon: Building2, label: 'Agences', value: agences.length },
+              { icon: Monitor, label: 'Parc', value: parc.length },
+              { icon: TrendingUp, label: 'CA', value: `${(client.ca / 1000).toFixed(1)}k€` },
+            ].map((s, i) => (
+              <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/20 flex items-center gap-2">
+                <s.icon className="h-3.5 w-3.5 text-white/80" />
+                <div className="flex items-baseline gap-1">
+                  <span className="text-sm font-bold leading-none">{s.value}</span>
+                  <span className="text-[10px] text-white/70">{s.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-1.5">
+            <Button size="sm" className="h-8 bg-white/20 hover:bg-white/30 text-white border border-white/30">
+              <Edit className="h-3.5 w-3.5 mr-1.5" />Modifier
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+                <Button size="icon" variant="outline" className="h-8 w-8 bg-white/10 text-white border-white/20 hover:bg-white/20">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem><Star className="h-4 w-4 mr-2" />Favori</DropdownMenuItem>
                 <DropdownMenuItem><Download className="h-4 w-4 mr-2" />Exporter fiche</DropdownMenuItem>
                 <DropdownMenuItem><Mail className="h-4 w-4 mr-2" />Envoyer email</DropdownMenuItem>
                 <DropdownMenuItem className="text-destructive"><Trash2 className="h-4 w-4 mr-2" />Archiver</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
-
-        {/* KPI strip */}
-        <div className="relative z-10 grid grid-cols-2 md:grid-cols-5 gap-3 mt-8">
-          {[
-            { icon: UsersIcon, label: 'Utilisateurs', value: client.utilisateurs },
-            { icon: CreditCard, label: 'Licences', value: client.licences },
-            { icon: Building2, label: 'Agences', value: agences.length },
-            { icon: Monitor, label: 'Parc', value: parcInformatique.length },
-            { icon: TrendingUp, label: 'CA / mois', value: `${(client.ca / 1000).toFixed(1)}k€` },
-          ].map((s, i) => (
-            <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-              <div className="flex items-center gap-1.5 mb-1">
-                <s.icon className="h-3.5 w-3.5 text-white/80" />
-                <span className="text-xs text-white/70">{s.label}</span>
-              </div>
-              <p className="text-2xl font-bold">{s.value}</p>
-            </div>
-          ))}
         </div>
       </motion.div>
 
