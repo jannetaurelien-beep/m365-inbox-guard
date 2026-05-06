@@ -16,11 +16,24 @@ const statusStyles: Record<Client['status'], string> = {
   inactif: 'bg-muted text-muted-foreground border-border',
 };
 
-const contratStyles: Record<Client['contrat'], string> = {
-  Premium: 'bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 text-violet-700 dark:text-violet-300 border-violet-500/30',
-  Business: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',
-  Essentiel: 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30',
-};
+import { mockClients, Client, CONTRAT_TYPES, ContratType } from '@/lib/mock-data/clients';
+
+const contratMap = Object.fromEntries(CONTRAT_TYPES.map(c => [c.value, c])) as Record<ContratType, typeof CONTRAT_TYPES[number]>;
+
+function ContratBadges({ contrats, max = 3 }: { contrats: ContratType[]; max?: number }) {
+  if (!contrats?.length) return <Badge variant="outline" className="text-xs text-muted-foreground">Aucun contrat</Badge>;
+  const visible = contrats.slice(0, max);
+  const rest = contrats.length - visible.length;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {visible.map(c => {
+        const meta = contratMap[c];
+        return <Badge key={c} variant="outline" className={`text-[10px] h-5 px-1.5 ${meta.color}`}>{meta.short}</Badge>;
+      })}
+      {rest > 0 && <Badge variant="outline" className="text-[10px] h-5 px-1.5">+{rest}</Badge>}
+    </div>
+  );
+}
 
 function ClientLogo({ client, size = 'md' }: { client: Client; size?: 'sm' | 'md' | 'lg' }) {
   const sizes = { sm: 'w-10 h-10 text-sm', md: 'w-12 h-12 text-base', lg: 'w-16 h-16 text-xl' };
