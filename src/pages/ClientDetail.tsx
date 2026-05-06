@@ -214,7 +214,7 @@ export default function ClientDetail() {
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-bold truncate">{client.nom}</h1>
-                <Badge variant="outline" className="text-[10px] h-5 bg-white/15 text-white border-white/25">{client.contrat}</Badge>
+                {client.contrats?.map(c => <Badge key={c} variant="outline" className="text-[10px] h-5 bg-white/15 text-white border-white/25">{c}</Badge>)}
                 <Badge variant="outline" className="text-[10px] h-5 bg-white/15 text-white border-white/25 capitalize">{client.status}</Badge>
               </div>
               <p className="text-xs text-white/70 flex items-center gap-1.5 mt-0.5">
