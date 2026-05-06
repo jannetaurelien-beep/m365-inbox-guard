@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Download, Building2, MapPin, Mail, Phone, Globe, Users as UsersIcon, CreditCard, TrendingUp, Briefcase, Sparkles, MoreVertical, Eye, Edit, Trash2, LayoutGrid, List, Filter, Star } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ function ClientLogo({ client, size = 'md' }: { client: Client; size?: 'sm' | 'md
 }
 
 export default function Clients() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [contratFilter, setContratFilter] = useState('all');
