@@ -24,6 +24,7 @@ import { mockClients, Client } from '@/lib/mock-data/clients';
 import { toast } from 'sonner';
 import { enrichedParc, type EnrichedDevice } from '@/lib/mock-data/parc-details';
 import { DeviceDetailSheet } from '@/components/clients/DeviceDetailSheet';
+import { SupervisionPanel } from '@/components/clients/SupervisionPanel';
 
 interface Agence {
   id: string;
