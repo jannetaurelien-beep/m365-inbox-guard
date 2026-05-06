@@ -122,9 +122,11 @@ export default function ClientDetail() {
   const [selectedAgence, setSelectedAgence] = useState<Agence | null>(null);
   const [showPicker, setShowPicker] = useState(true);
   const [categorieFilter, setCategorieFilter] = useState<ParcCategorie | 'all'>('all');
-  const [parc, setParc] = useState(initialParc);
+  const [parc, setParc] = useState<EnrichedDevice[]>(initialParc);
   const [deviceDialog, setDeviceDialog] = useState(false);
-  const [newDevice, setNewDevice] = useState<Partial<AppareilParc & { agence: string }>>({ categorie: 'poste', status: 'actif' });
+  const [newDevice, setNewDevice] = useState<Partial<EnrichedDevice>>({ categorie: 'poste', status: 'actif' });
+  const [selectedDevice, setSelectedDevice] = useState<EnrichedDevice | null>(null);
+  const [deviceSheet, setDeviceSheet] = useState(false);
 
   const agenceFilter = selectedAgence?.ville;
   const scopedUsers = agenceFilter ? utilisateursClient.filter(u => u.agence === agenceFilter) : utilisateursClient;
