@@ -621,6 +621,7 @@ export default function ClientDetail() {
           </Tabs>
         </div>
       </div>
+      )}
     </div>
   );
 }
