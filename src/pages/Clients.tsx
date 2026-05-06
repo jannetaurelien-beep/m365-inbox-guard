@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Download, Building2, MapPin, Mail, Phone, Globe, Users as UsersIcon, CreditCard, TrendingUp, Briefcase, Sparkles, MoreVertical, Eye, Edit, Trash2, LayoutGrid, List, Filter, Star } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ function ClientLogo({ client, size = 'md' }: { client: Client; size?: 'sm' | 'md
 }
 
 export default function Clients() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [contratFilter, setContratFilter] = useState('all');
@@ -142,7 +144,7 @@ export default function Clients() {
       {view === 'grid' && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {filtered.map(client => (
-            <Card key={client.id} className="group relative overflow-hidden bg-card/80 backdrop-blur-sm border-border/50 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+            <Card key={client.id} onClick={() => navigate(`/clients/${client.id}`)} className="group relative overflow-hidden bg-card/80 backdrop-blur-sm border-border/50 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
               <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${client.logoColor}`} />
               <div className="p-6 space-y-4">
                 <div className="flex items-start justify-between gap-3">
@@ -230,7 +232,7 @@ export default function Clients() {
             </TableHeader>
             <TableBody>
               {filtered.map(client => (
-                <TableRow key={client.id} className="group cursor-pointer hover:bg-muted/40">
+                <TableRow key={client.id} onClick={() => navigate(`/clients/${client.id}`)} className="group cursor-pointer hover:bg-muted/40">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <ClientLogo client={client} size="sm" />
