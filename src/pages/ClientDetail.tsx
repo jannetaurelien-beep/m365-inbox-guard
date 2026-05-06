@@ -79,35 +79,23 @@ const utilisateursClient = [
   { id: 'u5', nom: 'Julie Garnier', email: 'j.garnier@acme.fr', role: 'RH', agence: 'Paris', status: 'inactive', licence: 'E1' },
 ];
 
-const parcInformatique: (AppareilParc & { agence: string })[] = [
-  { id: 'd1', nom: 'PC-MARIE-01', type: 'laptop', utilisateur: 'Marie Dubois', os: 'Windows 11 Pro', modele: 'Dell XPS 15', numeroSerie: 'SN-DXP15-001', status: 'actif', dernierVu: 'il y a 2 min', agence: 'Paris' },
-  { id: 'd2', nom: 'PC-THOMAS-02', type: 'laptop', utilisateur: 'Thomas Bernard', os: 'Windows 11 Pro', modele: 'HP EliteBook', numeroSerie: 'SN-HP-EB-042', status: 'actif', dernierVu: 'il y a 12 min', agence: 'Lyon' },
-  { id: 'd3', nom: 'SERVER-AD-01', type: 'server', os: 'Windows Server 2022', modele: 'Dell PowerEdge R750', numeroSerie: 'SN-PER-750-A', status: 'actif', dernierVu: 'en ligne', agence: 'Paris' },
-  { id: 'd4', nom: 'NAS-FILES-01', type: 'server', os: 'Synology DSM 7', modele: 'Synology RS1221+', numeroSerie: 'SN-RS1221-X', status: 'actif', dernierVu: 'en ligne', agence: 'Paris' },
-  { id: 'd5', nom: 'IPHONE-SOPHIE', type: 'mobile', utilisateur: 'Sophie Lemoine', os: 'iOS 17', modele: 'iPhone 15', numeroSerie: 'SN-IP15-008', status: 'actif', dernierVu: 'il y a 1h', agence: 'Paris' },
-  { id: 'd6', nom: 'PRINTER-PARIS-01', type: 'printer', os: '—', modele: 'HP LaserJet Pro', numeroSerie: 'SN-HPLJ-211', status: 'maintenance', dernierVu: 'il y a 3h', agence: 'Paris' },
-  { id: 'd7', nom: 'SWITCH-LYON-01', type: 'network', os: 'Cisco IOS', modele: 'Cisco Catalyst 9300', numeroSerie: 'SN-C9300-A', status: 'actif', dernierVu: 'en ligne', agence: 'Lyon' },
-  { id: 'd8', nom: 'PC-PIERRE-04', type: 'laptop', utilisateur: 'Pierre Roux', os: 'Windows 11 Pro', modele: 'Lenovo ThinkPad', numeroSerie: 'SN-LTP-088', status: 'actif', dernierVu: 'il y a 5 min', agence: 'Marseille' },
+const initialParc: (AppareilParc & { agence: string })[] = [
+  { id: 'd1', nom: 'PC-MARIE-01', categorie: 'poste', utilisateur: 'Marie Dubois', os: 'Windows 11 Pro', modele: 'Dell XPS 15', numeroSerie: 'SN-DXP15-001', status: 'actif', dernierVu: 'il y a 2 min', agence: 'Paris', fournisseur: 'Dell' },
+  { id: 'd2', nom: 'PC-THOMAS-02', categorie: 'poste', utilisateur: 'Thomas Bernard', os: 'Windows 11 Pro', modele: 'HP EliteBook', numeroSerie: 'SN-HP-EB-042', status: 'actif', dernierVu: 'il y a 12 min', agence: 'Lyon', fournisseur: 'HP' },
+  { id: 'd3', nom: 'SERVER-AD-01', categorie: 'serveur', os: 'Windows Server 2022', modele: 'Dell PowerEdge R750', numeroSerie: 'SN-PER-750-A', status: 'actif', dernierVu: 'en ligne', agence: 'Paris', fournisseur: 'Dell', contrat: 'ProSupport 24/7' },
+  { id: 'd4', nom: 'NAS-FILES-01', categorie: 'serveur', os: 'Synology DSM 7', modele: 'Synology RS1221+', numeroSerie: 'SN-RS1221-X', status: 'actif', dernierVu: 'en ligne', agence: 'Paris', fournisseur: 'Synology' },
+  { id: 'd5', nom: 'IPHONE-SOPHIE', categorie: 'mobile', utilisateur: 'Sophie Lemoine', os: 'iOS 17', modele: 'iPhone 15', numeroSerie: 'SN-IP15-008', status: 'actif', dernierVu: 'il y a 1h', agence: 'Paris', fournisseur: 'Apple' },
+  { id: 'd6', nom: 'PRINTER-PARIS-01', categorie: 'imprimante', os: '—', modele: 'HP LaserJet Pro', numeroSerie: 'SN-HPLJ-211', status: 'maintenance', dernierVu: 'il y a 3h', agence: 'Paris', fournisseur: 'HP' },
+  { id: 'd7', nom: 'SWITCH-LYON-01', categorie: 'reseau', os: 'Cisco IOS', modele: 'Cisco Catalyst 9300', numeroSerie: 'SN-C9300-A', status: 'actif', dernierVu: 'en ligne', agence: 'Lyon', fournisseur: 'Cisco' },
+  { id: 'd8', nom: 'PC-PIERRE-04', categorie: 'poste', utilisateur: 'Pierre Roux', os: 'Windows 11 Pro', modele: 'Lenovo ThinkPad', numeroSerie: 'SN-LTP-088', status: 'actif', dernierVu: 'il y a 5 min', agence: 'Marseille', fournisseur: 'Lenovo' },
+  { id: 'd9', nom: 'TEL-STD-PARIS', categorie: 'telephonie', os: '3CX v20', modele: 'Yealink T54W (12 postes)', numeroSerie: 'SN-Y54-PAR', status: 'actif', dernierVu: 'en ligne', agence: 'Paris', fournisseur: 'Yealink', contrat: 'IPBX hébergé' },
+  { id: 'd10', nom: 'ALARME-SIEGE', categorie: 'alarme', os: '—', modele: 'Verisure Pro', numeroSerie: 'SN-VS-9921', status: 'actif', dernierVu: 'OK', agence: 'Paris', fournisseur: 'Verisure', contrat: 'Télésurveillance 24/7' },
+  { id: 'd11', nom: 'CCTV-LYON-EXT', categorie: 'videosurveillance', os: 'Hik-Connect', modele: 'Hikvision NVR 8ch', numeroSerie: 'SN-HIK-NVR8', status: 'actif', dernierVu: 'en ligne', agence: 'Lyon', fournisseur: 'Hikvision' },
+  { id: 'd12', nom: 'FIBRE-PARIS-1G', categorie: 'lien-internet', os: '—', modele: 'Orange Pro Fibre 1Gb/s', numeroSerie: 'OF-PAR-77821', status: 'actif', dernierVu: '99,98% SLA', agence: 'Paris', fournisseur: 'Orange', contrat: 'GTR 4h' },
+  { id: 'd13', nom: 'SDSL-LYON-BACKUP', categorie: 'lien-internet', os: '—', modele: 'SFR SDSL 20Mb backup', numeroSerie: 'SFR-LYO-3320', status: 'actif', dernierVu: 'OK', agence: 'Lyon', fournisseur: 'SFR' },
 ];
 
-const ficherClient = [
-  { id: 'f1', nom: 'Contrat-cadre-2024.pdf', taille: '1.2 Mo', date: '12/03/2024', type: 'Contrat' },
-  { id: 'f2', nom: 'Audit-securite-Q1.docx', taille: '845 Ko', date: '02/04/2026', type: 'Audit' },
-  { id: 'f3', nom: 'Inventaire-parc.xlsx', taille: '2.4 Mo', date: '18/04/2026', type: 'Inventaire' },
-  { id: 'f4', nom: 'Plan-migration-365.pdf', taille: '3.1 Mo', date: '21/04/2026', type: 'Projet' },
-];
-
-const activites = [
-  { id: 'ac1', icon: CheckCircle2, color: 'text-emerald-500', titre: 'Migration Exchange terminée', date: 'Il y a 2 jours', user: 'Système' },
-  { id: 'ac2', icon: Plus, color: 'text-blue-500', titre: '5 nouveaux utilisateurs créés', date: 'Il y a 4 jours', user: 'Marie D.' },
-  { id: 'ac3', icon: AlertTriangle, color: 'text-amber-500', titre: 'Quota stockage à 85%', date: 'Il y a 5 jours', user: 'Système' },
-  { id: 'ac4', icon: Shield, color: 'text-violet-500', titre: 'Audit sécurité planifié', date: 'Il y a 1 semaine', user: 'Tech support' },
-  { id: 'ac5', icon: CreditCard, color: 'text-cyan-500', titre: 'Renouvellement contrat Premium', date: 'Il y a 2 semaines', user: 'Commercial' },
-];
-
-const deviceIcons: Record<AppareilParc['type'], any> = {
-  laptop: Laptop, desktop: Monitor, mobile: Smartphone, server: Server, printer: Printer, network: Network,
-};
+const categoryMap = Object.fromEntries(CATEGORIES.map(c => [c.value, c])) as Record<ParcCategorie, typeof CATEGORIES[number]>;
 
 const statusStyles: Record<Client['status'], string> = {
   actif: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30',
