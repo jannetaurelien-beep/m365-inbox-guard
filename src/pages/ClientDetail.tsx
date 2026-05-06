@@ -24,7 +24,7 @@ import { mockClients, Client } from '@/lib/mock-data/clients';
 import { toast } from 'sonner';
 import { enrichedParc, type EnrichedDevice } from '@/lib/mock-data/parc-details';
 import { DeviceDetailSheet } from '@/components/clients/DeviceDetailSheet';
-import { SupervisionPanel } from '@/components/clients/SupervisionPanel';
+
 
 interface Agence {
   id: string;
@@ -281,6 +281,9 @@ export default function ClientDetail() {
                 <Button variant="outline" size="sm" onClick={() => navigate('/fichiers-serveur')}>
                   <HardDrive className="h-4 w-4 mr-2" />Fichiers serveur
                 </Button>
+                <Button size="sm" onClick={() => navigate(`/clients/${id}/supervision`)} className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
+                  <Activity className="h-4 w-4 mr-2" />Supervision globale
+                </Button>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -288,24 +291,28 @@ export default function ClientDetail() {
                 const usersCount = utilisateursClient.filter(u => u.agence === a.ville).length;
                 const devicesCount = parcInformatique.filter(d => d.agence === a.ville).length;
                 return (
-                  <button
+                  <div
                     key={a.id}
-                    onClick={() => { setSelectedAgence(a); setShowPicker(false); }}
                     className="group relative text-left p-5 rounded-2xl border border-border/50 bg-gradient-to-br from-card to-muted/30 hover:border-primary/50 hover:shadow-xl hover:-translate-y-0.5 transition-all"
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
-                        <Building2 className="h-5 w-5 text-white" />
+                    <button onClick={() => { setSelectedAgence(a); setShowPicker(false); }} className="text-left w-full">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
+                          <Building2 className="h-5 w-5 text-white" />
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                       </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                    </div>
-                    <h3 className="font-semibold">{a.nom}</h3>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><MapPin className="h-3 w-3" />{a.codePostal} {a.ville}</p>
-                    <div className="flex gap-4 mt-4 pt-3 border-t border-border/50 text-xs">
-                      <div><span className="font-bold text-base">{usersCount}</span> <span className="text-muted-foreground">utilisateurs</span></div>
-                      <div><span className="font-bold text-base">{devicesCount}</span> <span className="text-muted-foreground">appareils</span></div>
-                    </div>
-                  </button>
+                      <h3 className="font-semibold">{a.nom}</h3>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><MapPin className="h-3 w-3" />{a.codePostal} {a.ville}</p>
+                      <div className="flex gap-4 mt-4 pt-3 border-t border-border/50 text-xs">
+                        <div><span className="font-bold text-base">{usersCount}</span> <span className="text-muted-foreground">utilisateurs</span></div>
+                        <div><span className="font-bold text-base">{devicesCount}</span> <span className="text-muted-foreground">appareils</span></div>
+                      </div>
+                    </button>
+                    <Button size="sm" variant="outline" className="w-full mt-3" onClick={(e) => { e.stopPropagation(); navigate(`/clients/${id}/supervision?agence=${a.ville}`); }}>
+                      <Activity className="h-3.5 w-3.5 mr-1.5" />Supervision agence
+                    </Button>
+                  </div>
                 );
               })}
             </div>
@@ -398,12 +405,11 @@ export default function ClientDetail() {
         {/* Tabs */}
         <div>
           <Tabs defaultValue="agences" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-4">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5 mb-4">
               <TabsTrigger value="agences"><Building2 className="h-4 w-4 mr-1.5" />Agences</TabsTrigger>
               <TabsTrigger value="users"><UsersIcon className="h-4 w-4 mr-1.5" />Utilisateurs</TabsTrigger>
               <TabsTrigger value="parc"><Monitor className="h-4 w-4 mr-1.5" />Parc IT</TabsTrigger>
               <TabsTrigger value="files"><FolderOpen className="h-4 w-4 mr-1.5" />Fichiers</TabsTrigger>
-              <TabsTrigger value="supervision"><Activity className="h-4 w-4 mr-1.5" />Supervision</TabsTrigger>
               <TabsTrigger value="contracts"><FileText className="h-4 w-4 mr-1.5" />Contrats</TabsTrigger>
             </TabsList>
 
@@ -712,15 +718,6 @@ export default function ClientDetail() {
                   ))}
                 </div>
               </Card>
-            </TabsContent>
-
-            {/* SUPERVISION */}
-            <TabsContent value="supervision" className="space-y-4">
-              <SupervisionPanel
-                devices={scopedDevices}
-                scopeLabel={agenceFilter ? `Agence ${agenceFilter}` : `Tous les équipements de ${client.nom}`}
-                onDeviceClick={(d) => { setSelectedDevice(d); setDeviceSheet(true); }}
-              />
             </TabsContent>
 
             {/* CONTRATS */}

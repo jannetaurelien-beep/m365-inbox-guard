@@ -27,6 +27,7 @@ import Leaderboard from "./pages/Leaderboard";
 import CyberSecurity from "./pages/CyberSecurity";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
+import ClientSupervision from "./pages/ClientSupervision";
 import Login from "./pages/Login";
 import TwoFactorAuth from "./pages/TwoFactorAuth";
 import NotFound from "./pages/NotFound";
@@ -69,7 +70,8 @@ const App = () => (
                     <Route path="/classement" element={<Leaderboard />} />
                     <Route path="/cybersecurite" element={<CyberSecurity />} />
                     <Route path="/clients" element={<Clients />} />
-                    <Route path="/clients/:id" element={<ClientDetail />} />
+                   <Route path="/clients/:id" element={<ClientDetail />} />
+                   <Route path="/clients/:id/supervision" element={<ClientSupervision />} />
                     <Route path="/parametres" element={<div className="p-8 text-center text-muted-foreground">Paramètres (à venir)</div>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
