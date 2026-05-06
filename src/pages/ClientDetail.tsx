@@ -516,59 +516,139 @@ export default function ClientDetail() {
 
             {/* PARC IT */}
             <TabsContent value="parc" className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[
-                  { icon: Laptop, label: 'Postes', value: parcInformatique.filter(d => d.type === 'laptop' || d.type === 'desktop').length, color: 'from-blue-500 to-indigo-600' },
-                  { icon: Server, label: 'Serveurs', value: parcInformatique.filter(d => d.type === 'server').length, color: 'from-violet-500 to-purple-600' },
-                  { icon: Smartphone, label: 'Mobiles', value: parcInformatique.filter(d => d.type === 'mobile').length, color: 'from-emerald-500 to-teal-600' },
-                  { icon: Network, label: 'Réseau', value: parcInformatique.filter(d => d.type === 'network' || d.type === 'printer').length, color: 'from-amber-500 to-orange-600' },
-                ].map((s, i) => (
-                  <Card key={i} className="p-4 bg-card/80 backdrop-blur-sm border-border/50">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center mb-2`}><s.icon className="h-5 w-5 text-white" /></div>
-                    <p className="text-2xl font-bold">{s.value}</p>
-                    <p className="text-xs text-muted-foreground">{s.label}</p>
-                  </Card>
-                ))}
+              {/* Catégories cards (cliquables = filtre) */}
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+                <button
+                  onClick={() => setCategorieFilter('all')}
+                  className={`p-4 rounded-xl border text-left transition-all ${categorieFilter === 'all' ? 'border-primary bg-primary/5 shadow-md' : 'border-border/50 bg-card/80 hover:border-primary/40 hover:-translate-y-0.5'}`}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-zinc-600 flex items-center justify-center mb-2">
+                    <Cpu className="h-5 w-5 text-white" />
+                  </div>
+                  <p className="text-2xl font-bold">{scopedDevices.length}</p>
+                  <p className="text-xs text-muted-foreground">Tous équipements</p>
+                </button>
+                {CATEGORIES.map(c => {
+                  const count = scopedDevices.filter(d => d.categorie === c.value).length;
+                  const Icon = c.icon;
+                  const active = categorieFilter === c.value;
+                  return (
+                    <button
+                      key={c.value}
+                      onClick={() => setCategorieFilter(c.value)}
+                      className={`p-4 rounded-xl border text-left transition-all ${active ? 'border-primary bg-primary/5 shadow-md' : 'border-border/50 bg-card/80 hover:border-primary/40 hover:-translate-y-0.5'}`}
+                    >
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${c.color} flex items-center justify-center mb-2`}>
+                        <Icon className="h-5 w-5 text-white" />
+                      </div>
+                      <p className="text-2xl font-bold">{count}</p>
+                      <p className="text-xs text-muted-foreground">{c.label}</p>
+                    </button>
+                  );
+                })}
               </div>
 
               <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
-                <div className="flex items-center justify-between mb-4 gap-3">
+                <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
                   <div>
-                    <h3 className="text-lg font-semibold">Inventaire du parc</h3>
-                    <p className="text-sm text-muted-foreground">{filteredDevices.length} appareil(s)</p>
+                    <h3 className="text-lg font-semibold">
+                      Inventaire {categorieFilter !== 'all' && <span className="text-primary">· {categoryMap[categorieFilter].label}</span>}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{filteredDevices.length} équipement(s){agenceFilter ? ` · ${agenceFilter}` : ''}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <div className="relative w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Rechercher..." value={searchDevice} onChange={e => setSearchDevice(e.target.value)} className="pl-9" /></div>
-                    <Button><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
+                    {categorieFilter !== 'all' && <Button variant="outline" onClick={() => setCategorieFilter('all')}>Réinitialiser</Button>}
+                    <Dialog open={deviceDialog} onOpenChange={setDeviceDialog}>
+                      <DialogTrigger asChild>
+                        <Button><Plus className="h-4 w-4 mr-2" />Ajouter un équipement</Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-xl">
+                        <DialogHeader><DialogTitle>Nouvel équipement</DialogTitle></DialogHeader>
+                        <div className="grid grid-cols-2 gap-3 py-2">
+                          <div className="col-span-2">
+                            <Label>Catégorie *</Label>
+                            <Select value={newDevice.categorie} onValueChange={v => setNewDevice({ ...newDevice, categorie: v as ParcCategorie })}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div><Label>Nom / Identifiant *</Label><Input value={newDevice.nom || ''} onChange={e => setNewDevice({ ...newDevice, nom: e.target.value })} placeholder="PC-DUPONT-01" /></div>
+                          <div><Label>Modèle</Label><Input value={newDevice.modele || ''} onChange={e => setNewDevice({ ...newDevice, modele: e.target.value })} placeholder="Dell XPS 15" /></div>
+                          <div><Label>OS / Firmware</Label><Input value={newDevice.os || ''} onChange={e => setNewDevice({ ...newDevice, os: e.target.value })} placeholder="Windows 11 Pro" /></div>
+                          <div><Label>N° série</Label><Input value={newDevice.numeroSerie || ''} onChange={e => setNewDevice({ ...newDevice, numeroSerie: e.target.value })} /></div>
+                          <div><Label>Utilisateur</Label><Input value={newDevice.utilisateur || ''} onChange={e => setNewDevice({ ...newDevice, utilisateur: e.target.value })} placeholder="Optionnel" /></div>
+                          <div>
+                            <Label>Agence</Label>
+                            <Select value={newDevice.agence} onValueChange={v => setNewDevice({ ...newDevice, agence: v })}>
+                              <SelectTrigger><SelectValue placeholder="Choisir..." /></SelectTrigger>
+                              <SelectContent>
+                                {agences.map(a => <SelectItem key={a.id} value={a.ville}>{a.nom}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div><Label>Fournisseur</Label><Input value={newDevice.fournisseur || ''} onChange={e => setNewDevice({ ...newDevice, fournisseur: e.target.value })} /></div>
+                          <div className="col-span-2"><Label>Contrat / SLA</Label><Input value={newDevice.contrat || ''} onChange={e => setNewDevice({ ...newDevice, contrat: e.target.value })} placeholder="GTR 4h, télésurveillance, ProSupport..." /></div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setDeviceDialog(false)}>Annuler</Button>
+                          <Button onClick={() => {
+                            if (!newDevice.nom || !newDevice.categorie) { toast.error('Nom et catégorie obligatoires'); return; }
+                            const d = {
+                              id: `d-${Date.now()}`, nom: newDevice.nom!, categorie: newDevice.categorie!,
+                              utilisateur: newDevice.utilisateur, os: newDevice.os || '—', modele: newDevice.modele || '—',
+                              numeroSerie: newDevice.numeroSerie || '—', status: (newDevice.status as any) || 'actif',
+                              dernierVu: 'à l\'instant', agence: newDevice.agence || (agences[0]?.ville || '—'),
+                              fournisseur: newDevice.fournisseur, contrat: newDevice.contrat,
+                            };
+                            setParc([d, ...parc]);
+                            setNewDevice({ categorie: 'poste', status: 'actif' });
+                            setDeviceDialog(false);
+                            toast.success('Équipement ajouté');
+                          }}>Ajouter</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
                 <Table>
-                  <TableHeader><TableRow><TableHead>Appareil</TableHead><TableHead>Modèle / OS</TableHead><TableHead>Utilisateur</TableHead><TableHead>N° série</TableHead><TableHead>Statut</TableHead><TableHead>Dernière connexion</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>Équipement</TableHead><TableHead>Catégorie</TableHead><TableHead>Modèle / OS</TableHead><TableHead>Utilisateur</TableHead><TableHead>Agence</TableHead><TableHead>Fournisseur</TableHead><TableHead>Statut</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {filteredDevices.map(d => {
-                      const Icon = deviceIcons[d.type];
+                      const cat = categoryMap[d.categorie];
+                      const Icon = cat.icon;
                       return (
                         <TableRow key={d.id} className="hover:bg-muted/40">
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <div className="p-1.5 rounded-md bg-muted"><Icon className="h-4 w-4 text-muted-foreground" /></div>
-                              <span className="text-sm font-medium">{d.nom}</span>
+                              <div className={`p-1.5 rounded-md bg-gradient-to-br ${cat.color}`}><Icon className="h-4 w-4 text-white" /></div>
+                              <div>
+                                <span className="text-sm font-medium block">{d.nom}</span>
+                                <code className="text-[10px] text-muted-foreground">{d.numeroSerie}</code>
+                              </div>
                             </div>
                           </TableCell>
+                          <TableCell><Badge variant="outline" className="text-xs">{cat.label}</Badge></TableCell>
                           <TableCell><div className="text-sm">{d.modele}</div><div className="text-xs text-muted-foreground">{d.os}</div></TableCell>
                           <TableCell className="text-sm">{d.utilisateur || <span className="text-muted-foreground italic">—</span>}</TableCell>
-                          <TableCell><code className="text-xs bg-muted px-1.5 py-0.5 rounded">{d.numeroSerie}</code></TableCell>
+                          <TableCell className="text-sm">{d.agence}</TableCell>
+                          <TableCell className="text-sm">{d.fournisseur || '—'}{d.contrat && <div className="text-[10px] text-muted-foreground">{d.contrat}</div>}</TableCell>
                           <TableCell>
                             <Badge className={`text-xs ${
                               d.status === 'actif' ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30' :
                               d.status === 'maintenance' ? 'bg-amber-500/15 text-amber-700 border-amber-500/30' :
                               'bg-destructive/15 text-destructive border-destructive/30'
                             }`}>{d.status}</Badge>
+                            <div className="text-[10px] text-muted-foreground mt-0.5">{d.dernierVu}</div>
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{d.dernierVu}</TableCell>
                         </TableRow>
                       );
                     })}
+                    {filteredDevices.length === 0 && (
+                      <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">Aucun équipement dans cette catégorie</TableCell></TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </Card>
