@@ -241,6 +241,86 @@ export default function ClientDetail() {
         </div>
       </motion.div>
 
+      {/* Sélecteur d'agence (vue d'entrée) */}
+      {showPicker && agences.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
+            <div className="flex items-start justify-between mb-5 gap-3 flex-wrap">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="p-1.5 rounded-lg bg-primary/10"><Building2 className="h-4 w-4 text-primary" /></div>
+                  <h2 className="text-lg font-semibold">Choisissez une agence</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">Filtrez les utilisateurs et le parc IT par agence, ou accédez directement aux ressources globales du client.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => { setShowPicker(false); setSelectedAgence(null); }}>
+                  <FolderOpen className="h-4 w-4 mr-2" />Voir toutes les ressources
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/utilisateurs')}>
+                  <UsersIcon className="h-4 w-4 mr-2" />Tous les utilisateurs
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/fichiers-serveur')}>
+                  <HardDrive className="h-4 w-4 mr-2" />Fichiers serveur
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {agences.map(a => {
+                const usersCount = utilisateursClient.filter(u => u.agence === a.ville).length;
+                const devicesCount = parcInformatique.filter(d => d.agence === a.ville).length;
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => { setSelectedAgence(a); setShowPicker(false); }}
+                    className="group relative text-left p-5 rounded-2xl border border-border/50 bg-gradient-to-br from-card to-muted/30 hover:border-primary/50 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
+                        <Building2 className="h-5 w-5 text-white" />
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                    </div>
+                    <h3 className="font-semibold">{a.nom}</h3>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><MapPin className="h-3 w-3" />{a.codePostal} {a.ville}</p>
+                    <div className="flex gap-4 mt-4 pt-3 border-t border-border/50 text-xs">
+                      <div><span className="font-bold text-base">{usersCount}</span> <span className="text-muted-foreground">utilisateurs</span></div>
+                      <div><span className="font-bold text-base">{devicesCount}</span> <span className="text-muted-foreground">appareils</span></div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Bandeau filtre actif */}
+      {!showPicker && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-between gap-3 p-3 px-4 rounded-xl bg-primary/5 border border-primary/20">
+          <div className="flex items-center gap-3 text-sm">
+            {selectedAgence ? (
+              <>
+                <Badge className="bg-primary/15 text-primary border-primary/30">
+                  <Building2 className="h-3 w-3 mr-1" />Agence : {selectedAgence.nom}
+                </Badge>
+                <span className="text-muted-foreground">Les onglets Utilisateurs et Parc IT sont filtrés sur cette agence.</span>
+              </>
+            ) : (
+              <>
+                <Badge variant="outline" className="border-border">
+                  <FolderOpen className="h-3 w-3 mr-1" />Vue globale du client
+                </Badge>
+                <span className="text-muted-foreground">Toutes les ressources sont affichées.</span>
+              </>
+            )}
+          </div>
+          <Button variant="outline" size="sm" onClick={() => { setShowPicker(true); setSelectedAgence(null); }}>
+            <Building2 className="h-3.5 w-3.5 mr-1.5" />Changer d'agence
+          </Button>
+        </motion.div>
+      )}
+
       {/* Main grid : sidebar + tabs */}
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
         {/* Sidebar info */}
