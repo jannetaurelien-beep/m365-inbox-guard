@@ -281,6 +281,9 @@ export default function ClientDetail() {
                 <Button variant="outline" size="sm" onClick={() => navigate('/fichiers-serveur')}>
                   <HardDrive className="h-4 w-4 mr-2" />Fichiers serveur
                 </Button>
+                <Button size="sm" onClick={() => navigate(`/clients/${id}/supervision`)} className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
+                  <Activity className="h-4 w-4 mr-2" />Supervision globale
+                </Button>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
