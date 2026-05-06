@@ -132,17 +132,21 @@ export default function ClientDetail() {
   const [searchDevice, setSearchDevice] = useState('');
   const [selectedAgence, setSelectedAgence] = useState<Agence | null>(null);
   const [showPicker, setShowPicker] = useState(true);
+  const [categorieFilter, setCategorieFilter] = useState<ParcCategorie | 'all'>('all');
+  const [parc, setParc] = useState(initialParc);
+  const [deviceDialog, setDeviceDialog] = useState(false);
+  const [newDevice, setNewDevice] = useState<Partial<AppareilParc & { agence: string }>>({ categorie: 'poste', status: 'actif' });
 
   const agenceFilter = selectedAgence?.ville;
   const scopedUsers = agenceFilter ? utilisateursClient.filter(u => u.agence === agenceFilter) : utilisateursClient;
-  const scopedDevices = agenceFilter ? parcInformatique.filter(d => d.agence === agenceFilter) : parcInformatique;
+  const scopedDevices = agenceFilter ? parc.filter(d => d.agence === agenceFilter) : parc;
 
   const filteredUsers = useMemo(
     () => scopedUsers.filter(u => u.nom.toLowerCase().includes(searchUser.toLowerCase()) || u.email.toLowerCase().includes(searchUser.toLowerCase())),
     [searchUser, scopedUsers]
   );
   const filteredDevices = useMemo(
-    () => scopedDevices.filter(d => d.nom.toLowerCase().includes(searchDevice.toLowerCase()) || (d.utilisateur || '').toLowerCase().includes(searchDevice.toLowerCase())),
+    () => scopedDevices.filter(d => (categorieFilter === 'all' || d.categorie === categorieFilter) && (d.nom.toLowerCase().includes(searchDevice.toLowerCase()) || (d.utilisateur || '').toLowerCase().includes(searchDevice.toLowerCase()))),
     [searchDevice, scopedDevices]
   );
 
