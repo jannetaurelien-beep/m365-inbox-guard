@@ -107,14 +107,20 @@ export default function ClientDetail() {
   const [newAgence, setNewAgence] = useState<Partial<Agence>>({});
   const [searchUser, setSearchUser] = useState('');
   const [searchDevice, setSearchDevice] = useState('');
+  const [selectedAgence, setSelectedAgence] = useState<Agence | null>(null);
+  const [showPicker, setShowPicker] = useState(true);
+
+  const agenceFilter = selectedAgence?.ville;
+  const scopedUsers = agenceFilter ? utilisateursClient.filter(u => u.agence === agenceFilter) : utilisateursClient;
+  const scopedDevices = agenceFilter ? parcInformatique.filter(d => d.agence === agenceFilter) : parcInformatique;
 
   const filteredUsers = useMemo(
-    () => utilisateursClient.filter(u => u.nom.toLowerCase().includes(searchUser.toLowerCase()) || u.email.toLowerCase().includes(searchUser.toLowerCase())),
-    [searchUser]
+    () => scopedUsers.filter(u => u.nom.toLowerCase().includes(searchUser.toLowerCase()) || u.email.toLowerCase().includes(searchUser.toLowerCase())),
+    [searchUser, scopedUsers]
   );
   const filteredDevices = useMemo(
-    () => parcInformatique.filter(d => d.nom.toLowerCase().includes(searchDevice.toLowerCase()) || (d.utilisateur || '').toLowerCase().includes(searchDevice.toLowerCase())),
-    [searchDevice]
+    () => scopedDevices.filter(d => d.nom.toLowerCase().includes(searchDevice.toLowerCase()) || (d.utilisateur || '').toLowerCase().includes(searchDevice.toLowerCase())),
+    [searchDevice, scopedDevices]
   );
 
   if (!client) {
