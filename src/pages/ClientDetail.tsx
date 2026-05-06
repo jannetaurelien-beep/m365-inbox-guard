@@ -95,6 +95,23 @@ const initialParc: (AppareilParc & { agence: string })[] = [
   { id: 'd13', nom: 'SDSL-LYON-BACKUP', categorie: 'lien-internet', os: '—', modele: 'SFR SDSL 20Mb backup', numeroSerie: 'SFR-LYO-3320', status: 'actif', dernierVu: 'OK', agence: 'Lyon', fournisseur: 'SFR' },
 ];
 
+const parcInformatique = initialParc;
+
+const ficherClient = [
+  { id: 'f1', nom: 'Contrat-cadre-2024.pdf', taille: '1.2 Mo', date: '12/03/2024', type: 'Contrat' },
+  { id: 'f2', nom: 'Audit-securite-Q1.docx', taille: '845 Ko', date: '02/04/2026', type: 'Audit' },
+  { id: 'f3', nom: 'Inventaire-parc.xlsx', taille: '2.4 Mo', date: '18/04/2026', type: 'Inventaire' },
+  { id: 'f4', nom: 'Plan-migration-365.pdf', taille: '3.1 Mo', date: '21/04/2026', type: 'Projet' },
+];
+
+const activites = [
+  { id: 'ac1', icon: CheckCircle2, color: 'text-emerald-500', titre: 'Migration Exchange terminée', date: 'Il y a 2 jours', user: 'Système' },
+  { id: 'ac2', icon: Plus, color: 'text-blue-500', titre: '5 nouveaux utilisateurs créés', date: 'Il y a 4 jours', user: 'Marie D.' },
+  { id: 'ac3', icon: AlertTriangle, color: 'text-amber-500', titre: 'Quota stockage à 85%', date: 'Il y a 5 jours', user: 'Système' },
+  { id: 'ac4', icon: Shield, color: 'text-violet-500', titre: 'Audit sécurité planifié', date: 'Il y a 1 semaine', user: 'Tech support' },
+  { id: 'ac5', icon: CreditCard, color: 'text-cyan-500', titre: 'Renouvellement contrat Premium', date: 'Il y a 2 semaines', user: 'Commercial' },
+];
+
 const categoryMap = Object.fromEntries(CATEGORIES.map(c => [c.value, c])) as Record<ParcCategorie, typeof CATEGORIES[number]>;
 
 const statusStyles: Record<Client['status'], string> = {
