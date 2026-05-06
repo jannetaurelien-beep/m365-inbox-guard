@@ -398,12 +398,11 @@ export default function ClientDetail() {
         {/* Tabs */}
         <div>
           <Tabs defaultValue="agences" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-4">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5 mb-4">
               <TabsTrigger value="agences"><Building2 className="h-4 w-4 mr-1.5" />Agences</TabsTrigger>
               <TabsTrigger value="users"><UsersIcon className="h-4 w-4 mr-1.5" />Utilisateurs</TabsTrigger>
               <TabsTrigger value="parc"><Monitor className="h-4 w-4 mr-1.5" />Parc IT</TabsTrigger>
               <TabsTrigger value="files"><FolderOpen className="h-4 w-4 mr-1.5" />Fichiers</TabsTrigger>
-              <TabsTrigger value="supervision"><Activity className="h-4 w-4 mr-1.5" />Supervision</TabsTrigger>
               <TabsTrigger value="contracts"><FileText className="h-4 w-4 mr-1.5" />Contrats</TabsTrigger>
             </TabsList>
 
