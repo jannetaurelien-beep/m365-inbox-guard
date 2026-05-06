@@ -763,6 +763,8 @@ export default function ClientDetail() {
         </div>
       </div>
       )}
+
+      <DeviceDetailSheet device={selectedDevice} open={deviceSheet} onOpenChange={setDeviceSheet} />
     </div>
   );
 }
