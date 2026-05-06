@@ -713,15 +713,6 @@ export default function ClientDetail() {
               </Card>
             </TabsContent>
 
-            {/* SUPERVISION */}
-            <TabsContent value="supervision" className="space-y-4">
-              <SupervisionPanel
-                devices={scopedDevices}
-                scopeLabel={agenceFilter ? `Agence ${agenceFilter}` : `Tous les équipements de ${client.nom}`}
-                onDeviceClick={(d) => { setSelectedDevice(d); setDeviceSheet(true); }}
-              />
-            </TabsContent>
-
             {/* CONTRATS */}
             <TabsContent value="contracts" className="space-y-4">
               <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
