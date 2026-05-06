@@ -322,6 +322,7 @@ export default function ClientDetail() {
       )}
 
       {/* Main grid : sidebar + tabs */}
+      {!showPicker && (
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
         {/* Sidebar info */}
         <div className="space-y-4">
