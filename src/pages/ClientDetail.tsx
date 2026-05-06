@@ -197,75 +197,74 @@ export default function ClientDetail() {
         <span className="text-foreground font-medium">{client.nom}</span>
       </div>
 
-      {/* Hero header */}
+      {/* Hero header (compact) */}
       <motion.div
         initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 p-8 text-white"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600 p-4 text-white"
       >
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-cyan-300/20 rounded-full blur-3xl" />
+        <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-cyan-300/20 rounded-full blur-3xl" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${client.logoColor} flex items-center justify-center text-white font-bold text-2xl shadow-2xl ring-4 ring-white/20`}>
+        <div className="relative z-10 flex items-center gap-4 flex-wrap">
+          {/* Identité */}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${client.logoColor} flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-white/20 flex-shrink-0`}>
               {initials}
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Badge variant="outline" className={`text-xs ${statusStyles[client.status]} border-white/20 bg-white/10 text-white`}>
-                  {client.status}
-                </Badge>
-                <Badge variant="outline" className="text-xs bg-white/10 text-white border-white/20">{client.contrat}</Badge>
-                <span className="text-xs text-white/70">Client depuis {new Date(client.depuis).toLocaleDateString('fr-FR')}</span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold truncate">{client.nom}</h1>
+                <Badge variant="outline" className="text-[10px] h-5 bg-white/15 text-white border-white/25">{client.contrat}</Badge>
+                <Badge variant="outline" className="text-[10px] h-5 bg-white/15 text-white border-white/25 capitalize">{client.status}</Badge>
               </div>
-              <h1 className="text-4xl font-bold">{client.nom}</h1>
-              <p className="text-white/70 text-lg flex items-center gap-2">
-                <Briefcase className="h-4 w-4" /> {client.secteur}
-                <span className="mx-2">·</span>
-                <MapPin className="h-4 w-4" /> {client.ville}
+              <p className="text-xs text-white/70 flex items-center gap-1.5 mt-0.5">
+                <Briefcase className="h-3 w-3" />{client.secteur}
+                <span>·</span>
+                <MapPin className="h-3 w-3" />{client.ville}
+                <span>·</span>
+                Depuis {new Date(client.depuis).toLocaleDateString('fr-FR')}
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm">
-              <Edit className="h-4 w-4 mr-2" /> Modifier
-            </Button>
-            <Button variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-              <Star className="h-4 w-4 mr-2" /> Favori
+          {/* KPI inline */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {[
+              { icon: UsersIcon, label: 'Users', value: client.utilisateurs },
+              { icon: CreditCard, label: 'Lic.', value: client.licences },
+              { icon: Building2, label: 'Agences', value: agences.length },
+              { icon: Monitor, label: 'Parc', value: parc.length },
+              { icon: TrendingUp, label: 'CA', value: `${(client.ca / 1000).toFixed(1)}k€` },
+            ].map((s, i) => (
+              <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/20 flex items-center gap-2">
+                <s.icon className="h-3.5 w-3.5 text-white/80" />
+                <div className="flex items-baseline gap-1">
+                  <span className="text-sm font-bold leading-none">{s.value}</span>
+                  <span className="text-[10px] text-white/70">{s.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-1.5">
+            <Button size="sm" className="h-8 bg-white/20 hover:bg-white/30 text-white border border-white/30">
+              <Edit className="h-3.5 w-3.5 mr-1.5" />Modifier
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+                <Button size="icon" variant="outline" className="h-8 w-8 bg-white/10 text-white border-white/20 hover:bg-white/20">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem><Star className="h-4 w-4 mr-2" />Favori</DropdownMenuItem>
                 <DropdownMenuItem><Download className="h-4 w-4 mr-2" />Exporter fiche</DropdownMenuItem>
                 <DropdownMenuItem><Mail className="h-4 w-4 mr-2" />Envoyer email</DropdownMenuItem>
                 <DropdownMenuItem className="text-destructive"><Trash2 className="h-4 w-4 mr-2" />Archiver</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
-
-        {/* KPI strip */}
-        <div className="relative z-10 grid grid-cols-2 md:grid-cols-5 gap-3 mt-8">
-          {[
-            { icon: UsersIcon, label: 'Utilisateurs', value: client.utilisateurs },
-            { icon: CreditCard, label: 'Licences', value: client.licences },
-            { icon: Building2, label: 'Agences', value: agences.length },
-            { icon: Monitor, label: 'Parc', value: parcInformatique.length },
-            { icon: TrendingUp, label: 'CA / mois', value: `${(client.ca / 1000).toFixed(1)}k€` },
-          ].map((s, i) => (
-            <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-              <div className="flex items-center gap-1.5 mb-1">
-                <s.icon className="h-3.5 w-3.5 text-white/80" />
-                <span className="text-xs text-white/70">{s.label}</span>
-              </div>
-              <p className="text-2xl font-bold">{s.value}</p>
-            </div>
-          ))}
         </div>
       </motion.div>
 
@@ -516,37 +515,79 @@ export default function ClientDetail() {
 
             {/* PARC IT */}
             <TabsContent value="parc" className="space-y-4">
-              {/* Catégories cards (cliquables = filtre) */}
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-                <button
-                  onClick={() => setCategorieFilter('all')}
-                  className={`p-4 rounded-xl border text-left transition-all ${categorieFilter === 'all' ? 'border-primary bg-primary/5 shadow-md' : 'border-border/50 bg-card/80 hover:border-primary/40 hover:-translate-y-0.5'}`}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-zinc-600 flex items-center justify-center mb-2">
-                    <Cpu className="h-5 w-5 text-white" />
-                  </div>
-                  <p className="text-2xl font-bold">{scopedDevices.length}</p>
-                  <p className="text-xs text-muted-foreground">Tous équipements</p>
-                </button>
-                {CATEGORIES.map(c => {
-                  const count = scopedDevices.filter(d => d.categorie === c.value).length;
-                  const Icon = c.icon;
-                  const active = categorieFilter === c.value;
-                  return (
-                    <button
-                      key={c.value}
-                      onClick={() => setCategorieFilter(c.value)}
-                      className={`p-4 rounded-xl border text-left transition-all ${active ? 'border-primary bg-primary/5 shadow-md' : 'border-border/50 bg-card/80 hover:border-primary/40 hover:-translate-y-0.5'}`}
-                    >
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${c.color} flex items-center justify-center mb-2`}>
-                        <Icon className="h-5 w-5 text-white" />
+              {(() => {
+                const FAMILIES: { id: string; label: string; icon: any; color: string; cats: ParcCategorie[] }[] = [
+                  { id: 'endpoints', label: 'Endpoints', icon: Laptop, color: 'from-blue-500 to-indigo-600', cats: ['poste', 'mobile'] },
+                  { id: 'infra', label: 'Infrastructure', icon: Server, color: 'from-violet-500 to-purple-600', cats: ['serveur', 'reseau', 'lien-internet'] },
+                  { id: 'comm', label: 'Communication', icon: PhoneCall, color: 'from-cyan-500 to-sky-600', cats: ['telephonie', 'imprimante'] },
+                  { id: 'security', label: 'Sécurité physique', icon: Shield, color: 'from-rose-500 to-red-600', cats: ['alarme', 'videosurveillance'] },
+                ];
+                const activeFamily = FAMILIES.find(f => categorieFilter !== 'all' && f.cats.includes(categorieFilter as ParcCategorie));
+                return (
+                  <>
+                    {/* 4 familles */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <button
+                        onClick={() => setCategorieFilter('all')}
+                        className={`p-4 rounded-xl border text-left transition-all flex items-center gap-3 ${categorieFilter === 'all' ? 'border-primary bg-primary/5 shadow-md' : 'border-border/50 bg-card/80 hover:border-primary/40'}`}
+                      >
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-slate-500 to-zinc-600 flex items-center justify-center flex-shrink-0">
+                          <Cpu className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-2xl font-bold leading-none">{scopedDevices.length}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Vue globale</p>
+                        </div>
+                      </button>
+                      {FAMILIES.map(f => {
+                        const count = scopedDevices.filter(d => f.cats.includes(d.categorie)).length;
+                        const active = activeFamily?.id === f.id;
+                        const Icon = f.icon;
+                        return (
+                          <button
+                            key={f.id}
+                            onClick={() => setCategorieFilter(f.cats[0])}
+                            className={`p-4 rounded-xl border text-left transition-all flex items-center gap-3 ${active ? 'border-primary bg-primary/5 shadow-md' : 'border-border/50 bg-card/80 hover:border-primary/40'}`}
+                          >
+                            <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center flex-shrink-0`}>
+                              <Icon className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-2xl font-bold leading-none">{count}</p>
+                              <p className="text-xs text-muted-foreground mt-1 truncate">{f.label}</p>
+                              <p className="text-[10px] text-muted-foreground/70 truncate">{f.cats.map(c => categoryMap[c].label).join(' · ')}</p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Sous-catégories de la famille active */}
+                    {activeFamily && (
+                      <div className="flex items-center gap-2 flex-wrap p-2 rounded-xl bg-muted/40 border border-border/50">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground px-2">{activeFamily.label} :</span>
+                        {activeFamily.cats.map(cat => {
+                          const c = categoryMap[cat];
+                          const count = scopedDevices.filter(d => d.categorie === cat).length;
+                          const Icon = c.icon;
+                          const active = categorieFilter === cat;
+                          return (
+                            <button
+                              key={cat}
+                              onClick={() => setCategorieFilter(cat)}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${active ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-card hover:bg-card/80 text-foreground border border-border/50'}`}
+                            >
+                              <Icon className="h-3.5 w-3.5" />
+                              {c.label}
+                              <span className={`ml-0.5 px-1.5 py-0.5 rounded text-[10px] ${active ? 'bg-primary-foreground/20' : 'bg-muted'}`}>{count}</span>
+                            </button>
+                          );
+                        })}
                       </div>
-                      <p className="text-2xl font-bold">{count}</p>
-                      <p className="text-xs text-muted-foreground">{c.label}</p>
-                    </button>
-                  );
-                })}
-              </div>
+                    )}
+                  </>
+                );
+              })()}
 
               <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
                 <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
