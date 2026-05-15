@@ -91,11 +91,35 @@ const CATEGORIES: { value: ParcCategorie; label: string; icon: any; color: strin
 
 const initialAgences: Record<string, Agence[]> = {
   c1: [
-    { id: 'a1', nom: 'Siège Paris', ville: 'Paris', adresse: '12 rue de la République', codePostal: '75001', utilisateurs: 78, responsable: 'Marie Dubois', telephone: '+33 1 42 86 00 00' },
-    { id: 'a2', nom: 'Agence Lyon', ville: 'Lyon', adresse: '5 cours Vitton', codePostal: '69006', utilisateurs: 42, responsable: 'Thomas Bernard', telephone: '+33 4 72 14 00 00' },
-    { id: 'a3', nom: 'Agence Marseille', ville: 'Marseille', adresse: '88 La Canebière', codePostal: '13001', utilisateurs: 22, responsable: 'Sarah Martin', telephone: '+33 4 91 13 00 00' },
+    { id: 'a1', nom: 'Siège Paris', ville: 'Paris', adresse: '12 rue de la République', codePostal: '75001', utilisateurs: 78, responsable: 'Marie Dubois', telephone: '+33 1 42 86 00 00',
+      contact: { nom: 'Marie Dubois', role: 'DSI', email: 'm.dubois@acme.fr', telephone: '+33 1 42 86 00 12' } },
+    { id: 'a2', nom: 'Agence Lyon', ville: 'Lyon', adresse: '5 cours Vitton', codePostal: '69006', utilisateurs: 42, responsable: 'Thomas Bernard', telephone: '+33 4 72 14 00 00',
+      contact: { nom: 'Thomas Bernard', role: 'Resp. agence', email: 't.bernard@acme.fr', telephone: '+33 4 72 14 00 21' } },
+    { id: 'a3', nom: 'Agence Marseille', ville: 'Marseille', adresse: '88 La Canebière', codePostal: '13001', utilisateurs: 22, responsable: 'Sarah Martin', telephone: '+33 4 91 13 00 00',
+      contact: { nom: 'Sarah Martin', role: 'Office Manager', email: 's.martin@acme.fr', telephone: '+33 4 91 13 00 18' } },
   ],
 };
+
+const ficherClient = [
+  { id: 'f1', nom: 'Contrat-cadre-2024.pdf', taille: '1.2 Mo', date: '12/03/2024', type: 'Contrat' },
+  { id: 'f2', nom: 'Audit-securite-Q1.docx', taille: '845 Ko', date: '02/04/2026', type: 'Audit' },
+  { id: 'f3', nom: 'Inventaire-parc.xlsx', taille: '2.4 Mo', date: '18/04/2026', type: 'Inventaire' },
+  { id: 'f4', nom: 'Plan-migration-365.pdf', taille: '3.1 Mo', date: '21/04/2026', type: 'Projet' },
+];
+
+const initialTickets: Ticket[] = [
+  { id: 't1', reference: 'TIC-2026-0142', sujet: 'Boîte mail bloquée — quota dépassé', agence: 'Paris', priorite: 'haute', status: 'en-cours', ouvertLe: '2026-05-13T09:14', assignee: 'Tech support N2', categorie: 'incident' },
+  { id: 't2', reference: 'TIC-2026-0141', sujet: 'Demande nouvel utilisateur — RH', agence: 'Lyon', priorite: 'normale', status: 'ouvert', ouvertLe: '2026-05-12T15:30', assignee: 'Service desk', categorie: 'demande' },
+  { id: 't3', reference: 'TIC-2026-0140', sujet: 'Imprimante HS — remplacement toner', agence: 'Marseille', priorite: 'basse', status: 'ouvert', ouvertLe: '2026-05-12T11:02', assignee: 'Tech terrain', categorie: 'maintenance' },
+  { id: 't4', reference: 'TIC-2026-0139', sujet: 'Lien internet instable matin', agence: 'Paris', priorite: 'critique', status: 'en-cours', ouvertLe: '2026-05-11T08:42', assignee: 'NOC', categorie: 'incident' },
+  { id: 't5', reference: 'TIC-2026-0136', sujet: 'Création licence E5 dirigeant', agence: 'Paris', priorite: 'normale', status: 'ouvert', ouvertLe: '2026-05-10T17:00', assignee: 'M365 admin', categorie: 'demande' },
+  { id: 't6', reference: 'TIC-2026-0135', sujet: 'Problème VPN', agence: 'Lyon', priorite: 'haute', status: 'ouvert', ouvertLe: '2026-05-10T10:20', assignee: 'Réseau N2', categorie: 'incident' },
+  // Historique
+  { id: 't7', reference: 'TIC-2026-0128', sujet: 'Migration boîte partagée', agence: 'Paris', priorite: 'normale', status: 'resolu', ouvertLe: '2026-05-04T09:00', fermeLe: '2026-05-05T16:30', assignee: 'M365 admin', categorie: 'demande' },
+  { id: 't8', reference: 'TIC-2026-0119', sujet: 'Caméra hall principal HS', agence: 'Marseille', priorite: 'haute', status: 'ferme', ouvertLe: '2026-04-28T08:15', fermeLe: '2026-04-29T11:00', assignee: 'Tech terrain', categorie: 'maintenance' },
+  { id: 't9', reference: 'TIC-2026-0112', sujet: 'Reset mot de passe AD', agence: 'Lyon', priorite: 'basse', status: 'ferme', ouvertLe: '2026-04-22T14:00', fermeLe: '2026-04-22T14:18', assignee: 'Service desk', categorie: 'demande' },
+  { id: 't10', reference: 'TIC-2026-0098', sujet: 'Audit sécurité trimestriel', agence: 'Paris', priorite: 'normale', status: 'resolu', ouvertLe: '2026-04-10T09:00', fermeLe: '2026-04-15T18:00', assignee: 'RSSI', categorie: 'demande' },
+];
 
 const utilisateursClient = [
   { id: 'u1', nom: 'Marie Dubois', email: 'm.dubois@acme.fr', role: 'DSI', agence: 'Paris', status: 'active', licence: 'E5' },
