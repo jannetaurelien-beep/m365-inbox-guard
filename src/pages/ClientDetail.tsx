@@ -168,10 +168,51 @@ export default function ClientDetail() {
   const [newDevice, setNewDevice] = useState<Partial<EnrichedDevice>>({ categorie: 'poste', status: 'actif' });
   const [selectedDevice, setSelectedDevice] = useState<EnrichedDevice | null>(null);
   const [deviceSheet, setDeviceSheet] = useState(false);
+  const [tickets] = useState<Ticket[]>(initialTickets);
+  const [activeTab, setActiveTab] = useState<string>('agences');
+  const [contactDialog, setContactDialog] = useState(false);
+  const [contactDraft, setContactDraft] = useState<AgenceContact>({ nom: '', role: '', email: '', telephone: '' });
+  const [contactAgenceId, setContactAgenceId] = useState<string | null>(null);
 
   const agenceFilter = selectedAgence?.ville;
   const scopedUsers = agenceFilter ? utilisateursClient.filter(u => u.agence === agenceFilter) : utilisateursClient;
   const scopedDevices = agenceFilter ? parc.filter(d => d.agence === agenceFilter) : parc;
+  const scopedTickets = agenceFilter ? tickets.filter(t => t.agence === agenceFilter) : tickets;
+  const openTickets = scopedTickets.filter(t => t.status === 'ouvert' || t.status === 'en-cours');
+  const closedTickets = scopedTickets.filter(t => t.status === 'resolu' || t.status === 'ferme');
+
+  const pickAgence = (a: Agence) => {
+    setSelectedAgence(a);
+    setShowPicker(false);
+    setActiveTab('users');
+  };
+
+  const openContactEditor = (a: Agence) => {
+    setContactAgenceId(a.id);
+    setContactDraft(a.contact || { nom: a.responsable, role: 'Contact agence', email: '', telephone: a.telephone });
+    setContactDialog(true);
+  };
+
+  const saveContact = () => {
+    if (!contactAgenceId) return;
+    setAgences(prev => prev.map(a => a.id === contactAgenceId ? { ...a, contact: { ...contactDraft } } : a));
+    if (selectedAgence?.id === contactAgenceId) {
+      setSelectedAgence({ ...selectedAgence, contact: { ...contactDraft } });
+    }
+    setContactDialog(false);
+    toast.success('Contact agence mis à jour');
+  };
+
+  // Synthèse globale du client
+  const totalPostes = parc.filter(d => d.categorie === 'poste' || d.categorie === 'serveur').length;
+  const devicesEnPanne = parc.filter(d => d.status === 'hors-service').length;
+  const devicesMaint = parc.filter(d => d.status === 'maintenance').length;
+  const sante: { label: string; color: string; dot: string } =
+    devicesEnPanne > 0 ? { label: 'Critique', color: 'text-rose-500', dot: 'bg-rose-500' }
+    : devicesMaint > 2 ? { label: 'À surveiller', color: 'text-amber-500', dot: 'bg-amber-500' }
+    : { label: 'Opérationnel', color: 'text-emerald-500', dot: 'bg-emerald-500' };
+  const ticketsOuvertsClient = tickets.filter(t => t.status === 'ouvert' || t.status === 'en-cours').length;
+  const derniereIntervention = tickets.find(t => t.fermeLe);
 
   const filteredUsers = useMemo(
     () => scopedUsers.filter(u => u.nom.toLowerCase().includes(searchUser.toLowerCase()) || u.email.toLowerCase().includes(searchUser.toLowerCase())),
