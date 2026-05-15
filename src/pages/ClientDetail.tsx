@@ -27,6 +27,13 @@ import { enrichedParc, type EnrichedDevice } from '@/lib/mock-data/parc-details'
 import { DeviceDetailSheet } from '@/components/clients/DeviceDetailSheet';
 
 
+interface AgenceContact {
+  nom: string;
+  role: string;
+  email: string;
+  telephone: string;
+}
+
 interface Agence {
   id: string;
   nom: string;
@@ -36,6 +43,20 @@ interface Agence {
   utilisateurs: number;
   responsable: string;
   telephone: string;
+  contact?: AgenceContact;
+}
+
+interface Ticket {
+  id: string;
+  reference: string;
+  sujet: string;
+  agence: string;
+  priorite: 'basse' | 'normale' | 'haute' | 'critique';
+  status: 'ouvert' | 'en-cours' | 'resolu' | 'ferme';
+  ouvertLe: string;
+  fermeLe?: string;
+  assignee: string;
+  categorie: 'incident' | 'demande' | 'maintenance';
 }
 
 type ParcCategorie = 'serveur' | 'poste' | 'mobile' | 'telephonie' | 'alarme' | 'reseau' | 'lien-internet' | 'imprimante' | 'videosurveillance' | 'autre';
