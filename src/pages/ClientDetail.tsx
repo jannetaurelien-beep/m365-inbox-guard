@@ -342,7 +342,75 @@ export default function ClientDetail() {
 
       {/* Sélecteur d'agence (vue d'entrée) */}
       {showPicker && agences.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+
+          {/* SYNTHÈSE CLIENT — Cockpit annulaire */}
+          <Card className="p-5 bg-gradient-to-br from-card to-muted/20 border-border/50 shadow-md">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr_1fr_1fr] gap-5">
+              {/* Identité */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Synthèse client</span>
+                </div>
+                <h3 className="text-lg font-bold leading-tight">{client.nom}</h3>
+                <p className="text-xs text-muted-foreground">Portefeuille <span className="font-mono font-semibold text-foreground">GRCS</span> · {client.secteur}</p>
+                <div className="space-y-1 pt-1 text-xs">
+                  <p className="flex items-center gap-1.5"><Mail className="h-3 w-3 text-muted-foreground" /><a href={`mailto:${client.email}`} className="text-primary hover:underline truncate">{client.email}</a></p>
+                  <p className="flex items-center gap-1.5"><Headphones className="h-3 w-3 text-muted-foreground" /><span className="font-mono">{client.telephone}</span><span className="text-muted-foreground">· Commercial</span></p>
+                  <p className="flex items-start gap-1.5"><MapPin className="h-3 w-3 text-muted-foreground mt-0.5" /><span>{client.adresse}, {client.codePostal} {client.ville}</span></p>
+                </div>
+              </div>
+
+              {/* Support */}
+              <div className="rounded-xl border border-border/50 bg-card/50 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-md bg-amber-500/15"><Ticket className="h-3.5 w-3.5 text-amber-600" /></div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Support</span>
+                </div>
+                <p className="text-3xl font-bold leading-none">{ticketsOuvertsClient}<span className="text-sm font-normal text-muted-foreground ml-1">tickets ouverts</span></p>
+                <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                  <p>{tickets.filter(t => t.priorite === 'critique' && (t.status === 'ouvert' || t.status === 'en-cours')).length} critique(s) · {tickets.filter(t => t.priorite === 'haute' && (t.status === 'ouvert' || t.status === 'en-cours')).length} haute(s)</p>
+                  {derniereIntervention && (
+                    <p className="flex items-center gap-1"><Wrench className="h-3 w-3" />Dernière interv. : <span className="text-foreground">{new Date(derniereIntervention.fermeLe!).toLocaleDateString('fr-FR')}</span></p>
+                  )}
+                </div>
+              </div>
+
+              {/* Infra IT */}
+              <div className="rounded-xl border border-border/50 bg-card/50 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-md bg-blue-500/15"><Server className="h-3.5 w-3.5 text-blue-600" /></div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Infra IT</span>
+                </div>
+                <p className="text-3xl font-bold leading-none">{totalPostes}<span className="text-sm font-normal text-muted-foreground ml-1">postes & serveurs</span></p>
+                <div className="mt-3 flex items-center gap-2 text-xs">
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/60 ${sante.color}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${sante.dot} animate-pulse`} />
+                    {sante.label}
+                  </span>
+                  <span className="text-muted-foreground">{parc.length} équipt.</span>
+                </div>
+              </div>
+
+              {/* Affectation */}
+              <div className="rounded-xl border border-border/50 bg-card/50 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-md bg-violet-500/15"><BriefcaseIcon className="h-3.5 w-3.5 text-violet-600" /></div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Affectation</span>
+                </div>
+                <p className="text-sm font-semibold">{client.contact.nom}</p>
+                <p className="text-xs text-muted-foreground">{client.contact.role} principal</p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Building2 className="h-3 w-3" />{agences.length} agence(s)
+                  <span>·</span>
+                  <UsersIcon className="h-3 w-3" />{client.utilisateurs} util.
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* PICKER AGENCES */}
           <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
             <div className="flex items-start justify-between mb-5 gap-3 flex-wrap">
               <div>
@@ -350,17 +418,11 @@ export default function ClientDetail() {
                   <div className="p-1.5 rounded-lg bg-primary/10"><Building2 className="h-4 w-4 text-primary" /></div>
                   <h2 className="text-lg font-semibold">Choisissez une agence</h2>
                 </div>
-                <p className="text-sm text-muted-foreground">Filtrez les utilisateurs et le parc IT par agence, ou accédez directement aux ressources globales du client.</p>
+                <p className="text-sm text-muted-foreground">Filtre les utilisateurs, le parc IT et les tickets sur cette agence.</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => { setShowPicker(false); setSelectedAgence(null); }}>
+                <Button variant="outline" size="sm" onClick={() => { setShowPicker(false); setSelectedAgence(null); setActiveTab('users'); }}>
                   <FolderOpen className="h-4 w-4 mr-2" />Voir toutes les ressources
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/utilisateurs')}>
-                  <UsersIcon className="h-4 w-4 mr-2" />Tous les utilisateurs
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/fichiers-serveur')}>
-                  <HardDrive className="h-4 w-4 mr-2" />Fichiers serveur
                 </Button>
                 <Button size="sm" onClick={() => navigate(`/clients/${id}/supervision`)} className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
                   <Activity className="h-4 w-4 mr-2" />Supervision globale
@@ -371,12 +433,14 @@ export default function ClientDetail() {
               {agences.map(a => {
                 const usersCount = utilisateursClient.filter(u => u.agence === a.ville).length;
                 const devicesCount = parcInformatique.filter(d => d.agence === a.ville).length;
+                const ticketsCount = tickets.filter(t => t.agence === a.ville && (t.status === 'ouvert' || t.status === 'en-cours')).length;
+                const c = a.contact;
                 return (
                   <div
                     key={a.id}
                     className="group relative text-left p-5 rounded-2xl border border-border/50 bg-gradient-to-br from-card to-muted/30 hover:border-primary/50 hover:shadow-xl hover:-translate-y-0.5 transition-all"
                   >
-                    <button onClick={() => { setSelectedAgence(a); setShowPicker(false); }} className="text-left w-full">
+                    <button onClick={() => pickAgence(a)} className="text-left w-full">
                       <div className="flex items-start justify-between mb-3">
                         <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
                           <Building2 className="h-5 w-5 text-white" />
@@ -385,11 +449,28 @@ export default function ClientDetail() {
                       </div>
                       <h3 className="font-semibold">{a.nom}</h3>
                       <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><MapPin className="h-3 w-3" />{a.codePostal} {a.ville}</p>
-                      <div className="flex gap-4 mt-4 pt-3 border-t border-border/50 text-xs">
-                        <div><span className="font-bold text-base">{usersCount}</span> <span className="text-muted-foreground">utilisateurs</span></div>
-                        <div><span className="font-bold text-base">{devicesCount}</span> <span className="text-muted-foreground">appareils</span></div>
+                      <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-border/50 text-xs">
+                        <div><span className="font-bold text-base">{usersCount}</span><p className="text-muted-foreground text-[10px]">util.</p></div>
+                        <div><span className="font-bold text-base">{devicesCount}</span><p className="text-muted-foreground text-[10px]">appareils</p></div>
+                        <div><span className={`font-bold text-base ${ticketsCount > 0 ? 'text-amber-600' : ''}`}>{ticketsCount}</span><p className="text-muted-foreground text-[10px]">tickets</p></div>
                       </div>
                     </button>
+                    <div className="mt-3 p-2.5 rounded-lg bg-muted/40 border border-border/40">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Avatar className="h-7 w-7 flex-shrink-0">
+                            <AvatarFallback className="text-[10px] bg-gradient-to-br from-violet-500 to-purple-600 text-white">{c ? c.nom.split(' ').map(w => w[0]).join('').slice(0,2) : '?'}</AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium truncate">{c?.nom || 'Aucun contact'}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{c?.role || '—'}</p>
+                          </div>
+                        </div>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 flex-shrink-0" onClick={(e) => { e.stopPropagation(); openContactEditor(a); }}>
+                          <UserCog className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
                     <Button size="sm" variant="outline" className="w-full mt-3" onClick={(e) => { e.stopPropagation(); navigate(`/clients/${id}/supervision?agence=${a.ville}`); }}>
                       <Activity className="h-3.5 w-3.5 mr-1.5" />Supervision agence
                     </Button>
