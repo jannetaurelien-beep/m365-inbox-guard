@@ -6,7 +6,8 @@ import {
   TrendingUp, Briefcase, Edit, Star, MoreVertical, Plus, Monitor, Laptop, Smartphone,
   Server, Network, FileText, Calendar, Activity, Shield, MessageSquare, Paperclip,
   CheckCircle2, AlertTriangle, Clock, ChevronRight, Trash2, Download, Search,
-  HardDrive, Wifi, Printer, Cpu, FolderOpen, Sparkles, PhoneCall, Bell, Router, Tv, Camera
+  HardDrive, Wifi, Printer, Cpu, FolderOpen, Sparkles, PhoneCall, Bell, Router, Tv, Camera,
+  Ticket, UserCog, Heart, Wrench, Briefcase as BriefcaseIcon, Headphones
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,13 @@ import { enrichedParc, type EnrichedDevice } from '@/lib/mock-data/parc-details'
 import { DeviceDetailSheet } from '@/components/clients/DeviceDetailSheet';
 
 
+interface AgenceContact {
+  nom: string;
+  role: string;
+  email: string;
+  telephone: string;
+}
+
 interface Agence {
   id: string;
   nom: string;
@@ -35,6 +43,20 @@ interface Agence {
   utilisateurs: number;
   responsable: string;
   telephone: string;
+  contact?: AgenceContact;
+}
+
+interface Ticket {
+  id: string;
+  reference: string;
+  sujet: string;
+  agence: string;
+  priorite: 'basse' | 'normale' | 'haute' | 'critique';
+  status: 'ouvert' | 'en-cours' | 'resolu' | 'ferme';
+  ouvertLe: string;
+  fermeLe?: string;
+  assignee: string;
+  categorie: 'incident' | 'demande' | 'maintenance';
 }
 
 type ParcCategorie = 'serveur' | 'poste' | 'mobile' | 'telephonie' | 'alarme' | 'reseau' | 'lien-internet' | 'imprimante' | 'videosurveillance' | 'autre';
@@ -69,11 +91,35 @@ const CATEGORIES: { value: ParcCategorie; label: string; icon: any; color: strin
 
 const initialAgences: Record<string, Agence[]> = {
   c1: [
-    { id: 'a1', nom: 'Siège Paris', ville: 'Paris', adresse: '12 rue de la République', codePostal: '75001', utilisateurs: 78, responsable: 'Marie Dubois', telephone: '+33 1 42 86 00 00' },
-    { id: 'a2', nom: 'Agence Lyon', ville: 'Lyon', adresse: '5 cours Vitton', codePostal: '69006', utilisateurs: 42, responsable: 'Thomas Bernard', telephone: '+33 4 72 14 00 00' },
-    { id: 'a3', nom: 'Agence Marseille', ville: 'Marseille', adresse: '88 La Canebière', codePostal: '13001', utilisateurs: 22, responsable: 'Sarah Martin', telephone: '+33 4 91 13 00 00' },
+    { id: 'a1', nom: 'Siège Paris', ville: 'Paris', adresse: '12 rue de la République', codePostal: '75001', utilisateurs: 78, responsable: 'Marie Dubois', telephone: '+33 1 42 86 00 00',
+      contact: { nom: 'Marie Dubois', role: 'DSI', email: 'm.dubois@acme.fr', telephone: '+33 1 42 86 00 12' } },
+    { id: 'a2', nom: 'Agence Lyon', ville: 'Lyon', adresse: '5 cours Vitton', codePostal: '69006', utilisateurs: 42, responsable: 'Thomas Bernard', telephone: '+33 4 72 14 00 00',
+      contact: { nom: 'Thomas Bernard', role: 'Resp. agence', email: 't.bernard@acme.fr', telephone: '+33 4 72 14 00 21' } },
+    { id: 'a3', nom: 'Agence Marseille', ville: 'Marseille', adresse: '88 La Canebière', codePostal: '13001', utilisateurs: 22, responsable: 'Sarah Martin', telephone: '+33 4 91 13 00 00',
+      contact: { nom: 'Sarah Martin', role: 'Office Manager', email: 's.martin@acme.fr', telephone: '+33 4 91 13 00 18' } },
   ],
 };
+
+const ficherClient = [
+  { id: 'f1', nom: 'Contrat-cadre-2024.pdf', taille: '1.2 Mo', date: '12/03/2024', type: 'Contrat' },
+  { id: 'f2', nom: 'Audit-securite-Q1.docx', taille: '845 Ko', date: '02/04/2026', type: 'Audit' },
+  { id: 'f3', nom: 'Inventaire-parc.xlsx', taille: '2.4 Mo', date: '18/04/2026', type: 'Inventaire' },
+  { id: 'f4', nom: 'Plan-migration-365.pdf', taille: '3.1 Mo', date: '21/04/2026', type: 'Projet' },
+];
+
+const initialTickets: Ticket[] = [
+  { id: 't1', reference: 'TIC-2026-0142', sujet: 'Boîte mail bloquée — quota dépassé', agence: 'Paris', priorite: 'haute', status: 'en-cours', ouvertLe: '2026-05-13T09:14', assignee: 'Tech support N2', categorie: 'incident' },
+  { id: 't2', reference: 'TIC-2026-0141', sujet: 'Demande nouvel utilisateur — RH', agence: 'Lyon', priorite: 'normale', status: 'ouvert', ouvertLe: '2026-05-12T15:30', assignee: 'Service desk', categorie: 'demande' },
+  { id: 't3', reference: 'TIC-2026-0140', sujet: 'Imprimante HS — remplacement toner', agence: 'Marseille', priorite: 'basse', status: 'ouvert', ouvertLe: '2026-05-12T11:02', assignee: 'Tech terrain', categorie: 'maintenance' },
+  { id: 't4', reference: 'TIC-2026-0139', sujet: 'Lien internet instable matin', agence: 'Paris', priorite: 'critique', status: 'en-cours', ouvertLe: '2026-05-11T08:42', assignee: 'NOC', categorie: 'incident' },
+  { id: 't5', reference: 'TIC-2026-0136', sujet: 'Création licence E5 dirigeant', agence: 'Paris', priorite: 'normale', status: 'ouvert', ouvertLe: '2026-05-10T17:00', assignee: 'M365 admin', categorie: 'demande' },
+  { id: 't6', reference: 'TIC-2026-0135', sujet: 'Problème VPN', agence: 'Lyon', priorite: 'haute', status: 'ouvert', ouvertLe: '2026-05-10T10:20', assignee: 'Réseau N2', categorie: 'incident' },
+  // Historique
+  { id: 't7', reference: 'TIC-2026-0128', sujet: 'Migration boîte partagée', agence: 'Paris', priorite: 'normale', status: 'resolu', ouvertLe: '2026-05-04T09:00', fermeLe: '2026-05-05T16:30', assignee: 'M365 admin', categorie: 'demande' },
+  { id: 't8', reference: 'TIC-2026-0119', sujet: 'Caméra hall principal HS', agence: 'Marseille', priorite: 'haute', status: 'ferme', ouvertLe: '2026-04-28T08:15', fermeLe: '2026-04-29T11:00', assignee: 'Tech terrain', categorie: 'maintenance' },
+  { id: 't9', reference: 'TIC-2026-0112', sujet: 'Reset mot de passe AD', agence: 'Lyon', priorite: 'basse', status: 'ferme', ouvertLe: '2026-04-22T14:00', fermeLe: '2026-04-22T14:18', assignee: 'Service desk', categorie: 'demande' },
+  { id: 't10', reference: 'TIC-2026-0098', sujet: 'Audit sécurité trimestriel', agence: 'Paris', priorite: 'normale', status: 'resolu', ouvertLe: '2026-04-10T09:00', fermeLe: '2026-04-15T18:00', assignee: 'RSSI', categorie: 'demande' },
+];
 
 const utilisateursClient = [
   { id: 'u1', nom: 'Marie Dubois', email: 'm.dubois@acme.fr', role: 'DSI', agence: 'Paris', status: 'active', licence: 'E5' },
@@ -87,12 +133,6 @@ const initialParc: EnrichedDevice[] = enrichedParc;
 
 const parcInformatique = initialParc;
 
-const ficherClient = [
-  { id: 'f1', nom: 'Contrat-cadre-2024.pdf', taille: '1.2 Mo', date: '12/03/2024', type: 'Contrat' },
-  { id: 'f2', nom: 'Audit-securite-Q1.docx', taille: '845 Ko', date: '02/04/2026', type: 'Audit' },
-  { id: 'f3', nom: 'Inventaire-parc.xlsx', taille: '2.4 Mo', date: '18/04/2026', type: 'Inventaire' },
-  { id: 'f4', nom: 'Plan-migration-365.pdf', taille: '3.1 Mo', date: '21/04/2026', type: 'Projet' },
-];
 
 const activites = [
   { id: 'ac1', icon: CheckCircle2, color: 'text-emerald-500', titre: 'Migration Exchange terminée', date: 'Il y a 2 jours', user: 'Système' },
@@ -128,10 +168,51 @@ export default function ClientDetail() {
   const [newDevice, setNewDevice] = useState<Partial<EnrichedDevice>>({ categorie: 'poste', status: 'actif' });
   const [selectedDevice, setSelectedDevice] = useState<EnrichedDevice | null>(null);
   const [deviceSheet, setDeviceSheet] = useState(false);
+  const [tickets] = useState<Ticket[]>(initialTickets);
+  const [activeTab, setActiveTab] = useState<string>('agences');
+  const [contactDialog, setContactDialog] = useState(false);
+  const [contactDraft, setContactDraft] = useState<AgenceContact>({ nom: '', role: '', email: '', telephone: '' });
+  const [contactAgenceId, setContactAgenceId] = useState<string | null>(null);
 
   const agenceFilter = selectedAgence?.ville;
   const scopedUsers = agenceFilter ? utilisateursClient.filter(u => u.agence === agenceFilter) : utilisateursClient;
   const scopedDevices = agenceFilter ? parc.filter(d => d.agence === agenceFilter) : parc;
+  const scopedTickets = agenceFilter ? tickets.filter(t => t.agence === agenceFilter) : tickets;
+  const openTickets = scopedTickets.filter(t => t.status === 'ouvert' || t.status === 'en-cours');
+  const closedTickets = scopedTickets.filter(t => t.status === 'resolu' || t.status === 'ferme');
+
+  const pickAgence = (a: Agence) => {
+    setSelectedAgence(a);
+    setShowPicker(false);
+    setActiveTab('users');
+  };
+
+  const openContactEditor = (a: Agence) => {
+    setContactAgenceId(a.id);
+    setContactDraft(a.contact || { nom: a.responsable, role: 'Contact agence', email: '', telephone: a.telephone });
+    setContactDialog(true);
+  };
+
+  const saveContact = () => {
+    if (!contactAgenceId) return;
+    setAgences(prev => prev.map(a => a.id === contactAgenceId ? { ...a, contact: { ...contactDraft } } : a));
+    if (selectedAgence?.id === contactAgenceId) {
+      setSelectedAgence({ ...selectedAgence, contact: { ...contactDraft } });
+    }
+    setContactDialog(false);
+    toast.success('Contact agence mis à jour');
+  };
+
+  // Synthèse globale du client
+  const totalPostes = parc.filter(d => d.categorie === 'poste' || d.categorie === 'serveur').length;
+  const devicesEnPanne = parc.filter(d => d.status === 'hors-service').length;
+  const devicesMaint = parc.filter(d => d.status === 'maintenance').length;
+  const sante: { label: string; color: string; dot: string } =
+    devicesEnPanne > 0 ? { label: 'Critique', color: 'text-rose-500', dot: 'bg-rose-500' }
+    : devicesMaint > 2 ? { label: 'À surveiller', color: 'text-amber-500', dot: 'bg-amber-500' }
+    : { label: 'Opérationnel', color: 'text-emerald-500', dot: 'bg-emerald-500' };
+  const ticketsOuvertsClient = tickets.filter(t => t.status === 'ouvert' || t.status === 'en-cours').length;
+  const derniereIntervention = tickets.find(t => t.fermeLe);
 
   const filteredUsers = useMemo(
     () => scopedUsers.filter(u => u.nom.toLowerCase().includes(searchUser.toLowerCase()) || u.email.toLowerCase().includes(searchUser.toLowerCase())),
@@ -261,7 +342,75 @@ export default function ClientDetail() {
 
       {/* Sélecteur d'agence (vue d'entrée) */}
       {showPicker && agences.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+
+          {/* SYNTHÈSE CLIENT — Cockpit annulaire */}
+          <Card className="p-5 bg-gradient-to-br from-card to-muted/20 border-border/50 shadow-md">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr_1fr_1fr] gap-5">
+              {/* Identité */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Synthèse client</span>
+                </div>
+                <h3 className="text-lg font-bold leading-tight">{client.nom}</h3>
+                <p className="text-xs text-muted-foreground">Portefeuille <span className="font-mono font-semibold text-foreground">GRCS</span> · {client.secteur}</p>
+                <div className="space-y-1 pt-1 text-xs">
+                  <p className="flex items-center gap-1.5"><Mail className="h-3 w-3 text-muted-foreground" /><a href={`mailto:${client.email}`} className="text-primary hover:underline truncate">{client.email}</a></p>
+                  <p className="flex items-center gap-1.5"><Headphones className="h-3 w-3 text-muted-foreground" /><span className="font-mono">{client.telephone}</span><span className="text-muted-foreground">· Commercial</span></p>
+                  <p className="flex items-start gap-1.5"><MapPin className="h-3 w-3 text-muted-foreground mt-0.5" /><span>{client.adresse}, {client.codePostal} {client.ville}</span></p>
+                </div>
+              </div>
+
+              {/* Support */}
+              <div className="rounded-xl border border-border/50 bg-card/50 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-md bg-amber-500/15"><Ticket className="h-3.5 w-3.5 text-amber-600" /></div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Support</span>
+                </div>
+                <p className="text-3xl font-bold leading-none">{ticketsOuvertsClient}<span className="text-sm font-normal text-muted-foreground ml-1">tickets ouverts</span></p>
+                <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                  <p>{tickets.filter(t => t.priorite === 'critique' && (t.status === 'ouvert' || t.status === 'en-cours')).length} critique(s) · {tickets.filter(t => t.priorite === 'haute' && (t.status === 'ouvert' || t.status === 'en-cours')).length} haute(s)</p>
+                  {derniereIntervention && (
+                    <p className="flex items-center gap-1"><Wrench className="h-3 w-3" />Dernière interv. : <span className="text-foreground">{new Date(derniereIntervention.fermeLe!).toLocaleDateString('fr-FR')}</span></p>
+                  )}
+                </div>
+              </div>
+
+              {/* Infra IT */}
+              <div className="rounded-xl border border-border/50 bg-card/50 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-md bg-blue-500/15"><Server className="h-3.5 w-3.5 text-blue-600" /></div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Infra IT</span>
+                </div>
+                <p className="text-3xl font-bold leading-none">{totalPostes}<span className="text-sm font-normal text-muted-foreground ml-1">postes & serveurs</span></p>
+                <div className="mt-3 flex items-center gap-2 text-xs">
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/60 ${sante.color}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${sante.dot} animate-pulse`} />
+                    {sante.label}
+                  </span>
+                  <span className="text-muted-foreground">{parc.length} équipt.</span>
+                </div>
+              </div>
+
+              {/* Affectation */}
+              <div className="rounded-xl border border-border/50 bg-card/50 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-md bg-violet-500/15"><BriefcaseIcon className="h-3.5 w-3.5 text-violet-600" /></div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Affectation</span>
+                </div>
+                <p className="text-sm font-semibold">{client.contact.nom}</p>
+                <p className="text-xs text-muted-foreground">{client.contact.role} principal</p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Building2 className="h-3 w-3" />{agences.length} agence(s)
+                  <span>·</span>
+                  <UsersIcon className="h-3 w-3" />{client.utilisateurs} util.
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* PICKER AGENCES */}
           <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
             <div className="flex items-start justify-between mb-5 gap-3 flex-wrap">
               <div>
@@ -269,17 +418,11 @@ export default function ClientDetail() {
                   <div className="p-1.5 rounded-lg bg-primary/10"><Building2 className="h-4 w-4 text-primary" /></div>
                   <h2 className="text-lg font-semibold">Choisissez une agence</h2>
                 </div>
-                <p className="text-sm text-muted-foreground">Filtrez les utilisateurs et le parc IT par agence, ou accédez directement aux ressources globales du client.</p>
+                <p className="text-sm text-muted-foreground">Filtre les utilisateurs, le parc IT et les tickets sur cette agence.</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => { setShowPicker(false); setSelectedAgence(null); }}>
+                <Button variant="outline" size="sm" onClick={() => { setShowPicker(false); setSelectedAgence(null); setActiveTab('users'); }}>
                   <FolderOpen className="h-4 w-4 mr-2" />Voir toutes les ressources
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/utilisateurs')}>
-                  <UsersIcon className="h-4 w-4 mr-2" />Tous les utilisateurs
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/fichiers-serveur')}>
-                  <HardDrive className="h-4 w-4 mr-2" />Fichiers serveur
                 </Button>
                 <Button size="sm" onClick={() => navigate(`/clients/${id}/supervision`)} className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
                   <Activity className="h-4 w-4 mr-2" />Supervision globale
@@ -290,12 +433,14 @@ export default function ClientDetail() {
               {agences.map(a => {
                 const usersCount = utilisateursClient.filter(u => u.agence === a.ville).length;
                 const devicesCount = parcInformatique.filter(d => d.agence === a.ville).length;
+                const ticketsCount = tickets.filter(t => t.agence === a.ville && (t.status === 'ouvert' || t.status === 'en-cours')).length;
+                const c = a.contact;
                 return (
                   <div
                     key={a.id}
                     className="group relative text-left p-5 rounded-2xl border border-border/50 bg-gradient-to-br from-card to-muted/30 hover:border-primary/50 hover:shadow-xl hover:-translate-y-0.5 transition-all"
                   >
-                    <button onClick={() => { setSelectedAgence(a); setShowPicker(false); }} className="text-left w-full">
+                    <button onClick={() => pickAgence(a)} className="text-left w-full">
                       <div className="flex items-start justify-between mb-3">
                         <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
                           <Building2 className="h-5 w-5 text-white" />
@@ -304,11 +449,28 @@ export default function ClientDetail() {
                       </div>
                       <h3 className="font-semibold">{a.nom}</h3>
                       <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><MapPin className="h-3 w-3" />{a.codePostal} {a.ville}</p>
-                      <div className="flex gap-4 mt-4 pt-3 border-t border-border/50 text-xs">
-                        <div><span className="font-bold text-base">{usersCount}</span> <span className="text-muted-foreground">utilisateurs</span></div>
-                        <div><span className="font-bold text-base">{devicesCount}</span> <span className="text-muted-foreground">appareils</span></div>
+                      <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-border/50 text-xs">
+                        <div><span className="font-bold text-base">{usersCount}</span><p className="text-muted-foreground text-[10px]">util.</p></div>
+                        <div><span className="font-bold text-base">{devicesCount}</span><p className="text-muted-foreground text-[10px]">appareils</p></div>
+                        <div><span className={`font-bold text-base ${ticketsCount > 0 ? 'text-amber-600' : ''}`}>{ticketsCount}</span><p className="text-muted-foreground text-[10px]">tickets</p></div>
                       </div>
                     </button>
+                    <div className="mt-3 p-2.5 rounded-lg bg-muted/40 border border-border/40">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Avatar className="h-7 w-7 flex-shrink-0">
+                            <AvatarFallback className="text-[10px] bg-gradient-to-br from-violet-500 to-purple-600 text-white">{c ? c.nom.split(' ').map(w => w[0]).join('').slice(0,2) : '?'}</AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium truncate">{c?.nom || 'Aucun contact'}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{c?.role || '—'}</p>
+                          </div>
+                        </div>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 flex-shrink-0" onClick={(e) => { e.stopPropagation(); openContactEditor(a); }}>
+                          <UserCog className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
                     <Button size="sm" variant="outline" className="w-full mt-3" onClick={(e) => { e.stopPropagation(); navigate(`/clients/${id}/supervision?agence=${a.ville}`); }}>
                       <Activity className="h-3.5 w-3.5 mr-1.5" />Supervision agence
                     </Button>
@@ -329,7 +491,7 @@ export default function ClientDetail() {
                 <Badge className="bg-primary/15 text-primary border-primary/30">
                   <Building2 className="h-3 w-3 mr-1" />Agence : {selectedAgence.nom}
                 </Badge>
-                <span className="text-muted-foreground">Les onglets Utilisateurs et Parc IT sont filtrés sur cette agence.</span>
+                <span className="text-muted-foreground">Utilisateurs, Parc IT et Tickets filtrés sur cette agence.</span>
               </>
             ) : (
               <>
@@ -367,18 +529,33 @@ export default function ClientDetail() {
           </Card>
 
           <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
-            <h3 className="text-sm font-semibold mb-4">Contact principal</h3>
-            <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12"><AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white font-semibold">{client.contact.nom.split(' ').map(w => w[0]).join('')}</AvatarFallback></Avatar>
-              <div>
-                <p className="font-semibold text-sm">{client.contact.nom}</p>
-                <p className="text-xs text-muted-foreground">{client.contact.role}</p>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-4">
-              <Button size="sm" variant="outline" className="flex-1"><Mail className="h-3.5 w-3.5 mr-1" />Email</Button>
-              <Button size="sm" variant="outline" className="flex-1"><Phone className="h-3.5 w-3.5 mr-1" />Appeler</Button>
-            </div>
+            {(() => {
+              const c = selectedAgence?.contact;
+              const displayed = c ? c : { nom: client.contact.nom, role: client.contact.role + ' principal', email: client.email, telephone: client.telephone };
+              return (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold">{selectedAgence ? `Contact ${selectedAgence.nom}` : 'Contact principal'}</h3>
+                    {selectedAgence && (
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openContactEditor(selectedAgence)}>
+                        <UserCog className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12"><AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white font-semibold">{displayed.nom.split(' ').map(w => w[0]).join('').slice(0,2)}</AvatarFallback></Avatar>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm truncate">{displayed.nom}</p>
+                      <p className="text-xs text-muted-foreground truncate">{displayed.role}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <Button size="sm" variant="outline" className="flex-1" asChild><a href={`mailto:${displayed.email}`}><Mail className="h-3.5 w-3.5 mr-1" />Email</a></Button>
+                    <Button size="sm" variant="outline" className="flex-1" asChild><a href={`tel:${displayed.telephone}`}><Phone className="h-3.5 w-3.5 mr-1" />Appeler</a></Button>
+                  </div>
+                </>
+              );
+            })()}
           </Card>
 
           <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
@@ -404,13 +581,16 @@ export default function ClientDetail() {
 
         {/* Tabs */}
         <div>
-          <Tabs defaultValue="agences" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5 mb-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-4">
               <TabsTrigger value="agences"><Building2 className="h-4 w-4 mr-1.5" />Agences</TabsTrigger>
               <TabsTrigger value="users"><UsersIcon className="h-4 w-4 mr-1.5" />Utilisateurs</TabsTrigger>
               <TabsTrigger value="parc"><Monitor className="h-4 w-4 mr-1.5" />Parc IT</TabsTrigger>
-              <TabsTrigger value="files"><FolderOpen className="h-4 w-4 mr-1.5" />Fichiers</TabsTrigger>
-              <TabsTrigger value="contracts"><FileText className="h-4 w-4 mr-1.5" />Contrats</TabsTrigger>
+              <TabsTrigger value="tickets">
+                <Ticket className="h-4 w-4 mr-1.5" />Tickets
+                {openTickets.length > 0 && <Badge className="ml-1.5 h-4 px-1 text-[10px] bg-amber-500/20 text-amber-700 border-amber-500/30">{openTickets.length}</Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="files"><FolderOpen className="h-4 w-4 mr-1.5" />Fichiers & Contrats</TabsTrigger>
             </TabsList>
 
             {/* AGENCES */}
@@ -466,7 +646,20 @@ export default function ClientDetail() {
                           <p className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{a.adresse || '—'}</p>
                           <p className="flex items-center gap-1.5"><UsersIcon className="h-3 w-3" />{a.utilisateurs} utilisateurs</p>
                           <p className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{a.telephone}</p>
-                          <p className="flex items-center gap-1.5"><Briefcase className="h-3 w-3" />Resp. {a.responsable}</p>
+                        </div>
+                        <div className="mt-3 p-2.5 rounded-lg bg-muted/40 border border-border/40 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Avatar className="h-7 w-7 flex-shrink-0">
+                              <AvatarFallback className="text-[10px] bg-gradient-to-br from-violet-500 to-purple-600 text-white">{a.contact ? a.contact.nom.split(' ').map(w => w[0]).join('').slice(0,2) : '?'}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium truncate">{a.contact?.nom || a.responsable || 'Aucun contact'}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{a.contact?.role || 'Responsable agence'}</p>
+                            </div>
+                          </div>
+                          <Button size="sm" variant="ghost" className="h-7 px-2 text-xs flex-shrink-0" onClick={() => openContactEditor(a)}>
+                            <UserCog className="h-3.5 w-3.5 mr-1" />Éditer
+                          </Button>
                         </div>
                       </Card>
                     ))}
@@ -692,8 +885,78 @@ export default function ClientDetail() {
               </Card>
             </TabsContent>
 
-            {/* FICHIERS */}
+            {/* TICKETS */}
+            <TabsContent value="tickets" className="space-y-4">
+              {/* KPI tickets */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'Ouverts', value: scopedTickets.filter(t => t.status === 'ouvert').length, color: 'from-amber-500 to-orange-600', icon: Clock },
+                  { label: 'En cours', value: scopedTickets.filter(t => t.status === 'en-cours').length, color: 'from-blue-500 to-indigo-600', icon: Activity },
+                  { label: 'Critiques', value: scopedTickets.filter(t => t.priorite === 'critique' && t.status !== 'resolu' && t.status !== 'ferme').length, color: 'from-rose-500 to-red-600', icon: AlertTriangle },
+                  { label: 'Résolus (30j)', value: closedTickets.length, color: 'from-emerald-500 to-teal-600', icon: CheckCircle2 },
+                ].map((k, i) => (
+                  <Card key={i} className="p-4 border-border/50 bg-card/80">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${k.color} flex items-center justify-center`}>
+                        <k.icon className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold leading-none">{k.value}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
+                <Tabs defaultValue="open" className="w-full">
+                  <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                    <div>
+                      <h3 className="text-lg font-semibold">Tickets {selectedAgence ? `· ${selectedAgence.nom}` : '· tous'}</h3>
+                      <p className="text-sm text-muted-foreground">{scopedTickets.length} ticket(s)</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TabsList>
+                        <TabsTrigger value="open">En cours ({openTickets.length})</TabsTrigger>
+                        <TabsTrigger value="history">Historique ({closedTickets.length})</TabsTrigger>
+                      </TabsList>
+                      <Button onClick={() => navigate('/demandes')}><Plus className="h-4 w-4 mr-2" />Nouveau ticket</Button>
+                    </div>
+                  </div>
+                  <TabsContent value="open"><TicketsTable tickets={openTickets} /></TabsContent>
+                  <TabsContent value="history"><TicketsTable tickets={closedTickets} historic /></TabsContent>
+                </Tabs>
+              </Card>
+            </TabsContent>
+
+            {/* FICHIERS & CONTRATS */}
             <TabsContent value="files" className="space-y-4">
+              <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
+                <h3 className="text-lg font-semibold mb-4">Contrat & facturation</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
+                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-2">Contrats actifs</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {client.contrats?.map(c => <Badge key={c} variant="outline" className="text-xs">{c}</Badge>) || <span className="text-sm text-muted-foreground">Aucun</span>}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
+                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">CA mensuel</p>
+                    <p className="text-2xl font-bold">{(client.ca / 1000).toFixed(1)}k€</p>
+                    <p className="text-xs text-emerald-600 mt-1">+12% sur 6 mois</p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
+                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">Date de début</p>
+                    <p className="text-2xl font-bold">{new Date(client.depuis).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
+                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">Prochaine facture</p>
+                    <p className="text-2xl font-bold">01/06/2026</p>
+                  </div>
+                </div>
+              </Card>
+
               <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -719,42 +982,77 @@ export default function ClientDetail() {
                 </div>
               </Card>
             </TabsContent>
-
-            {/* CONTRATS */}
-            <TabsContent value="contracts" className="space-y-4">
-              <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
-                <h3 className="text-lg font-semibold mb-4">Contrat & facturation</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
-                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-2">Contrats actifs</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {client.contrats?.map(c => <Badge key={c} variant="outline" className="text-xs">{c}</Badge>) || <span className="text-sm text-muted-foreground">Aucun</span>}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-3">Renouvellement automatique annuel</p>
-                  </div>
-                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
-                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">Chiffre d'affaires</p>
-                    <p className="text-2xl font-bold">{(client.ca / 1000).toFixed(1)}k€<span className="text-sm font-normal text-muted-foreground">/mois</span></p>
-                    <p className="text-sm text-emerald-600 mt-2">+12% sur 6 mois</p>
-                  </div>
-                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
-                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">Date de début</p>
-                    <p className="text-2xl font-bold">{new Date(client.depuis).toLocaleDateString('fr-FR')}</p>
-                  </div>
-                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
-                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">Prochaine facture</p>
-                    <p className="text-2xl font-bold">01/06/2026</p>
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
           </Tabs>
         </div>
       </div>
       )}
 
       <DeviceDetailSheet device={selectedDevice} open={deviceSheet} onOpenChange={setDeviceSheet} />
+
+      {/* Dialog édition contact agence */}
+      <Dialog open={contactDialog} onOpenChange={setContactDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Contact de l'agence</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-3 py-2">
+            <div><Label>Nom *</Label><Input value={contactDraft.nom} onChange={e => setContactDraft({ ...contactDraft, nom: e.target.value })} /></div>
+            <div><Label>Rôle</Label><Input value={contactDraft.role} onChange={e => setContactDraft({ ...contactDraft, role: e.target.value })} placeholder="Resp. agence, IT local..." /></div>
+            <div><Label>Email</Label><Input type="email" value={contactDraft.email} onChange={e => setContactDraft({ ...contactDraft, email: e.target.value })} /></div>
+            <div><Label>Téléphone</Label><Input value={contactDraft.telephone} onChange={e => setContactDraft({ ...contactDraft, telephone: e.target.value })} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setContactDialog(false)}>Annuler</Button>
+            <Button onClick={saveContact}>Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+const ticketStatusStyles: Record<Ticket['status'], string> = {
+  'ouvert': 'bg-amber-500/15 text-amber-700 border-amber-500/30',
+  'en-cours': 'bg-blue-500/15 text-blue-700 border-blue-500/30',
+  'resolu': 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30',
+  'ferme': 'bg-muted text-muted-foreground border-border',
+};
+const ticketPrioStyles: Record<Ticket['priorite'], string> = {
+  'basse': 'bg-muted text-muted-foreground',
+  'normale': 'bg-blue-500/15 text-blue-700',
+  'haute': 'bg-amber-500/15 text-amber-700',
+  'critique': 'bg-rose-500/15 text-rose-700',
+};
+
+function TicketsTable({ tickets, historic = false }: { tickets: Ticket[]; historic?: boolean }) {
+  if (tickets.length === 0) {
+    return <div className="text-center py-12 text-sm text-muted-foreground">Aucun ticket {historic ? 'archivé' : 'en cours'}</div>;
+  }
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Référence</TableHead>
+          <TableHead>Sujet</TableHead>
+          <TableHead>Agence</TableHead>
+          <TableHead>Priorité</TableHead>
+          <TableHead>Statut</TableHead>
+          <TableHead>{historic ? 'Fermé le' : 'Ouvert le'}</TableHead>
+          <TableHead>Assigné à</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {tickets.map(t => (
+          <TableRow key={t.id} className="hover:bg-muted/40">
+            <TableCell><code className="text-xs font-mono text-primary">{t.reference}</code></TableCell>
+            <TableCell className="text-sm font-medium max-w-[280px] truncate">{t.sujet}</TableCell>
+            <TableCell className="text-sm">{t.agence}</TableCell>
+            <TableCell><Badge className={`text-[10px] capitalize ${ticketPrioStyles[t.priorite]}`}>{t.priorite}</Badge></TableCell>
+            <TableCell><Badge className={`text-[10px] capitalize ${ticketStatusStyles[t.status]}`}>{t.status.replace('-', ' ')}</Badge></TableCell>
+            <TableCell className="text-xs text-muted-foreground">{new Date(historic ? t.fermeLe! : t.ouvertLe).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</TableCell>
+            <TableCell className="text-sm">{t.assignee}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
