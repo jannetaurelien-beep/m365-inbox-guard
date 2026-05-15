@@ -646,7 +646,20 @@ export default function ClientDetail() {
                           <p className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{a.adresse || '—'}</p>
                           <p className="flex items-center gap-1.5"><UsersIcon className="h-3 w-3" />{a.utilisateurs} utilisateurs</p>
                           <p className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{a.telephone}</p>
-                          <p className="flex items-center gap-1.5"><Briefcase className="h-3 w-3" />Resp. {a.responsable}</p>
+                        </div>
+                        <div className="mt-3 p-2.5 rounded-lg bg-muted/40 border border-border/40 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Avatar className="h-7 w-7 flex-shrink-0">
+                              <AvatarFallback className="text-[10px] bg-gradient-to-br from-violet-500 to-purple-600 text-white">{a.contact ? a.contact.nom.split(' ').map(w => w[0]).join('').slice(0,2) : '?'}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium truncate">{a.contact?.nom || a.responsable || 'Aucun contact'}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{a.contact?.role || 'Responsable agence'}</p>
+                            </div>
+                          </div>
+                          <Button size="sm" variant="ghost" className="h-7 px-2 text-xs flex-shrink-0" onClick={() => openContactEditor(a)}>
+                            <UserCog className="h-3.5 w-3.5 mr-1" />Éditer
+                          </Button>
                         </div>
                       </Card>
                     ))}
