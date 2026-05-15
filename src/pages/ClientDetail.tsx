@@ -988,7 +988,71 @@ export default function ClientDetail() {
       )}
 
       <DeviceDetailSheet device={selectedDevice} open={deviceSheet} onOpenChange={setDeviceSheet} />
+
+      {/* Dialog édition contact agence */}
+      <Dialog open={contactDialog} onOpenChange={setContactDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Contact de l'agence</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-3 py-2">
+            <div><Label>Nom *</Label><Input value={contactDraft.nom} onChange={e => setContactDraft({ ...contactDraft, nom: e.target.value })} /></div>
+            <div><Label>Rôle</Label><Input value={contactDraft.role} onChange={e => setContactDraft({ ...contactDraft, role: e.target.value })} placeholder="Resp. agence, IT local..." /></div>
+            <div><Label>Email</Label><Input type="email" value={contactDraft.email} onChange={e => setContactDraft({ ...contactDraft, email: e.target.value })} /></div>
+            <div><Label>Téléphone</Label><Input value={contactDraft.telephone} onChange={e => setContactDraft({ ...contactDraft, telephone: e.target.value })} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setContactDialog(false)}>Annuler</Button>
+            <Button onClick={saveContact}>Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+const ticketStatusStyles: Record<Ticket['status'], string> = {
+  'ouvert': 'bg-amber-500/15 text-amber-700 border-amber-500/30',
+  'en-cours': 'bg-blue-500/15 text-blue-700 border-blue-500/30',
+  'resolu': 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30',
+  'ferme': 'bg-muted text-muted-foreground border-border',
+};
+const ticketPrioStyles: Record<Ticket['priorite'], string> = {
+  'basse': 'bg-muted text-muted-foreground',
+  'normale': 'bg-blue-500/15 text-blue-700',
+  'haute': 'bg-amber-500/15 text-amber-700',
+  'critique': 'bg-rose-500/15 text-rose-700',
+};
+
+function TicketsTable({ tickets, historic = false }: { tickets: Ticket[]; historic?: boolean }) {
+  if (tickets.length === 0) {
+    return <div className="text-center py-12 text-sm text-muted-foreground">Aucun ticket {historic ? 'archivé' : 'en cours'}</div>;
+  }
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Référence</TableHead>
+          <TableHead>Sujet</TableHead>
+          <TableHead>Agence</TableHead>
+          <TableHead>Priorité</TableHead>
+          <TableHead>Statut</TableHead>
+          <TableHead>{historic ? 'Fermé le' : 'Ouvert le'}</TableHead>
+          <TableHead>Assigné à</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {tickets.map(t => (
+          <TableRow key={t.id} className="hover:bg-muted/40">
+            <TableCell><code className="text-xs font-mono text-primary">{t.reference}</code></TableCell>
+            <TableCell className="text-sm font-medium max-w-[280px] truncate">{t.sujet}</TableCell>
+            <TableCell className="text-sm">{t.agence}</TableCell>
+            <TableCell><Badge className={`text-[10px] capitalize ${ticketPrioStyles[t.priorite]}`}>{t.priorite}</Badge></TableCell>
+            <TableCell><Badge className={`text-[10px] capitalize ${ticketStatusStyles[t.status]}`}>{t.status.replace('-', ' ')}</Badge></TableCell>
+            <TableCell className="text-xs text-muted-foreground">{new Date(historic ? t.fermeLe! : t.ouvertLe).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</TableCell>
+            <TableCell className="text-sm">{t.assignee}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
