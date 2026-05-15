@@ -491,7 +491,7 @@ export default function ClientDetail() {
                 <Badge className="bg-primary/15 text-primary border-primary/30">
                   <Building2 className="h-3 w-3 mr-1" />Agence : {selectedAgence.nom}
                 </Badge>
-                <span className="text-muted-foreground">Les onglets Utilisateurs et Parc IT sont filtrés sur cette agence.</span>
+                <span className="text-muted-foreground">Utilisateurs, Parc IT et Tickets filtrés sur cette agence.</span>
               </>
             ) : (
               <>
