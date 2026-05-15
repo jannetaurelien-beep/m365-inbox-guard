@@ -885,8 +885,78 @@ export default function ClientDetail() {
               </Card>
             </TabsContent>
 
-            {/* FICHIERS */}
+            {/* TICKETS */}
+            <TabsContent value="tickets" className="space-y-4">
+              {/* KPI tickets */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'Ouverts', value: scopedTickets.filter(t => t.status === 'ouvert').length, color: 'from-amber-500 to-orange-600', icon: Clock },
+                  { label: 'En cours', value: scopedTickets.filter(t => t.status === 'en-cours').length, color: 'from-blue-500 to-indigo-600', icon: Activity },
+                  { label: 'Critiques', value: scopedTickets.filter(t => t.priorite === 'critique' && t.status !== 'resolu' && t.status !== 'ferme').length, color: 'from-rose-500 to-red-600', icon: AlertTriangle },
+                  { label: 'Résolus (30j)', value: closedTickets.length, color: 'from-emerald-500 to-teal-600', icon: CheckCircle2 },
+                ].map((k, i) => (
+                  <Card key={i} className="p-4 border-border/50 bg-card/80">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${k.color} flex items-center justify-center`}>
+                        <k.icon className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold leading-none">{k.value}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{k.label}</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
+                <Tabs defaultValue="open" className="w-full">
+                  <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                    <div>
+                      <h3 className="text-lg font-semibold">Tickets {selectedAgence ? `· ${selectedAgence.nom}` : '· tous'}</h3>
+                      <p className="text-sm text-muted-foreground">{scopedTickets.length} ticket(s)</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TabsList>
+                        <TabsTrigger value="open">En cours ({openTickets.length})</TabsTrigger>
+                        <TabsTrigger value="history">Historique ({closedTickets.length})</TabsTrigger>
+                      </TabsList>
+                      <Button onClick={() => navigate('/demandes')}><Plus className="h-4 w-4 mr-2" />Nouveau ticket</Button>
+                    </div>
+                  </div>
+                  <TabsContent value="open"><TicketsTable tickets={openTickets} /></TabsContent>
+                  <TabsContent value="history"><TicketsTable tickets={closedTickets} historic /></TabsContent>
+                </Tabs>
+              </Card>
+            </TabsContent>
+
+            {/* FICHIERS & CONTRATS */}
             <TabsContent value="files" className="space-y-4">
+              <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
+                <h3 className="text-lg font-semibold mb-4">Contrat & facturation</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
+                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-2">Contrats actifs</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {client.contrats?.map(c => <Badge key={c} variant="outline" className="text-xs">{c}</Badge>) || <span className="text-sm text-muted-foreground">Aucun</span>}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
+                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">CA mensuel</p>
+                    <p className="text-2xl font-bold">{(client.ca / 1000).toFixed(1)}k€</p>
+                    <p className="text-xs text-emerald-600 mt-1">+12% sur 6 mois</p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
+                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">Date de début</p>
+                    <p className="text-2xl font-bold">{new Date(client.depuis).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
+                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">Prochaine facture</p>
+                    <p className="text-2xl font-bold">01/06/2026</p>
+                  </div>
+                </div>
+              </Card>
+
               <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -909,35 +979,6 @@ export default function ClientDetail() {
                       <Button size="icon" variant="ghost" className="h-8 w-8"><Download className="h-4 w-4" /></Button>
                     </Card>
                   ))}
-                </div>
-              </Card>
-            </TabsContent>
-
-            {/* CONTRATS */}
-            <TabsContent value="contracts" className="space-y-4">
-              <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
-                <h3 className="text-lg font-semibold mb-4">Contrat & facturation</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
-                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-2">Contrats actifs</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {client.contrats?.map(c => <Badge key={c} variant="outline" className="text-xs">{c}</Badge>) || <span className="text-sm text-muted-foreground">Aucun</span>}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-3">Renouvellement automatique annuel</p>
-                  </div>
-                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
-                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">Chiffre d'affaires</p>
-                    <p className="text-2xl font-bold">{(client.ca / 1000).toFixed(1)}k€<span className="text-sm font-normal text-muted-foreground">/mois</span></p>
-                    <p className="text-sm text-emerald-600 mt-2">+12% sur 6 mois</p>
-                  </div>
-                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
-                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">Date de début</p>
-                    <p className="text-2xl font-bold">{new Date(client.depuis).toLocaleDateString('fr-FR')}</p>
-                  </div>
-                  <div className="p-4 rounded-xl border border-border/50 bg-muted/30">
-                    <p className="text-xs uppercase text-muted-foreground tracking-wider mb-1">Prochaine facture</p>
-                    <p className="text-2xl font-bold">01/06/2026</p>
-                  </div>
                 </div>
               </Card>
             </TabsContent>
