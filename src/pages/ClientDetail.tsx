@@ -529,18 +529,33 @@ export default function ClientDetail() {
           </Card>
 
           <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
-            <h3 className="text-sm font-semibold mb-4">Contact principal</h3>
-            <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12"><AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white font-semibold">{client.contact.nom.split(' ').map(w => w[0]).join('')}</AvatarFallback></Avatar>
-              <div>
-                <p className="font-semibold text-sm">{client.contact.nom}</p>
-                <p className="text-xs text-muted-foreground">{client.contact.role}</p>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-4">
-              <Button size="sm" variant="outline" className="flex-1"><Mail className="h-3.5 w-3.5 mr-1" />Email</Button>
-              <Button size="sm" variant="outline" className="flex-1"><Phone className="h-3.5 w-3.5 mr-1" />Appeler</Button>
-            </div>
+            {(() => {
+              const c = selectedAgence?.contact;
+              const displayed = c ? c : { nom: client.contact.nom, role: client.contact.role + ' principal', email: client.email, telephone: client.telephone };
+              return (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold">{selectedAgence ? `Contact ${selectedAgence.nom}` : 'Contact principal'}</h3>
+                    {selectedAgence && (
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openContactEditor(selectedAgence)}>
+                        <UserCog className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12"><AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white font-semibold">{displayed.nom.split(' ').map(w => w[0]).join('').slice(0,2)}</AvatarFallback></Avatar>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm truncate">{displayed.nom}</p>
+                      <p className="text-xs text-muted-foreground truncate">{displayed.role}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <Button size="sm" variant="outline" className="flex-1" asChild><a href={`mailto:${displayed.email}`}><Mail className="h-3.5 w-3.5 mr-1" />Email</a></Button>
+                    <Button size="sm" variant="outline" className="flex-1" asChild><a href={`tel:${displayed.telephone}`}><Phone className="h-3.5 w-3.5 mr-1" />Appeler</a></Button>
+                  </div>
+                </>
+              );
+            })()}
           </Card>
 
           <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
