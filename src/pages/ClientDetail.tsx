@@ -581,13 +581,16 @@ export default function ClientDetail() {
 
         {/* Tabs */}
         <div>
-          <Tabs defaultValue="agences" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5 mb-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-4">
               <TabsTrigger value="agences"><Building2 className="h-4 w-4 mr-1.5" />Agences</TabsTrigger>
               <TabsTrigger value="users"><UsersIcon className="h-4 w-4 mr-1.5" />Utilisateurs</TabsTrigger>
               <TabsTrigger value="parc"><Monitor className="h-4 w-4 mr-1.5" />Parc IT</TabsTrigger>
-              <TabsTrigger value="files"><FolderOpen className="h-4 w-4 mr-1.5" />Fichiers</TabsTrigger>
-              <TabsTrigger value="contracts"><FileText className="h-4 w-4 mr-1.5" />Contrats</TabsTrigger>
+              <TabsTrigger value="tickets">
+                <Ticket className="h-4 w-4 mr-1.5" />Tickets
+                {openTickets.length > 0 && <Badge className="ml-1.5 h-4 px-1 text-[10px] bg-amber-500/20 text-amber-700 border-amber-500/30">{openTickets.length}</Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="files"><FolderOpen className="h-4 w-4 mr-1.5" />Fichiers & Contrats</TabsTrigger>
             </TabsList>
 
             {/* AGENCES */}
