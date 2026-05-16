@@ -421,6 +421,9 @@ export default function ClientDetail() {
                 <p className="text-sm text-muted-foreground">Filtre les utilisateurs, le parc IT et les tickets sur cette agence.</p>
               </div>
               <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => setAgenceDialog(true)}>
+                  <Plus className="h-4 w-4 mr-2" />Ajouter une agence
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => { setShowPicker(false); setSelectedAgence(null); setActiveTab('users'); }}>
                   <FolderOpen className="h-4 w-4 mr-2" />Voir toutes les ressources
                 </Button>
