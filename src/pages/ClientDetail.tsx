@@ -421,6 +421,9 @@ export default function ClientDetail() {
                 <p className="text-sm text-muted-foreground">Filtre les utilisateurs, le parc IT et les tickets sur cette agence.</p>
               </div>
               <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => setAgenceDialog(true)}>
+                  <Plus className="h-4 w-4 mr-2" />Ajouter une agence
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => { setShowPicker(false); setSelectedAgence(null); setActiveTab('users'); }}>
                   <FolderOpen className="h-4 w-4 mr-2" />Voir toutes les ressources
                 </Button>
@@ -582,8 +585,10 @@ export default function ClientDetail() {
         {/* Tabs */}
         <div>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-4">
-              <TabsTrigger value="agences"><Building2 className="h-4 w-4 mr-1.5" />Agences</TabsTrigger>
+            <TabsList className={`grid w-full ${selectedAgence ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-5'} mb-4`}>
+              {!selectedAgence && (
+                <TabsTrigger value="agences"><Building2 className="h-4 w-4 mr-1.5" />Agences</TabsTrigger>
+              )}
               <TabsTrigger value="users"><UsersIcon className="h-4 w-4 mr-1.5" />Utilisateurs</TabsTrigger>
               <TabsTrigger value="parc"><Monitor className="h-4 w-4 mr-1.5" />Parc IT</TabsTrigger>
               <TabsTrigger value="tickets">
@@ -601,26 +606,7 @@ export default function ClientDetail() {
                     <h3 className="text-lg font-semibold">Agences de l'entreprise</h3>
                     <p className="text-sm text-muted-foreground">{agences.length} agence(s) enregistrée(s)</p>
                   </div>
-                  <Dialog open={agenceDialog} onOpenChange={setAgenceDialog}>
-                    <DialogTrigger asChild>
-                      <Button><Plus className="h-4 w-4 mr-2" />Créer une agence</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>Nouvelle agence</DialogTitle></DialogHeader>
-                      <div className="grid grid-cols-2 gap-3 py-2">
-                        <div className="col-span-2"><Label>Nom *</Label><Input value={newAgence.nom || ''} onChange={e => setNewAgence({ ...newAgence, nom: e.target.value })} placeholder="Agence Bordeaux" /></div>
-                        <div><Label>Ville *</Label><Input value={newAgence.ville || ''} onChange={e => setNewAgence({ ...newAgence, ville: e.target.value })} placeholder="Bordeaux" /></div>
-                        <div><Label>Code postal</Label><Input value={newAgence.codePostal || ''} onChange={e => setNewAgence({ ...newAgence, codePostal: e.target.value })} placeholder="33000" /></div>
-                        <div className="col-span-2"><Label>Adresse</Label><Input value={newAgence.adresse || ''} onChange={e => setNewAgence({ ...newAgence, adresse: e.target.value })} placeholder="14 cours du Médoc" /></div>
-                        <div><Label>Responsable</Label><Input value={newAgence.responsable || ''} onChange={e => setNewAgence({ ...newAgence, responsable: e.target.value })} /></div>
-                        <div><Label>Téléphone</Label><Input value={newAgence.telephone || ''} onChange={e => setNewAgence({ ...newAgence, telephone: e.target.value })} /></div>
-                      </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setAgenceDialog(false)}>Annuler</Button>
-                        <Button onClick={addAgence}>Créer</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                  <Button onClick={() => setAgenceDialog(true)}><Plus className="h-4 w-4 mr-2" />Créer une agence</Button>
                 </div>
 
                 {agences.length === 0 ? (
@@ -1002,6 +988,25 @@ export default function ClientDetail() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setContactDialog(false)}>Annuler</Button>
             <Button onClick={saveContact}>Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog création agence */}
+      <Dialog open={agenceDialog} onOpenChange={setAgenceDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Nouvelle agence</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-3 py-2">
+            <div className="col-span-2"><Label>Nom *</Label><Input value={newAgence.nom || ''} onChange={e => setNewAgence({ ...newAgence, nom: e.target.value })} placeholder="Agence Bordeaux" /></div>
+            <div><Label>Ville *</Label><Input value={newAgence.ville || ''} onChange={e => setNewAgence({ ...newAgence, ville: e.target.value })} placeholder="Bordeaux" /></div>
+            <div><Label>Code postal</Label><Input value={newAgence.codePostal || ''} onChange={e => setNewAgence({ ...newAgence, codePostal: e.target.value })} placeholder="33000" /></div>
+            <div className="col-span-2"><Label>Adresse</Label><Input value={newAgence.adresse || ''} onChange={e => setNewAgence({ ...newAgence, adresse: e.target.value })} placeholder="14 cours du Médoc" /></div>
+            <div><Label>Responsable</Label><Input value={newAgence.responsable || ''} onChange={e => setNewAgence({ ...newAgence, responsable: e.target.value })} /></div>
+            <div><Label>Téléphone</Label><Input value={newAgence.telephone || ''} onChange={e => setNewAgence({ ...newAgence, telephone: e.target.value })} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAgenceDialog(false)}>Annuler</Button>
+            <Button onClick={addAgence}>Créer</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
