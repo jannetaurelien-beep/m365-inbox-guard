@@ -173,6 +173,13 @@ export default function ClientDetail() {
   const [contactDialog, setContactDialog] = useState(false);
   const [contactDraft, setContactDraft] = useState<AgenceContact>({ nom: '', role: '', email: '', telephone: '' });
   const [contactAgenceId, setContactAgenceId] = useState<string | null>(null);
+  const slug = (client?.nom || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const [resources, setResources] = useState(() => ({
+    tenant: `${slug}.onmicrosoft.com`,
+    threecx: `${slug}.3cx.eu`,
+    portefeuille: `https://portefeuille.grcs.fr/clients/${id}`,
+  }));
+  const [editResources, setEditResources] = useState(false);
 
   const agenceFilter = selectedAgence?.ville;
   const scopedUsers = agenceFilter ? utilisateursClient.filter(u => u.agence === agenceFilter) : utilisateursClient;
