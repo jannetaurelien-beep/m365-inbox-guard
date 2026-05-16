@@ -585,8 +585,10 @@ export default function ClientDetail() {
         {/* Tabs */}
         <div>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-4">
-              <TabsTrigger value="agences"><Building2 className="h-4 w-4 mr-1.5" />Agences</TabsTrigger>
+            <TabsList className={`grid w-full ${selectedAgence ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-5'} mb-4`}>
+              {!selectedAgence && (
+                <TabsTrigger value="agences"><Building2 className="h-4 w-4 mr-1.5" />Agences</TabsTrigger>
+              )}
               <TabsTrigger value="users"><UsersIcon className="h-4 w-4 mr-1.5" />Utilisateurs</TabsTrigger>
               <TabsTrigger value="parc"><Monitor className="h-4 w-4 mr-1.5" />Parc IT</TabsTrigger>
               <TabsTrigger value="tickets">
