@@ -173,6 +173,13 @@ export default function ClientDetail() {
   const [contactDialog, setContactDialog] = useState(false);
   const [contactDraft, setContactDraft] = useState<AgenceContact>({ nom: '', role: '', email: '', telephone: '' });
   const [contactAgenceId, setContactAgenceId] = useState<string | null>(null);
+  const slug = (client?.nom || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const [resources, setResources] = useState(() => ({
+    tenant: `${slug}.onmicrosoft.com`,
+    threecx: `${slug}.3cx.eu`,
+    portefeuille: `https://portefeuille.grcs.fr/clients/${id}`,
+  }));
+  const [editResources, setEditResources] = useState(false);
 
   const agenceFilter = selectedAgence?.ville;
   const scopedUsers = agenceFilter ? utilisateursClient.filter(u => u.agence === agenceFilter) : utilisateursClient;
@@ -587,57 +594,53 @@ export default function ClientDetail() {
                 <Sparkles className="h-4 w-4 text-primary" />
                 Accès & ressources client
               </h3>
-              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs">
-                <Edit className="h-3 w-3 mr-1" />Modifier
+              <Button
+                size="sm"
+                variant={editResources ? 'default' : 'ghost'}
+                className="h-7 px-2 text-xs"
+                onClick={() => {
+                  if (editResources) toast.success('Ressources mises à jour');
+                  setEditResources(!editResources);
+                }}
+              >
+                {editResources ? <><CheckCircle2 className="h-3 w-3 mr-1" />Enregistrer</> : <><Edit className="h-3 w-3 mr-1" />Modifier</>}
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {[
-                {
-                  label: 'Tenant Microsoft 365',
-                  value: `${client.nom.toLowerCase().replace(/[^a-z0-9]/g, '')}.onmicrosoft.com`,
-                  url: `https://admin.microsoft.com/?tenant=${client.nom.toLowerCase().replace(/[^a-z0-9]/g, '')}.onmicrosoft.com`,
-                  icon: Shield,
-                  tone: 'from-blue-500/15 to-indigo-500/10 border-blue-500/30 text-blue-700 dark:text-blue-300',
-                  iconBg: 'bg-blue-500/15 text-blue-600 dark:text-blue-300',
-                },
-                {
-                  label: 'Système téléphonique 3CX',
-                  value: `${client.nom.toLowerCase().replace(/[^a-z0-9]/g, '')}.3cx.eu`,
-                  url: `https://${client.nom.toLowerCase().replace(/[^a-z0-9]/g, '')}.3cx.eu`,
-                  icon: PhoneCall,
-                  tone: 'from-emerald-500/15 to-teal-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300',
-                  iconBg: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300',
-                },
-                {
-                  label: 'Portefeuille client',
-                  value: `GRCS · ${client.id.toUpperCase()}`,
-                  url: `https://portefeuille.grcs.fr/clients/${client.id}`,
-                  icon: BriefcaseIcon,
-                  tone: 'from-amber-500/15 to-orange-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300',
-                  iconBg: 'bg-amber-500/15 text-amber-600 dark:text-amber-300',
-                },
-              ].map((r) => {
+            <div className="flex flex-col divide-y divide-border/40 rounded-lg border border-border/40 overflow-hidden">
+              {([
+                { key: 'tenant', label: 'Tenant Microsoft 365', icon: Shield, iconBg: 'bg-blue-500/15 text-blue-600 dark:text-blue-300', url: `https://admin.microsoft.com/?tenant=${resources.tenant}`, value: resources.tenant },
+                { key: 'threecx', label: 'Système téléphonique 3CX', icon: PhoneCall, iconBg: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300', url: `https://${resources.threecx}`, value: resources.threecx },
+                { key: 'portefeuille', label: 'Portefeuille client', icon: BriefcaseIcon, iconBg: 'bg-amber-500/15 text-amber-600 dark:text-amber-300', url: resources.portefeuille, value: resources.portefeuille },
+              ] as const).map((r) => {
                 const Icon = r.icon;
                 return (
-                  <a
-                    key={r.label}
-                    href={r.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`group relative overflow-hidden rounded-lg border bg-gradient-to-br ${r.tone} p-3 transition-all hover:shadow-md hover:-translate-y-0.5`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`h-9 w-9 shrink-0 rounded-md ${r.iconBg} flex items-center justify-center`}>
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[11px] uppercase tracking-wide font-semibold opacity-80">{r.label}</p>
-                        <p className="text-sm font-mono truncate mt-0.5 text-foreground/90">{r.value}</p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                  <div key={r.key} className="flex items-center gap-3 px-3 py-2.5 bg-card/50 hover:bg-muted/40 transition-colors">
+                    <div className={`h-8 w-8 shrink-0 rounded-md ${r.iconBg} flex items-center justify-center`}>
+                      <Icon className="h-4 w-4" />
                     </div>
-                  </a>
+                    <div className="w-48 shrink-0">
+                      <p className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">{r.label}</p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {editResources ? (
+                        <Input
+                          value={r.value}
+                          onChange={(e) => setResources((prev) => ({ ...prev, [r.key]: e.target.value }))}
+                          className="h-8 text-sm font-mono"
+                        />
+                      ) : (
+                        <p className="text-sm font-mono truncate text-foreground/90">{r.value}</p>
+                      )}
+                    </div>
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 inline-flex items-center gap-1 text-xs text-primary hover:underline px-2 py-1 rounded hover:bg-primary/10"
+                    >
+                      Ouvrir <ChevronRight className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
                 );
               })}
             </div>
