@@ -580,6 +580,68 @@ export default function ClientDetail() {
               <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"><Plus className="h-3 w-3 mr-1" />Tag</Button>
             </div>
           </Card>
+
+          <Card className="p-5 bg-card/80 backdrop-blur-sm border-border/50 shadow-md md:col-span-2 lg:col-span-3">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                Accès & ressources client
+              </h3>
+              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs">
+                <Edit className="h-3 w-3 mr-1" />Modifier
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {[
+                {
+                  label: 'Tenant Microsoft 365',
+                  value: `${client.nom.toLowerCase().replace(/[^a-z0-9]/g, '')}.onmicrosoft.com`,
+                  url: `https://admin.microsoft.com/?tenant=${client.nom.toLowerCase().replace(/[^a-z0-9]/g, '')}.onmicrosoft.com`,
+                  icon: Shield,
+                  tone: 'from-blue-500/15 to-indigo-500/10 border-blue-500/30 text-blue-700 dark:text-blue-300',
+                  iconBg: 'bg-blue-500/15 text-blue-600 dark:text-blue-300',
+                },
+                {
+                  label: 'Système téléphonique 3CX',
+                  value: `${client.nom.toLowerCase().replace(/[^a-z0-9]/g, '')}.3cx.eu`,
+                  url: `https://${client.nom.toLowerCase().replace(/[^a-z0-9]/g, '')}.3cx.eu`,
+                  icon: PhoneCall,
+                  tone: 'from-emerald-500/15 to-teal-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300',
+                  iconBg: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300',
+                },
+                {
+                  label: 'Portefeuille client',
+                  value: `GRCS · ${client.id.toUpperCase()}`,
+                  url: `https://portefeuille.grcs.fr/clients/${client.id}`,
+                  icon: BriefcaseIcon,
+                  tone: 'from-amber-500/15 to-orange-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300',
+                  iconBg: 'bg-amber-500/15 text-amber-600 dark:text-amber-300',
+                },
+              ].map((r) => {
+                const Icon = r.icon;
+                return (
+                  <a
+                    key={r.label}
+                    href={r.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group relative overflow-hidden rounded-lg border bg-gradient-to-br ${r.tone} p-3 transition-all hover:shadow-md hover:-translate-y-0.5`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`h-9 w-9 shrink-0 rounded-md ${r.iconBg} flex items-center justify-center`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] uppercase tracking-wide font-semibold opacity-80">{r.label}</p>
+                        <p className="text-sm font-mono truncate mt-0.5 text-foreground/90">{r.value}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </Card>
         </div>
 
         {/* Tabs */}
