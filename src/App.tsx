@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import Dashboard from "./pages/Dashboard";
+import TenantHub from "./pages/TenantHub";
 import Users from "./pages/Users";
 import UserDetail from "./pages/UserDetail";
 import CreateUser from "./pages/CreateUser";
