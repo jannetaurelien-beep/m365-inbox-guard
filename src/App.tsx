@@ -50,7 +50,8 @@ const App = () => (
                   <TopBar />
                   <main className="flex-1 p-6">
                     <Routes>
-                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/" element={<TenantHub />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/2fa" element={<TwoFactorAuth />} />
                     <Route path="/utilisateurs" element={<Users />} />
