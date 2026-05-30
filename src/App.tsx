@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import Dashboard from "./pages/Dashboard";
+import TenantHub from "./pages/TenantHub";
 import Users from "./pages/Users";
 import UserDetail from "./pages/UserDetail";
 import CreateUser from "./pages/CreateUser";
@@ -49,7 +50,8 @@ const App = () => (
                   <TopBar />
                   <main className="flex-1 p-6">
                     <Routes>
-                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/" element={<TenantHub />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/2fa" element={<TwoFactorAuth />} />
                     <Route path="/utilisateurs" element={<Users />} />

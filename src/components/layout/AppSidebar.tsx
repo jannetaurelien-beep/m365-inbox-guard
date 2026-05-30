@@ -1,4 +1,4 @@
-import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut, Share2, Bell, TrendingUp, Trophy, Workflow, Shield, Briefcase } from 'lucide-react';
+import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut, Share2, Bell, TrendingUp, Trophy, Workflow, Shield, Briefcase, Building2 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
@@ -13,7 +13,8 @@ import {
 } from '@/components/ui/sidebar';
 
 const menuItems = [
-  { title: 'Tableau de bord', url: '/', icon: Home },
+  { title: 'Hub des tenants', url: '/', icon: Building2 },
+  { title: 'Tableau de bord', url: '/dashboard', icon: Home },
   { title: 'Mes clients', url: '/clients', icon: Briefcase },
   { title: 'Utilisateurs', url: '/utilisateurs', icon: Users },
   { title: 'Actions', url: '/actions', icon: Zap },
