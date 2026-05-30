@@ -13,7 +13,8 @@ import {
 } from '@/components/ui/sidebar';
 
 const menuItems = [
-  { title: 'Tableau de bord', url: '/', icon: Home },
+  { title: 'Hub des tenants', url: '/', icon: Building2 },
+  { title: 'Tableau de bord', url: '/dashboard', icon: Home },
   { title: 'Mes clients', url: '/clients', icon: Briefcase },
   { title: 'Utilisateurs', url: '/utilisateurs', icon: Users },
   { title: 'Actions', url: '/actions', icon: Zap },
