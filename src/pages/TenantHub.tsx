@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Building2,
   ArrowRight,
@@ -11,11 +11,14 @@ import {
   Plus,
   Search,
   Crown,
-  CheckCircle2,
   Zap,
   Globe,
+  Activity,
+  Layers,
+  Compass,
+  Star,
+  TrendingUp,
 } from 'lucide-react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -30,457 +33,376 @@ interface Tenant {
   licences: number;
   statut: 'actif' | 'sync' | 'attention';
   derniereSync: string;
-  region: string;
+  sante: number; // 0-100
   primary?: boolean;
+  accent: string; // tailwind gradient classes
+  emoji: string;
 }
 
 const tenantsOperateurs: Tenant[] = [
   {
-    id: 't-grcs',
-    nom: 'it-grcs',
-    slug: 'IT-GRCS',
-    role: 'Owner',
-    type: 'operateur',
-    utilisateurs: 24,
-    licences: 30,
-    statut: 'actif',
-    derniereSync: 'il y a 2 min',
-    region: 'Europe — France',
-    primary: true,
+    id: 't-grcs', nom: 'it-grcs', slug: 'IT-GRCS', role: 'Owner', type: 'operateur',
+    utilisateurs: 24, licences: 30, statut: 'actif', derniereSync: 'il y a 2 min',
+    sante: 98, primary: true, accent: 'from-amber-400 via-orange-500 to-rose-500', emoji: '👑',
   },
 ];
 
 const tenantsClients: Tenant[] = [
-  {
-    id: 't-acme',
-    nom: 'Acme Industries',
-    slug: 'ACME',
-    role: 'Admin',
-    type: 'client',
-    utilisateurs: 142,
-    licences: 160,
-    statut: 'actif',
-    derniereSync: 'il y a 5 min',
-    region: 'Europe — France',
-  },
-  {
-    id: 't-lumina',
-    nom: 'Lumina Studio',
-    slug: 'LUMINA',
-    role: 'Admin',
-    type: 'client',
-    utilisateurs: 38,
-    licences: 40,
-    statut: 'sync',
-    derniereSync: 'synchronisation…',
-    region: 'Europe — France',
-  },
-  {
-    id: 't-nordtech',
-    nom: 'NordTech Solutions',
-    slug: 'NORDTECH',
-    role: 'Owner',
-    type: 'client',
-    utilisateurs: 96,
-    licences: 100,
-    statut: 'actif',
-    derniereSync: 'il y a 12 min',
-    region: 'Europe — France',
-  },
-  {
-    id: 't-atlas',
-    nom: 'Atlas Logistique',
-    slug: 'ATLAS-LOG',
-    role: 'Admin',
-    type: 'client',
-    utilisateurs: 215,
-    licences: 220,
-    statut: 'attention',
-    derniereSync: 'il y a 3 h',
-    region: 'Europe — France',
-  },
-  {
-    id: 't-vertex',
-    nom: 'Vertex Avocats',
-    slug: 'VERTEX',
-    role: 'Lecture',
-    type: 'client',
-    utilisateurs: 24,
-    licences: 25,
-    statut: 'actif',
-    derniereSync: 'il y a 1 h',
-    region: 'Europe — France',
-  },
+  { id: 't-acme', nom: 'Acme Industries', slug: 'ACME', role: 'Admin', type: 'client',
+    utilisateurs: 142, licences: 160, statut: 'actif', derniereSync: 'il y a 5 min',
+    sante: 94, accent: 'from-blue-400 via-indigo-500 to-violet-600', emoji: '🏭' },
+  { id: 't-lumina', nom: 'Lumina Studio', slug: 'LUMINA', role: 'Admin', type: 'client',
+    utilisateurs: 38, licences: 40, statut: 'sync', derniereSync: 'synchronisation…',
+    sante: 88, accent: 'from-fuchsia-400 via-pink-500 to-rose-500', emoji: '🎨' },
+  { id: 't-nordtech', nom: 'NordTech Solutions', slug: 'NORDTECH', role: 'Owner', type: 'client',
+    utilisateurs: 96, licences: 100, statut: 'actif', derniereSync: 'il y a 12 min',
+    sante: 91, accent: 'from-cyan-400 via-sky-500 to-blue-600', emoji: '⚡' },
+  { id: 't-atlas', nom: 'Atlas Logistique', slug: 'ATLAS-LOG', role: 'Admin', type: 'client',
+    utilisateurs: 215, licences: 220, statut: 'attention', derniereSync: 'il y a 3 h',
+    sante: 67, accent: 'from-amber-400 via-yellow-500 to-orange-500', emoji: '🚚' },
+  { id: 't-vertex', nom: 'Vertex Avocats', slug: 'VERTEX', role: 'Lecture', type: 'client',
+    utilisateurs: 24, licences: 25, statut: 'actif', derniereSync: 'il y a 1 h',
+    sante: 89, accent: 'from-emerald-400 via-teal-500 to-cyan-600', emoji: '⚖️' },
+  { id: 't-ocean', nom: 'OcéanPlus', slug: 'OCEANPLUS', role: 'Admin', type: 'client',
+    utilisateurs: 12, licences: 15, statut: 'actif', derniereSync: 'il y a 25 min',
+    sante: 82, accent: 'from-teal-400 via-cyan-500 to-sky-600', emoji: '🌊' },
 ];
 
-const statusStyle: Record<Tenant['statut'], { label: string; cls: string; dot: string }> = {
-  actif: {
-    label: 'Actif',
-    cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
-    dot: 'bg-emerald-500',
-  },
-  sync: {
-    label: 'Sync en cours',
-    cls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30',
-    dot: 'bg-blue-500 animate-pulse',
-  },
-  attention: {
-    label: 'Attention',
-    cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30',
-    dot: 'bg-amber-500',
-  },
-};
+const statusMap = {
+  actif: { label: 'Opérationnel', dot: 'bg-emerald-400', ring: 'ring-emerald-400/40' },
+  sync: { label: 'Synchronisation', dot: 'bg-sky-400 animate-pulse', ring: 'ring-sky-400/40' },
+  attention: { label: 'Attention', dot: 'bg-amber-400', ring: 'ring-amber-400/40' },
+} as const;
 
 export default function TenantHub() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'operateur' | 'client'>('all');
 
-  const handleEnter = (tenant: Tenant) => {
-    localStorage.setItem('active-tenant', JSON.stringify({ id: tenant.id, nom: tenant.nom, slug: tenant.slug }));
+  const handleEnter = (t: Tenant) => {
+    localStorage.setItem('active-tenant', JSON.stringify({ id: t.id, nom: t.nom, slug: t.slug }));
     navigate('/dashboard');
   };
 
-  const filterTenants = (list: Tenant[]) =>
-    list.filter(
-      (t) =>
-        t.nom.toLowerCase().includes(search.toLowerCase()) ||
-        t.slug.toLowerCase().includes(search.toLowerCase()),
-    );
+  const allTenants = [...tenantsOperateurs, ...tenantsClients];
+  const filtered = useMemo(() =>
+    allTenants.filter(t =>
+      (filter === 'all' || t.type === filter) &&
+      (t.nom.toLowerCase().includes(search.toLowerCase()) || t.slug.toLowerCase().includes(search.toLowerCase()))
+    ), [search, filter]
+  );
 
-  const operateurs = filterTenants(tenantsOperateurs);
-  const clients = filterTenants(tenantsClients);
-  const totalTenants = tenantsOperateurs.length + tenantsClients.length;
+  const stats = {
+    total: allTenants.length,
+    users: allTenants.reduce((s, t) => s + t.utilisateurs, 0),
+    licences: allTenants.reduce((s, t) => s + t.licences, 0),
+    sante: Math.round(allTenants.reduce((s, t) => s + t.sante, 0) / allTenants.length),
+  };
 
   return (
-    <div className="min-h-screen -m-6 p-6 bg-gradient-to-br from-background via-background to-primary/5">
-      {/* HERO */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-8 mb-8 shadow-2xl"
-      >
-        {/* Decorative blobs */}
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/30 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.06),transparent_60%)]" />
+    <div className="relative min-h-screen -m-6 overflow-hidden">
+      {/* Animated aurora background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-background" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-violet-500/30 via-fuchsia-500/20 to-transparent blur-3xl"
+          animate={{ x: [0, 80, 0], y: [0, 50, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute top-1/3 -right-40 w-[700px] h-[700px] rounded-full bg-gradient-to-br from-cyan-400/30 via-blue-500/20 to-transparent blur-3xl"
+          animate={{ x: [0, -60, 0], y: [0, 80, 0] }}
+          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute -bottom-40 left-1/4 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-emerald-400/25 via-teal-500/15 to-transparent blur-3xl"
+          animate={{ x: [0, 100, 0], y: [0, -40, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        {/* Grid overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:48px_48px]" />
+      </div>
 
-        <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-          <div className="max-w-2xl">
-            <Badge className="mb-4 bg-white/10 text-white border-white/20 backdrop-blur-sm hover:bg-white/15">
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              Mode multi-tenant
-            </Badge>
-            <h1 className="text-4xl lg:text-5xl font-bold text-white mb-3 tracking-tight">
-              Choisis le tenant Microsoft 365 à administrer
+      <div className="relative p-6 lg:p-8 max-w-[1600px] mx-auto">
+        {/* HEADER */}
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-10"
+        >
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <motion.div
+                animate={{ rotate: [0, 8, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                className="text-3xl"
+              >
+                🚀
+              </motion.div>
+              <Badge className="bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 text-foreground border-violet-500/30 backdrop-blur-md px-3 py-1">
+                <Sparkles className="h-3 w-3 mr-1.5" />
+                Console multi-tenant
+              </Badge>
+            </div>
+            <h1 className="text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-br from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent">
+              Choisis ton terrain de jeu.
             </h1>
-            <p className="text-white/70 text-base lg:text-lg leading-relaxed">
-              Ce hub centralise les environnements qui te sont rattachés. Entre dans un tenant pour accéder
-              aux utilisateurs, licences, automatisations et contrôles de sécurité correspondants.
+            <p className="mt-3 text-lg text-muted-foreground max-w-2xl">
+              Sélectionne le tenant Microsoft 365 à piloter. Chaque carte est une console complète :
+              utilisateurs, licences, automatisations, sécurité.
             </p>
           </div>
 
-          <div className="flex gap-4">
-            <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 px-6 py-4 min-w-[140px]">
-              <div className="flex items-center gap-2 text-white/60 text-xs uppercase tracking-widest mb-2">
-                <Building2 className="h-3.5 w-3.5" />
-                Tenants
-              </div>
-              <div className="text-3xl font-bold text-white">{totalTenants}</div>
-            </div>
-            <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 px-6 py-4 min-w-[160px]">
-              <div className="flex items-center gap-2 text-white/60 text-xs uppercase tracking-widest mb-2">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Accès
-              </div>
-              <div className="text-2xl font-bold text-white">Centralisé</div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, type: 'spring' }}
+            className="relative"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-cyan-500 blur-2xl opacity-30" />
+            <Button
+              size="lg"
+              className="relative bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 hover:from-violet-500 hover:via-fuchsia-500 hover:to-pink-500 text-white border-0 shadow-2xl shadow-fuchsia-500/30 h-14 px-8 text-base group"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Connecter un nouveau tenant
+              <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </motion.div>
+        </motion.header>
 
-      {/* GUIDED ONBOARDING */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"
-      >
-        <Card className="lg:col-span-2 p-6 border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 via-card to-card relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl" />
-          <Badge variant="outline" className="mb-3 border-emerald-500/40 text-emerald-600 dark:text-emerald-400">
-            Connexion Microsoft 365
-          </Badge>
-          <h2 className="text-2xl font-bold mb-2">Ajouter un nouveau tenant de façon guidée</h2>
-          <p className="text-muted-foreground mb-6 text-sm">
-            Depuis ce hub, tu peux créer un nouveau tenant client puis être redirigé directement vers la page de
-            configuration Microsoft 365 pour enregistrer l'application Azure, valider les permissions et lancer la
-            première synchronisation.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 relative">
-            {[
-              { n: 1, title: 'Créer le tenant', desc: 'Nom, slug optionnel et rattachement au tenant opérateur.' },
-              { n: 2, title: 'Connecter Microsoft 365', desc: 'Tenant ID, Client ID, secret et vérification des droits Graph.' },
-              { n: 3, title: 'Synchroniser', desc: 'Premier import utilisateurs, licences, groupes et données utiles.' },
-            ].map((s) => (
-              <div
-                key={s.n}
-                className="rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm p-4 hover:border-emerald-500/40 transition-colors"
+        {/* BENTO STATS */}
+        <motion.section
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+          className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+        >
+          <BentoStat icon={Layers} label="Tenants" value={stats.total} gradient="from-violet-500 to-fuchsia-500" emoji="🌐" />
+          <BentoStat icon={Users} label="Utilisateurs" value={stats.users} gradient="from-blue-500 to-cyan-500" emoji="👥" />
+          <BentoStat icon={Cloud} label="Licences M365" value={stats.licences} gradient="from-emerald-500 to-teal-500" emoji="☁️" />
+          <BentoStat icon={Activity} label="Santé globale" value={`${stats.sante}%`} gradient="from-amber-500 to-orange-500" emoji="💚" />
+        </motion.section>
+
+        {/* SEARCH + FILTERS */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="flex flex-col sm:flex-row gap-3 mb-8"
+        >
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un tenant par nom ou slug…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-11 h-12 bg-card/50 backdrop-blur-xl border-border/50 rounded-2xl"
+            />
+          </div>
+          <div className="flex gap-2 p-1 rounded-2xl bg-card/50 backdrop-blur-xl border border-border/50">
+            {([
+              { v: 'all', label: 'Tous', icon: Compass },
+              { v: 'operateur', label: 'Opérateurs', icon: Crown },
+              { v: 'client', label: 'Clients', icon: Building2 },
+            ] as const).map((f) => (
+              <button
+                key={f.v}
+                onClick={() => setFilter(f.v)}
+                className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
+                  filter === f.v ? 'text-white' : 'text-muted-foreground hover:text-foreground'
+                }`}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center text-sm">
-                    {s.n}
-                  </div>
-                  <span className="font-semibold text-sm">{s.title}</span>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
-              </div>
+                {filter === f.v && (
+                  <motion.div
+                    layoutId="filter-pill"
+                    className="absolute inset-0 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl shadow-lg"
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                  />
+                )}
+                <f.icon className="h-3.5 w-3.5 relative" />
+                <span className="relative">{f.label}</span>
+              </button>
             ))}
           </div>
-        </Card>
+        </motion.div>
 
-        <Card className="p-6 flex flex-col">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Tenant opérateur</div>
-          <div className="text-xl font-bold mb-4">1 tenant disponible</div>
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 mb-4 flex-1">
-            <div className="flex items-start gap-2 text-sm">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-foreground/80">La création ouvrira ensuite automatiquement :</p>
-                <p className="mt-1 text-muted-foreground text-xs">
-                  <span className="font-semibold text-foreground">Paramètres &gt; Connexion Microsoft 365</span> du
-                  nouveau tenant, avec l'assistant prêt à être suivi.
-                </p>
-              </div>
-            </div>
+        {/* TENANTS BENTO */}
+        <motion.section
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
+        >
+          {filtered.map((t, i) => (
+            <TenantCard key={t.id} tenant={t} index={i} onEnter={handleEnter} featured={t.primary} />
+          ))}
+        </motion.section>
+
+        {filtered.length === 0 && (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">🔍</div>
+            <p className="text-muted-foreground">Aucun tenant ne correspond à ta recherche.</p>
           </div>
-          <Button size="lg" className="w-full group">
-            Créer et configurer un tenant
-            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-          </Button>
-          <p className="text-xs text-muted-foreground mt-3 text-center">
-            Utilise ce parcours pour les nouveaux clients managés rattachés à ton tenant MSP.
-          </p>
-        </Card>
-      </motion.div>
+        )}
 
-      {/* SEARCH */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="mb-6 flex items-center gap-3"
-      >
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher un tenant…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Button variant="outline" size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Nouveau tenant
-        </Button>
-      </motion.div>
-
-      {/* OPERATOR TENANTS */}
-      {operateurs.length > 0 && (
-        <section className="mb-10">
-          <div className="flex items-end justify-between mb-4">
-            <div>
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <Crown className="h-5 w-5 text-amber-500" />
-                Tenants opérateurs / MSP
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Console(s) centrale(s) permettant de piloter plusieurs environnements clients.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {operateurs.map((tenant, i) => (
-              <TenantCard
-                key={tenant.id}
-                tenant={tenant}
-                index={i}
-                hovered={hoveredId === tenant.id}
-                onHover={setHoveredId}
-                onEnter={handleEnter}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* CLIENT TENANTS */}
-      {clients.length > 0 && (
-        <section>
-          <div className="flex items-end justify-between mb-4">
-            <div>
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-primary" />
-                Tenants clients
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Environnements Microsoft 365 que tu administres pour le compte de tes clients.
-              </p>
-            </div>
-            <Badge variant="outline" className="text-xs">
-              {clients.length} tenant{clients.length > 1 ? 's' : ''}
-            </Badge>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {clients.map((tenant, i) => (
-              <TenantCard
-                key={tenant.id}
-                tenant={tenant}
-                index={i}
-                hovered={hoveredId === tenant.id}
-                onHover={setHoveredId}
-                onEnter={handleEnter}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {operateurs.length === 0 && clients.length === 0 && (
-        <Card className="p-12 text-center">
-          <Building2 className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
-          <p className="text-muted-foreground">Aucun tenant ne correspond à ta recherche.</p>
-        </Card>
-      )}
+        {/* FOOTER HINT */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="mt-12 flex items-center justify-center gap-2 text-xs text-muted-foreground"
+        >
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+          Connexion sécurisée • Permissions Microsoft Graph validées • Logs d'audit actifs
+        </motion.div>
+      </div>
     </div>
   );
 }
 
+function BentoStat({
+  icon: Icon, label, value, gradient, emoji,
+}: { icon: React.ComponentType<{ className?: string }>; label: string; value: string | number; gradient: string; emoji: string }) {
+  return (
+    <motion.div
+      variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+      whileHover={{ y: -4 }}
+      className="relative group"
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-20 blur-2xl transition-opacity duration-500`} />
+      <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/60 backdrop-blur-xl p-5 h-full">
+        <div className={`absolute -top-8 -right-8 w-32 h-32 rounded-full bg-gradient-to-br ${gradient} opacity-10 blur-2xl`} />
+        <div className="flex items-start justify-between mb-3 relative">
+          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg`}>
+            <Icon className="h-5 w-5 text-white" />
+          </div>
+          <span className="text-2xl opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all">{emoji}</span>
+        </div>
+        <div className="text-3xl font-bold tracking-tight">{value}</div>
+        <div className="text-xs uppercase tracking-widest text-muted-foreground mt-1">{label}</div>
+      </div>
+    </motion.div>
+  );
+}
+
 function TenantCard({
-  tenant,
-  index,
-  hovered,
-  onHover,
-  onEnter,
-}: {
-  tenant: Tenant;
-  index: number;
-  hovered: boolean;
-  onHover: (id: string | null) => void;
-  onEnter: (t: Tenant) => void;
-}) {
-  const status = statusStyle[tenant.statut];
+  tenant, index, onEnter, featured,
+}: { tenant: Tenant; index: number; onEnter: (t: Tenant) => void; featured?: boolean }) {
+  const status = statusMap[tenant.statut];
+  const circumference = 2 * Math.PI * 18;
+  const offset = circumference - (tenant.sante / 100) * circumference;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.05 * index }}
-      onMouseEnter={() => onHover(tenant.id)}
-      onMouseLeave={() => onHover(null)}
-      className="group relative"
+      variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+      whileHover={{ y: -6, scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      className={`relative group ${featured ? 'md:col-span-2 lg:col-span-1' : ''}`}
     >
-      <Card className="relative overflow-hidden p-5 h-full border-border/60 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">
-        {/* Hover gradient */}
-        <div
-          className={`absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`}
-        />
+      {/* Glow */}
+      <div className={`absolute -inset-0.5 bg-gradient-to-br ${tenant.accent} rounded-3xl opacity-0 group-hover:opacity-60 blur transition-opacity duration-500`} />
 
-        <div className="relative">
+      <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-card/70 backdrop-blur-xl h-full flex flex-col">
+        {/* Top color bar */}
+        <div className={`h-1.5 bg-gradient-to-r ${tenant.accent}`} />
+
+        {/* Decorative gradient blob */}
+        <div className={`absolute -top-20 -right-20 w-48 h-48 rounded-full bg-gradient-to-br ${tenant.accent} opacity-10 blur-3xl group-hover:opacity-25 transition-opacity duration-500`} />
+
+        <div className="relative p-5 flex flex-col flex-1">
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-blue-500/20 border border-primary/30 flex items-center justify-center">
-                  <Building2 className="h-6 w-6 text-primary" />
-                </div>
-                {tenant.primary && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 border-2 border-card flex items-center justify-center">
-                    <Crown className="h-2 w-2 text-white" />
-                  </div>
+              <div className={`relative w-14 h-14 rounded-2xl bg-gradient-to-br ${tenant.accent} flex items-center justify-center text-2xl shadow-lg`}>
+                {tenant.emoji}
+                {featured && (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-400 border-2 border-card flex items-center justify-center"
+                  >
+                    <Star className="h-2.5 w-2.5 text-white fill-white" />
+                  </motion.div>
                 )}
               </div>
+              <div>
+                <h3 className="font-bold text-base leading-tight">{tenant.nom}</h3>
+                <div className="flex items-center gap-1 text-[11px] text-muted-foreground font-mono mt-0.5">
+                  <Globe className="h-2.5 w-2.5" />
+                  {tenant.slug}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className={status.cls}>
-                <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${status.dot}`} />
-                {status.label}
-              </Badge>
+
+            {/* Health ring */}
+            <div className="relative w-12 h-12 shrink-0">
+              <svg className="w-12 h-12 -rotate-90" viewBox="0 0 40 40">
+                <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="3" fill="none" className="text-muted/30" />
+                <motion.circle
+                  cx="20" cy="20" r="18" fill="none" strokeWidth="3" strokeLinecap="round"
+                  className={tenant.sante > 85 ? 'text-emerald-400' : tenant.sante > 70 ? 'text-amber-400' : 'text-rose-400'}
+                  stroke="currentColor"
+                  initial={{ strokeDasharray: circumference, strokeDashoffset: circumference }}
+                  animate={{ strokeDashoffset: offset }}
+                  transition={{ duration: 1.2, delay: 0.1 * index, ease: 'easeOut' }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold">
+                {tenant.sante}
+              </div>
             </div>
           </div>
 
-          {/* Identity */}
-          <div className="mb-4">
-            <h4 className="text-lg font-bold mb-1">{tenant.nom}</h4>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Globe className="h-3 w-3" />
-              <span className="font-mono">{tenant.slug}</span>
-            </div>
-          </div>
-
-          {/* Role */}
-          <div className="rounded-lg bg-muted/40 px-3 py-2 mb-4 flex items-center justify-between">
-            <div>
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Niveau d'accès</div>
-              <div className="text-sm font-semibold">{tenant.role}</div>
-            </div>
+          {/* Status + Role */}
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <Badge variant="outline" className={`bg-card/50 backdrop-blur ring-1 ${status.ring}`}>
+              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${status.dot}`} />
+              {status.label}
+            </Badge>
             <Badge
               variant="outline"
-              className={
-                tenant.type === 'operateur'
-                  ? 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/5'
-                  : 'border-primary/30 text-primary bg-primary/5'
-              }
+              className={tenant.type === 'operateur'
+                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                : 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30'}
             >
-              {tenant.type === 'operateur' ? 'Opérateur / MSP' : 'Client managé'}
+              {tenant.role}
             </Badge>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            <Stat icon={Users} label="Utilisateurs" value={tenant.utilisateurs} />
-            <Stat icon={Cloud} label="Licences" value={tenant.licences} />
-            <Stat icon={Zap} label="Sync" value="" sub={tenant.derniereSync} />
+          {/* Mini stats */}
+          <div className="grid grid-cols-2 gap-2 mb-4 flex-1">
+            <div className="rounded-xl bg-muted/30 backdrop-blur p-2.5 border border-border/40">
+              <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                <Users className="h-2.5 w-2.5" /> Users
+              </div>
+              <div className="text-lg font-bold leading-none">{tenant.utilisateurs}</div>
+            </div>
+            <div className="rounded-xl bg-muted/30 backdrop-blur p-2.5 border border-border/40">
+              <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                <Cloud className="h-2.5 w-2.5" /> Licences
+              </div>
+              <div className="text-lg font-bold leading-none">{tenant.licences}</div>
+            </div>
+          </div>
+
+          {/* Sync */}
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-3">
+            <Zap className="h-3 w-3" />
+            <span>Sync : {tenant.derniereSync}</span>
           </div>
 
           {/* CTA */}
           <Button
             onClick={() => onEnter(tenant)}
-            className="w-full group/btn"
-            variant={hovered ? 'default' : 'secondary'}
+            className={`w-full bg-gradient-to-r ${tenant.accent} text-white hover:opacity-90 border-0 shadow-lg group/btn`}
           >
-            Ouvrir ce tenant
+            Entrer dans ce tenant
             <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
           </Button>
         </div>
-      </Card>
-    </motion.div>
-  );
-}
-
-function Stat({
-  icon: Icon,
-  label,
-  value,
-  sub,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: number | string;
-  sub?: string;
-}) {
-  return (
-    <div className="rounded-lg border border-border/40 bg-card/50 p-2.5">
-      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
-        <Icon className="h-3 w-3" />
-        {label}
       </div>
-      {value !== '' && <div className="text-base font-bold leading-none">{value}</div>}
-      {sub && <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{sub}</div>}
-    </div>
+    </motion.div>
   );
 }
