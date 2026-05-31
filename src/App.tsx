@@ -90,6 +90,21 @@ const App = () => (
                    <Route path="/clients/:id" element={<ClientDetail />} />
                    <Route path="/clients/:id/supervision" element={<ClientSupervision />} />
                     <Route path="/parametres" element={<Settings />} />
+                    <Route path="/agent-serveur" element={<AgentServerLayout />}>
+                      <Route index element={<AgentOverview />} />
+                      <Route path="agents" element={<AgentList />} />
+                      <Route path="deploiement" element={<AgentDeployment />} />
+                      <Route path="ad/utilisateurs" element={<AdUsers />} />
+                      <Route path="ad/groupes" element={<AdGroups />} />
+                      <Route path="ad/ordinateurs" element={<AdComputers />} />
+                      <Route path="ad/ou" element={<AdOus />} />
+                      <Route path="ad/gpo" element={<AdGpos />} />
+                      <Route path="dns" element={<AgentDns />} />
+                      <Route path="dhcp" element={<AgentDhcp />} />
+                      <Route path="fichiers" element={<AgentFiles />} />
+                      <Route path="serveur" element={<AgentServer />} />
+                      <Route path="historique" element={<AgentHistory />} />
+                    </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
