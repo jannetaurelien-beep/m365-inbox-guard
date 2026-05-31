@@ -74,7 +74,7 @@ const App = () => (
                     <Route path="/clients" element={<Clients />} />
                    <Route path="/clients/:id" element={<ClientDetail />} />
                    <Route path="/clients/:id/supervision" element={<ClientSupervision />} />
-                    <Route path="/parametres" element={<div className="p-8 text-center text-muted-foreground">Paramètres (à venir)</div>} />
+                    <Route path="/parametres" element={<Settings />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
