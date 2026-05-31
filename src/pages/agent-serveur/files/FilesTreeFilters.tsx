@@ -90,9 +90,10 @@ export function FilesTreeFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous propriétaires</SelectItem>
-            {owners.map((o) => (
+            <SelectItem value="__empty__">— (vide)</SelectItem>
+            {owners.filter((o) => o && o.trim() !== "").map((o) => (
               <SelectItem key={o} value={o}>
-                {o || "— (vide)"}
+                {o}
               </SelectItem>
             ))}
           </SelectContent>
