@@ -272,12 +272,12 @@ export default function Clients() {
       )}
 
       {filtered.length === 0 && (
-        <Card className="p-12 text-center bg-card/80 backdrop-blur-sm border-border/50">
-          <div className="p-4 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-600 inline-block mb-4">
-            <Briefcase className="h-8 w-8 text-white" />
+        <Card className="p-8 text-center bg-card/80 backdrop-blur-sm border-border/50">
+          <div className="p-3 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-600 inline-block mb-3">
+            <Briefcase className="h-6 w-6 text-white" />
           </div>
-          <h3 className="text-xl font-semibold mb-2">Aucun client trouvé</h3>
-          <p className="text-muted-foreground">Ajustez vos filtres ou ajoutez un nouveau client</p>
+          <h3 className="text-lg font-semibold mb-1">Aucun client trouvé</h3>
+          <p className="text-sm text-muted-foreground">Ajustez vos filtres ou ajoutez un nouveau client</p>
         </Card>
       )}
     </div>
