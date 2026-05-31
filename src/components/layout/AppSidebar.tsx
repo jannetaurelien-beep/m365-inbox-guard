@@ -28,6 +28,7 @@ const menuItems = [
   { title: 'Performance', url: '/performance-kpi', icon: TrendingUp },
   { title: 'Classement', url: '/classement', icon: Trophy },
   { title: 'Cybersécurité', url: '/cybersecurite', icon: Shield },
+  { title: 'Agent Serveur', url: '/agent-serveur', icon: ServerCog },
   { title: 'Paramètres', url: '/parametres', icon: Settings },
 ];
 
