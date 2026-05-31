@@ -219,50 +219,50 @@ export default function Clients() {
 
       {/* Vue Liste */}
       {view === 'list' && (
-        <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-xl overflow-hidden">
+        <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/30 hover:bg-muted/30">
-                <TableHead className="w-[280px]">Client</TableHead>
-                <TableHead>Localisation</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Contrat</TableHead>
-                <TableHead className="text-right">Users</TableHead>
-                <TableHead className="text-right">CA/mois</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="w-[50px]" />
+                <TableHead className="w-[220px] text-xs">Client</TableHead>
+                <TableHead className="text-xs">Localisation</TableHead>
+                <TableHead className="text-xs">Contact</TableHead>
+                <TableHead className="text-xs">Contrat</TableHead>
+                <TableHead className="text-right text-xs">Users</TableHead>
+                <TableHead className="text-right text-xs">CA/mois</TableHead>
+                <TableHead className="text-xs">Statut</TableHead>
+                <TableHead className="w-[40px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map(client => (
                 <TableRow key={client.id} onClick={() => navigate(`/clients/${client.id}`)} className="group cursor-pointer hover:bg-muted/40">
-                  <TableCell>
-                    <div className="flex items-center gap-3">
+                  <TableCell className="py-2">
+                    <div className="flex items-center gap-2.5">
                       <ClientLogo client={client} size="sm" />
                       <div className="min-w-0">
                         <p className="font-semibold text-sm truncate">{client.nom}</p>
-                        <p className="text-xs text-muted-foreground">{client.secteur}</p>
+                        <p className="text-[10px] text-muted-foreground">{client.secteur}</p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="text-sm">{client.ville}</div>
-                    <div className="text-xs text-muted-foreground">{client.codePostal} · {client.pays}</div>
+                  <TableCell className="py-2">
+                    <div className="text-xs">{client.ville}</div>
+                    <div className="text-[10px] text-muted-foreground">{client.codePostal} · {client.pays}</div>
                   </TableCell>
-                  <TableCell>
-                    <div className="text-sm">{client.contact.nom}</div>
-                    <div className="text-xs text-muted-foreground">{client.contact.role}</div>
+                  <TableCell className="py-2">
+                    <div className="text-xs">{client.contact.nom}</div>
+                    <div className="text-[10px] text-muted-foreground">{client.contact.role}</div>
                   </TableCell>
-                  <TableCell>
-                    <ContratBadges contrats={client.contrats} max={4} />
+                  <TableCell className="py-2">
+                    <ContratBadges contrats={client.contrats} max={3} />
                   </TableCell>
-                  <TableCell className="text-right font-medium">{client.utilisateurs}</TableCell>
-                  <TableCell className="text-right font-medium">{(client.ca / 1000).toFixed(1)}k€</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={`text-xs ${statusStyles[client.status]}`}>{client.status}</Badge>
+                  <TableCell className="text-right font-medium text-xs py-2">{client.utilisateurs}</TableCell>
+                  <TableCell className="text-right font-medium text-xs py-2">{(client.ca / 1000).toFixed(1)}k€</TableCell>
+                  <TableCell className="py-2">
+                    <Badge variant="outline" className={`text-[10px] h-5 px-1.5 ${statusStyles[client.status]}`}>{client.status}</Badge>
                   </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100"><MoreVertical className="h-4 w-4" /></Button>
+                  <TableCell className="py-2">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100"><MoreVertical className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
