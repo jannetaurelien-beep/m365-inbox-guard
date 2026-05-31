@@ -161,6 +161,10 @@ function LayoutInner() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       >
+        {pathname !== "/agent-serveur" &&
+          pathname !== "/agent-serveur/agents" &&
+          pathname !== "/agent-serveur/deploiement" &&
+          pathname !== "/agent-serveur/historique" && <AgentContextBanner />}
         <Outlet />
       </motion.div>
     </div>
