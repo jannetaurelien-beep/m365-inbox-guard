@@ -1,4 +1,4 @@
-import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut, Share2, Bell, TrendingUp, Trophy, Workflow, Shield, Briefcase, Building2 } from 'lucide-react';
+import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut, Share2, Bell, TrendingUp, Trophy, Workflow, Shield, Briefcase, Building2, ServerCog } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
