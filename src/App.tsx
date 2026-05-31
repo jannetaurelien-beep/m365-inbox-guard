@@ -31,6 +31,7 @@ import ClientDetail from "./pages/ClientDetail";
 import ClientSupervision from "./pages/ClientSupervision";
 import Login from "./pages/Login";
 import TwoFactorAuth from "./pages/TwoFactorAuth";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,7 +75,7 @@ const App = () => (
                     <Route path="/clients" element={<Clients />} />
                    <Route path="/clients/:id" element={<ClientDetail />} />
                    <Route path="/clients/:id/supervision" element={<ClientSupervision />} />
-                    <Route path="/parametres" element={<div className="p-8 text-center text-muted-foreground">Paramètres (à venir)</div>} />
+                    <Route path="/parametres" element={<Settings />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
