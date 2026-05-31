@@ -1,4 +1,4 @@
-import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut, Share2, Bell, TrendingUp, Trophy, Workflow, Shield, Briefcase, Building2 } from 'lucide-react';
+import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut, Share2, Bell, TrendingUp, Trophy, Workflow, Shield, Briefcase, Building2, ServerCog } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
@@ -28,6 +28,7 @@ const menuItems = [
   { title: 'Performance', url: '/performance-kpi', icon: TrendingUp },
   { title: 'Classement', url: '/classement', icon: Trophy },
   { title: 'Cybersécurité', url: '/cybersecurite', icon: Shield },
+  { title: 'Agent Serveur', url: '/agent-serveur', icon: ServerCog },
   { title: 'Paramètres', url: '/parametres', icon: Settings },
 ];
 

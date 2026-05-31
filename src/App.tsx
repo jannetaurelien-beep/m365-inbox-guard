@@ -32,6 +32,20 @@ import ClientSupervision from "./pages/ClientSupervision";
 import Login from "./pages/Login";
 import TwoFactorAuth from "./pages/TwoFactorAuth";
 import Settings from "./pages/Settings";
+import AgentServerLayout from "./pages/agent-serveur/AgentServerLayout";
+import AgentOverview from "./pages/agent-serveur/Overview";
+import AgentList from "./pages/agent-serveur/Agents";
+import AgentDeployment from "./pages/agent-serveur/Deployment";
+import AdUsers from "./pages/agent-serveur/AdUsers";
+import AdGroups from "./pages/agent-serveur/AdGroups";
+import AdComputers from "./pages/agent-serveur/AdComputers";
+import AdOus from "./pages/agent-serveur/AdOus";
+import AdGpos from "./pages/agent-serveur/AdGpos";
+import AgentDns from "./pages/agent-serveur/Dns";
+import AgentDhcp from "./pages/agent-serveur/Dhcp";
+import AgentFiles from "./pages/agent-serveur/Files";
+import AgentServer from "./pages/agent-serveur/Server";
+import AgentHistory from "./pages/agent-serveur/History";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -76,6 +90,21 @@ const App = () => (
                    <Route path="/clients/:id" element={<ClientDetail />} />
                    <Route path="/clients/:id/supervision" element={<ClientSupervision />} />
                     <Route path="/parametres" element={<Settings />} />
+                    <Route path="/agent-serveur" element={<AgentServerLayout />}>
+                      <Route index element={<AgentOverview />} />
+                      <Route path="agents" element={<AgentList />} />
+                      <Route path="deploiement" element={<AgentDeployment />} />
+                      <Route path="ad/utilisateurs" element={<AdUsers />} />
+                      <Route path="ad/groupes" element={<AdGroups />} />
+                      <Route path="ad/ordinateurs" element={<AdComputers />} />
+                      <Route path="ad/ou" element={<AdOus />} />
+                      <Route path="ad/gpo" element={<AdGpos />} />
+                      <Route path="dns" element={<AgentDns />} />
+                      <Route path="dhcp" element={<AgentDhcp />} />
+                      <Route path="fichiers" element={<AgentFiles />} />
+                      <Route path="serveur" element={<AgentServer />} />
+                      <Route path="historique" element={<AgentHistory />} />
+                    </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>
