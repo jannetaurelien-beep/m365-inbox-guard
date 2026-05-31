@@ -104,7 +104,10 @@ export default function Files() {
     if (filters.onlyExplicit && !n.flags.hasExplicit) return false;
     if (filters.onlyFullControl && !n.flags.hasFullControlExplicit) return false;
     if (filters.onlyDeny && !n.flags.hasDeny) return false;
-    if (filters.owner !== "all" && n.Owner !== filters.owner) return false;
+    if (filters.owner !== "all") {
+      const ownerEmpty = !n.Owner || n.Owner.trim() === "";
+      if (filters.owner === "__empty__" ? !ownerEmpty : n.Owner !== filters.owner) return false;
+    }
     if (filters.depth !== "all" && String(n.Depth) !== filters.depth) return false;
     return true;
   };
