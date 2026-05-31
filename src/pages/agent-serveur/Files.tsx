@@ -1,83 +1,342 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { PageHeader } from "./_shared";
-import { HardDrive, Folder, FileText, ChevronRight, Shield, ScanLine } from "lucide-react";
-import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { ShieldAlert, AlertTriangle, ArrowRight } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
-const tree = [
-  { name: "Partage", type: "folder", size: "—", owner: "Domain Admins" },
-  { name: "Finance", type: "folder", size: "12 Go", owner: "GG-Finance" },
-  { name: "RH", type: "folder", size: "4.2 Go", owner: "GG-RH" },
-  { name: "IT", type: "folder", size: "85 Go", owner: "GG-IT" },
-  { name: "Public", type: "folder", size: "1.1 Go", owner: "Everyone" },
-];
+import { useAgent } from "./AgentContext";
+import { FilesScanHeader } from "./files/FilesScanHeader";
+import { FilesScanLauncher, type ScanFormState } from "./files/FilesScanLauncher";
+import { FilesTreeSummary } from "./files/FilesTreeSummary";
+import { FilesTreeFilters, initialFilters, type FiltersState } from "./files/FilesTreeFilters";
+import { FilesFolderNodeCard } from "./files/FilesFolderNodeCard";
+import { FilesEmptyState } from "./files/FilesEmptyState";
+import { buildTree, collectAllPaths, flattenTree } from "./files/utils";
+import { mockScanResult } from "./files/mock-scan";
+import type { FolderNode, ScanResult } from "./files/types";
 
-const acl = [
-  { identity: "BUILTIN\\Administrators", rights: "FullControl", type: "Allow", inherited: false },
-  { identity: "AUTOCORE\\GG-Finance", rights: "Modify", type: "Allow", inherited: true },
-  { identity: "AUTOCORE\\GG-IT", rights: "ReadAndExecute", type: "Allow", inherited: true },
-  { identity: "AUTOCORE\\Stagiaires", rights: "Write", type: "Deny", inherited: false },
-];
+/**
+ * BACKEND BRANCHEMENT
+ * -------------------
+ * Cette page est branchée sur le contrat réel AutoCore:
+ *   - GET  /api/agent/scan/fs_scan_tree/latest/        → charge `scan`
+ *   - POST /api/agent/scan/fs_scan_tree/trigger/       → déclenche un scan
+ *
+ * Pour intégration : remplacer `fetchLatestScan` et `triggerScan` par les vrais appels
+ * (ex. via le client API existant). Le mock conserve strictement le contrat ScanResult,
+ * donc le passage en prod ne nécessite aucune refonte UI.
+ */
+async function fetchLatestScan(): Promise<ScanResult> {
+  // TODO: brancher sur l'API réelle GET /api/agent/scan/fs_scan_tree/latest/
+  await new Promise((r) => setTimeout(r, 200));
+  return mockScanResult;
+}
+
+async function triggerScan(_payload: ScanFormState): Promise<{ task_id: number }> {
+  // TODO: brancher sur l'API réelle POST /api/agent/scan/fs_scan_tree/trigger/
+  await new Promise((r) => setTimeout(r, 800));
+  return { task_id: Date.now() };
+}
 
 export default function Files() {
-  const [path, setPath] = useState("\\\\SRV-FILE01\\Partage");
+  const { agent } = useAgent();
+  const [scan, setScan] = useState<ScanResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
+  const [lastForm, setLastForm] = useState<ScanFormState>({
+    agentId: agent.id,
+    path: "\\\\SRV-FILE01\\Partage",
+    maxDepth: 3,
+    includePermissions: true,
+  });
+
+  const [filters, setFilters] = useState<FiltersState>(initialFilters);
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
+  const [expandedAclPaths, setExpandedAclPaths] = useState<Set<string>>(new Set());
+
+  // === Chargement initial ===
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    fetchLatestScan()
+      .then((s) => {
+        if (!alive) return;
+        setScan(s);
+      })
+      .finally(() => alive && setLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // === Arbre ===
+  const roots = useMemo<FolderNode[]>(
+    () => (scan?.items ? buildTree(scan.items) : []),
+    [scan],
+  );
+  const allNodes = useMemo(() => flattenTree(roots), [roots]);
+
+  // Ouvre les racines par défaut au premier chargement
+  useEffect(() => {
+    if (roots.length && expandedPaths.size === 0) {
+      setExpandedPaths(new Set(roots.map((r) => r.FullName)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roots.length]);
+
+  // === Filtres ===
+  const owners = useMemo(
+    () => Array.from(new Set(allNodes.map((n) => n.Owner))).sort(),
+    [allNodes],
+  );
+  const depths = useMemo(
+    () => Array.from(new Set(allNodes.map((n) => n.Depth))).sort((a, b) => a - b),
+    [allNodes],
+  );
+
+  const matches = (n: FolderNode) => {
+    const q = filters.query.trim().toLowerCase();
+    if (q && !n.Name.toLowerCase().includes(q) && !n.FullName.toLowerCase().includes(q))
+      return false;
+    if (filters.onlyDenied && !n.flags.accessDenied) return false;
+    if (filters.onlySensitive && !n.flags.sensitive) return false;
+    if (filters.onlyExplicit && !n.flags.hasExplicit) return false;
+    if (filters.onlyFullControl && !n.flags.hasFullControlExplicit) return false;
+    if (filters.onlyDeny && !n.flags.hasDeny) return false;
+    if (filters.owner !== "all" && n.Owner !== filters.owner) return false;
+    if (filters.depth !== "all" && String(n.Depth) !== filters.depth) return false;
+    return true;
+  };
+
+  // Pour préserver l'arbre, on garde tout ancêtre d'un nœud qui matche.
+  const visiblePaths = useMemo(() => {
+    const visible = new Set<string>();
+    const visit = (n: FolderNode): boolean => {
+      const childOk = n.children.map(visit).some(Boolean);
+      const ok = matches(n) || childOk;
+      if (ok) visible.add(n.FullName);
+      return ok;
+    };
+    roots.forEach(visit);
+    return visible;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roots, filters]);
+
+  // Auto-expand quand on filtre
+  useEffect(() => {
+    const hasFilter =
+      filters.query ||
+      filters.onlyDenied ||
+      filters.onlySensitive ||
+      filters.onlyExplicit ||
+      filters.onlyFullControl ||
+      filters.onlyDeny ||
+      filters.owner !== "all" ||
+      filters.depth !== "all";
+    if (hasFilter && visiblePaths.size) {
+      setExpandedPaths(new Set(visiblePaths));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
+
+  const visibleRoots = roots.filter((r) => visiblePaths.has(r.FullName));
+
+  // === Points d'attention ===
+  const attention = useMemo(
+    () =>
+      [...allNodes]
+        .filter((n) => n.flags.sensitive || n.flags.accessDenied)
+        .sort((a, b) => b.flags.sensitivityScore - a.flags.sensitivityScore)
+        .slice(0, 5),
+    [allNodes],
+  );
+
+  // === Actions ===
+  const handleToggle = (p: string) => {
+    setExpandedPaths((prev) => {
+      const next = new Set(prev);
+      next.has(p) ? next.delete(p) : next.add(p);
+      return next;
+    });
+  };
+  const handleToggleAcl = (p: string) => {
+    setExpandedAclPaths((prev) => {
+      const next = new Set(prev);
+      next.has(p) ? next.delete(p) : next.add(p);
+      return next;
+    });
+  };
+  const expandAll = () => setExpandedPaths(new Set(collectAllPaths(roots)));
+  const collapseAll = () => setExpandedPaths(new Set());
+
+  const handleTrigger = async (state: ScanFormState) => {
+    setLastForm(state);
+    setRunning(true);
+    try {
+      const res = await triggerScan(state);
+      toast({
+        title: "Scan déclenché",
+        description: `Tâche #${res.task_id} envoyée à l'agent.`,
+      });
+      // En vrai : on poll ensuite GET /latest/ jusqu'au statut final.
+      const s = await fetchLatestScan();
+      setScan({ ...s, agent_label: state.agentId });
+    } catch (e) {
+      toast({
+        title: "Échec du déclenchement",
+        description: e instanceof Error ? e.message : "Erreur inconnue",
+        variant: "destructive",
+      });
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  // === États ===
+  const renderTreeArea = () => {
+    if (loading) return <FilesEmptyState variant="running" />;
+    if (!scan || !scan.items) return <FilesEmptyState variant="no-scan" />;
+    if (scan.status === "failed" || scan.status === "timeout")
+      return (
+        <FilesEmptyState
+          variant="failed"
+          message={scan.error ?? "Le scan ne s'est pas terminé correctement."}
+          detail={scan.error ?? undefined}
+        />
+      );
+    if (scan.status === "running" || scan.status === "pending")
+      return <FilesEmptyState variant="running" />;
+    if (allNodes.length === 0) return <FilesEmptyState variant="empty" />;
+    if (visibleRoots.length === 0)
+      return (
+        <Card className="border-dashed p-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            Aucun dossier ne correspond aux filtres actuels.
+          </p>
+        </Card>
+      );
+    return (
+      <div className="space-y-2">
+        {visibleRoots.map((r) => (
+          <FilesFolderNodeCard
+            key={r.FullName}
+            node={r}
+            expandedPaths={expandedPaths}
+            expandedAclPaths={expandedAclPaths}
+            visiblePaths={visiblePaths}
+            onToggle={handleToggle}
+            onToggleAcl={handleToggleAcl}
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
-      <PageHeader title="Explorateur & droits NTFS" description="Navigation, modification ACL et scan récursif" icon={HardDrive} accent="from-lime-500 to-emerald-500"
-        actions={<Button className="gap-2 bg-gradient-to-r from-lime-500 to-emerald-500"><ScanLine className="h-4 w-4" />Scan NTFS</Button>} />
+      <FilesScanHeader
+        agentLabel={scan?.agent_label ?? agent.hostname}
+        scan={scan}
+        depth={lastForm.maxDepth}
+        includeAcl={lastForm.includePermissions}
+      />
 
-      <Card className="p-4">
-        <div className="flex gap-2">
-          <Input value={path} onChange={(e) => setPath(e.target.value)} className="font-mono text-sm" />
-          <Button variant="outline">Aller</Button>
-        </div>
-      </Card>
+      <FilesScanLauncher
+        defaultAgent={agent}
+        running={running || scan?.status === "running" || scan?.status === "pending"}
+        status={scan?.status ?? undefined}
+        onTrigger={handleTrigger}
+      />
 
-      <div className="grid gap-4 lg:grid-cols-5">
-        <Card className="lg:col-span-3 p-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contenu</p>
-          <div className="space-y-1">
-            {tree.map((f, i) => (
-              <motion.div key={f.name} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
-                className="flex items-center justify-between rounded-lg border border-transparent p-2.5 hover:bg-muted/40 hover:border-border cursor-pointer transition">
-                <div className="flex items-center gap-3">
-                  {f.type === "folder" ? <Folder className="h-4 w-4 text-amber-500" /> : <FileText className="h-4 w-4 text-muted-foreground" />}
-                  <span className="font-medium">{f.name}</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>{f.size}</span>
-                  <Badge variant="outline" className="text-[10px]">{f.owner}</Badge>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </div>
-              </motion.div>
-            ))}
+      {scan?.warnings && scan.warnings.length > 0 && (
+        <Card className="border-amber-500/30 bg-amber-500/5 p-3">
+          <div className="flex items-start gap-2 text-sm">
+            <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600" />
+            <div>
+              <p className="font-medium text-amber-700 dark:text-amber-300">
+                Scan terminé avec {scan.warnings.length} avertissement(s)
+              </p>
+              <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-amber-700/80 dark:text-amber-300/80">
+                {scan.warnings.slice(0, 3).map((w, i) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
+            </div>
           </div>
         </Card>
+      )}
 
-        <Card className="lg:col-span-2 p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <Shield className="h-4 w-4 text-emerald-500" />
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Droits NTFS</p>
-          </div>
-          <div className="space-y-2">
-            {acl.map((a, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                className="rounded-lg border p-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium font-mono">{a.identity}</p>
-                  <Badge variant="outline" className={a.type === "Allow" ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" : "bg-rose-500/15 text-rose-600 border-rose-500/30"}>
-                    {a.type}
-                  </Badge>
+      {allNodes.length > 0 && (
+        <>
+          <FilesTreeSummary roots={roots} allNodes={allNodes} />
+
+          {attention.length > 0 && (
+            <Card className="overflow-hidden border-orange-500/20 bg-gradient-to-br from-orange-500/5 via-card to-card p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow">
+                  <ShieldAlert className="h-4 w-4" />
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">{a.rights} {a.inherited && "• hérité"}</p>
-              </motion.div>
-            ))}
-          </div>
-        </Card>
-      </div>
+                <div>
+                  <p className="text-sm font-semibold">Points d'attention</p>
+                  <p className="text-xs text-muted-foreground">
+                    Dossiers à vérifier en priorité, triés par score de sensibilité.
+                  </p>
+                </div>
+              </div>
+              <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                {attention.map((n) => (
+                  <button
+                    key={n.FullName}
+                    type="button"
+                    onClick={() => {
+                      // Déplie tous les ancêtres pour mettre en évidence le nœud
+                      const next = new Set(expandedPaths);
+                      let p: string | null = n.parentPath;
+                      while (p) {
+                        next.add(p);
+                        const parent = allNodes.find((x) => x.FullName === p);
+                        p = parent?.parentPath ?? null;
+                      }
+                      next.add(n.FullName);
+                      setExpandedPaths(next);
+                    }}
+                    className="group flex items-start justify-between gap-2 rounded-lg border bg-card/60 p-2.5 text-left transition hover:border-orange-500/40 hover:bg-card"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{n.Name}</p>
+                      <p className="truncate font-mono text-[10px] text-muted-foreground">
+                        {n.FullName}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <Badge
+                        variant="outline"
+                        className="border-orange-500/40 bg-orange-500/15 text-orange-700 dark:text-orange-300"
+                      >
+                        {n.flags.sensitivityScore}
+                      </Badge>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground transition group-hover:translate-x-0.5" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          <FilesTreeFilters
+            state={filters}
+            onChange={setFilters}
+            owners={owners}
+            depths={depths}
+            onExpandAll={expandAll}
+            onCollapseAll={collapseAll}
+            activeCount={visiblePaths.size}
+          />
+        </>
+      )}
+
+      {renderTreeArea()}
     </div>
   );
 }
