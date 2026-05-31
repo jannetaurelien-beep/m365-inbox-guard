@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AgentProvider, useAgent, AgentCapability } from "./AgentContext";
-import { AgentSelector } from "./AgentSelector";
+import { AgentSelector, AgentContextBanner } from "./AgentSelector";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Item = {
