@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "./_shared";
-import { AgentContextBanner } from "./AgentSelector";
 import { HardDrive, Folder, FileText, ChevronRight, Shield, ScanLine } from "lucide-react";
 import { motion } from "framer-motion";
 

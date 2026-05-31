@@ -2,7 +2,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "./_shared";
-import { AgentContextBanner } from "./AgentSelector";
 import { mockComputers } from "./mock";
 import { MonitorSmartphone } from "lucide-react";
 

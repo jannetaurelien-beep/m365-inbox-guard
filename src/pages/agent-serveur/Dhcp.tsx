@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "./_shared";
-import { AgentContextBanner } from "./AgentSelector";
 import { mockDhcpScopes, mockLeases } from "./mock";
 import { Network } from "lucide-react";
 import { motion } from "framer-motion";

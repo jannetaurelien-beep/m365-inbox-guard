@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { PageHeader, StatTile } from "./_shared";
-import { AgentContextBanner } from "./AgentSelector";
 import { mockServices, mockEvents } from "./mock";
 import { Activity, Cpu, MemoryStick, HardDrive, Play, Square, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";

@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "./_shared";
-import { AgentContextBanner } from "./AgentSelector";
 import { mockAdUsers } from "./mock";
 import { Users, Search, UserPlus, KeyRound, UserMinus, UserCheck, MoreHorizontal } from "lucide-react";
 
