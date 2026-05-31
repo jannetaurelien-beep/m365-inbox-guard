@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "./_shared";
+import { AgentContextBanner } from "./AgentSelector";
 import { mockAdGroups } from "./mock";
 import { UsersRound, Plus, Users } from "lucide-react";
 import { motion } from "framer-motion";

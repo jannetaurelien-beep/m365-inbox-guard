@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "./_shared";
+import { AgentContextBanner } from "./AgentSelector";
 import { mockTasks } from "./mock";
 import { History, Search, CheckCircle2, XCircle, Loader2, Clock, Ban, AlarmClock } from "lucide-react";
 import { motion } from "framer-motion";

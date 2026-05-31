@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "./_shared";
+import { AgentContextBanner } from "./AgentSelector";
 import { mockOUs } from "./mock";
 import { FolderTree, Folder } from "lucide-react";
 import { motion } from "framer-motion";
