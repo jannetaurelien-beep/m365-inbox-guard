@@ -66,47 +66,47 @@ export default function Clients() {
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 p-8 text-white">
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-cyan-300/20 rounded-full blur-3xl" />
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 p-5 text-white">
+        <div className="absolute -top-20 -right-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-20 -left-10 w-72 h-72 bg-cyan-300/20 rounded-full blur-3xl" />
         <div className="relative z-10">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                  <Briefcase className="h-6 w-6" />
+              <div className="flex items-center gap-2 mb-1">
+                <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                  <Briefcase className="h-5 w-5" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="relative flex h-3 w-3">
+                  <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-300 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-400" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400" />
                   </span>
-                  <span className="text-sm text-white/80">Portefeuille client en temps réel</span>
+                  <span className="text-xs text-white/80">Portefeuille client en temps réel</span>
                 </div>
               </div>
-              <h1 className="text-4xl font-bold">Mes clients</h1>
-              <p className="text-white/70 text-lg">Tous vos comptes, contrats et contacts au même endroit</p>
+              <h1 className="text-2xl font-bold">Mes clients</h1>
+              <p className="text-white/70 text-sm">Tous vos comptes, contrats et contacts au même endroit</p>
             </div>
-            <Button className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm shadow-lg">
+            <Button className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm shadow-lg h-9 text-sm">
               <Plus className="h-4 w-4 mr-2" />
               Nouveau client
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
             {[
               { icon: Building2, label: 'Clients', value: mockClients.length, hint: `${actifs} actifs`, color: 'text-cyan-300' },
-              { icon: UsersIcon, label: 'Utilisateurs gérés', value: totalUsers, hint: 'tous comptes', color: 'text-emerald-300' },
+              { icon: UsersIcon, label: 'Utilisateurs', value: totalUsers, hint: 'tous comptes', color: 'text-emerald-300' },
               { icon: TrendingUp, label: 'CA mensuel', value: `${(totalCa / 1000).toFixed(1)}k€`, hint: '+12% vs M-1', color: 'text-amber-300' },
               { icon: Sparkles, label: 'Prospects', value: prospects, hint: 'à convertir', color: 'text-fuchsia-300' },
             ].map((s, i) => (
-              <div key={i} className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 hover:bg-white/15 transition-colors">
-                <div className="flex items-center gap-2 mb-1">
-                  <s.icon className={`h-4 w-4 ${s.color}`} />
-                  <span className="text-sm text-white/70">{s.label}</span>
+              <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 hover:bg-white/15 transition-colors">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <s.icon className={`h-3.5 w-3.5 ${s.color}`} />
+                  <span className="text-xs text-white/70">{s.label}</span>
                 </div>
-                <p className="text-3xl font-bold">{s.value}</p>
-                <p className="text-xs text-white/60 mt-1">{s.hint}</p>
+                <p className="text-xl font-bold">{s.value}</p>
+                <p className="text-[10px] text-white/60 mt-0.5">{s.hint}</p>
               </div>
             ))}
           </div>
