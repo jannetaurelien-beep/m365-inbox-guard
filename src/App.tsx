@@ -31,6 +31,7 @@ import ClientDetail from "./pages/ClientDetail";
 import ClientSupervision from "./pages/ClientSupervision";
 import Login from "./pages/Login";
 import TwoFactorAuth from "./pages/TwoFactorAuth";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
