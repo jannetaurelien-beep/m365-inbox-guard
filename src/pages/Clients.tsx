@@ -153,22 +153,22 @@ export default function Clients() {
 
       {/* Vue Grid */}
       {view === 'grid' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {filtered.map(client => (
-            <Card key={client.id} onClick={() => navigate(`/clients/${client.id}`)} className="group relative overflow-hidden bg-card/80 backdrop-blur-sm border-border/50 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-              <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${client.logoColor}`} />
-              <div className="p-6 space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <ClientLogo client={client} />
+            <Card key={client.id} onClick={() => navigate(`/clients/${client.id}`)} className="group relative overflow-hidden bg-card/80 backdrop-blur-sm border-border/50 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer">
+              <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${client.logoColor}`} />
+              <div className="p-3.5 space-y-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <ClientLogo client={client} size="sm" />
                     <div className="min-w-0">
-                      <h3 className="font-semibold truncate group-hover:text-primary transition-colors">{client.nom}</h3>
-                      <p className="text-xs text-muted-foreground">{client.secteur}</p>
+                      <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{client.nom}</h3>
+                      <p className="text-[10px] text-muted-foreground">{client.secteur}</p>
                     </div>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100"><MoreVertical className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 -mr-1"><MoreVertical className="h-4 w-4" /></Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem><Eye className="h-4 w-4 mr-2" />Voir la fiche</DropdownMenuItem>
@@ -180,43 +180,35 @@ export default function Clients() {
                   </DropdownMenu>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <Badge variant="outline" className={`text-xs ${statusStyles[client.status]}`}>{client.status}</Badge>
-                  <ContratBadges contrats={client.contrats} max={4} />
-                  {client.tags.slice(0, 1).map(t => <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>)}
+                <div className="flex flex-wrap items-center gap-1">
+                  <Badge variant="outline" className={`text-[10px] h-5 px-1.5 ${statusStyles[client.status]}`}>{client.status}</Badge>
+                  <ContratBadges contrats={client.contrats} max={3} />
+                  {client.tags.slice(0, 1).map(t => <Badge key={t} variant="secondary" className="text-[10px] h-5 px-1.5">{t}</Badge>)}
                 </div>
 
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-start gap-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <span className="text-xs leading-relaxed">{client.adresse}, {client.codePostal} {client.ville}</span>
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-start gap-1.5 text-muted-foreground">
+                    <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-[11px] leading-relaxed">{client.adresse}, {client.codePostal} {client.ville}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Mail className="h-4 w-4 flex-shrink-0" />
-                    <span className="text-xs truncate">{client.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Phone className="h-4 w-4 flex-shrink-0" />
-                    <span className="text-xs">{client.telephone}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Globe className="h-4 w-4 flex-shrink-0" />
-                    <span className="text-xs">{client.siteWeb}</span>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Mail className="h-3 w-3 flex-shrink-0" />
+                    <span className="text-[11px] truncate">{client.email}</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border/50">
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/40">
                   <div className="text-center">
-                    <p className="text-lg font-bold">{client.utilisateurs}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Users</p>
+                    <p className="text-sm font-bold">{client.utilisateurs}</p>
+                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Users</p>
                   </div>
-                  <div className="text-center border-x border-border/50">
-                    <p className="text-lg font-bold">{client.licences}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Licences</p>
+                  <div className="text-center border-x border-border/40">
+                    <p className="text-sm font-bold">{client.licences}</p>
+                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Licences</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-lg font-bold">{(client.ca / 1000).toFixed(1)}k€</p>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">CA/mois</p>
+                    <p className="text-sm font-bold">{(client.ca / 1000).toFixed(1)}k€</p>
+                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">CA/mois</p>
                   </div>
                 </div>
               </div>
