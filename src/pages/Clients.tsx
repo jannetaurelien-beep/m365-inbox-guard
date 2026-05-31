@@ -114,15 +114,15 @@ export default function Clients() {
       </div>
 
       {/* Filtres */}
-      <Card className="p-4 bg-card/80 backdrop-blur-sm border-border/50 shadow-xl">
-        <div className="flex flex-col lg:flex-row gap-4">
+      <Card className="p-3 bg-card/80 backdrop-blur-sm border-border/50 shadow-lg">
+        <div className="flex flex-col lg:flex-row gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Rechercher par nom, ville, code postal, email..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 bg-background/50" />
+            <Input placeholder="Rechercher par nom, ville, code postal, email..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 bg-background/50 h-9 text-sm" />
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40"><Filter className="h-4 w-4 mr-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-36 h-9 text-sm"><Filter className="h-4 w-4 mr-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous statuts</SelectItem>
                 <SelectItem value="actif">Actifs</SelectItem>
@@ -131,21 +131,21 @@ export default function Clients() {
               </SelectContent>
             </Select>
             <Select value={contratFilter} onValueChange={setContratFilter}>
-              <SelectTrigger className="w-40"><CreditCard className="h-4 w-4 mr-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-36 h-9 text-sm"><CreditCard className="h-4 w-4 mr-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous contrats</SelectItem>
                 {CONTRAT_TYPES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
             <div className="flex rounded-md border border-border bg-background/50 p-1">
-              <Button size="sm" variant={view === 'grid' ? 'default' : 'ghost'} onClick={() => setView('grid')} className="h-8 px-3"><LayoutGrid className="h-4 w-4" /></Button>
-              <Button size="sm" variant={view === 'list' ? 'default' : 'ghost'} onClick={() => setView('list')} className="h-8 px-3"><List className="h-4 w-4" /></Button>
+              <Button size="sm" variant={view === 'grid' ? 'default' : 'ghost'} onClick={() => setView('grid')} className="h-7 px-2"><LayoutGrid className="h-4 w-4" /></Button>
+              <Button size="sm" variant={view === 'list' ? 'default' : 'ghost'} onClick={() => setView('list')} className="h-7 px-2"><List className="h-4 w-4" /></Button>
             </div>
-            <Button variant="outline" className="gap-2"><Download className="h-4 w-4" />Export</Button>
+            <Button variant="outline" className="gap-2 h-9 text-sm"><Download className="h-4 w-4" />Export</Button>
           </div>
         </div>
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
-          <p className="text-sm text-muted-foreground">
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+          <p className="text-xs text-muted-foreground">
             <span className="font-semibold text-foreground">{filtered.length}</span> client{filtered.length > 1 ? 's' : ''}
           </p>
         </div>
