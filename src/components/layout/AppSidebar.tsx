@@ -1,4 +1,4 @@
-import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut, Share2, Bell, TrendingUp, Trophy, Workflow, Shield, Briefcase, Building2, ServerCog } from 'lucide-react';
+import { Home, Users, CreditCard, ClipboardList, Settings, Zap, FolderTree, Mail, LogOut, Share2, Bell, TrendingUp, Trophy, Workflow, Shield, Briefcase, Building2, ServerCog, Plug } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
@@ -22,6 +22,7 @@ const menuItems = [
   { title: 'Fichiers Serveur', url: '/fichiers-serveur', icon: FolderTree },
   { title: "Messages d'absence", url: '/messages-absence', icon: Mail },
   { title: 'Licences', url: '/licences', icon: CreditCard },
+  { title: 'Connecteurs Licences', url: '/connecteurs-licences', icon: Plug },
   { title: 'Demandes', url: '/demandes', icon: ClipboardList },
   { title: 'SharePoint', url: '/sharepoint', icon: Share2 },
   { title: 'Notifications', url: '/notifications', icon: Bell },

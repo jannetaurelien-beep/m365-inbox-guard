@@ -27,6 +27,8 @@ import PerformanceKPI from "./pages/PerformanceKPI";
 import Leaderboard from "./pages/Leaderboard";
 import CyberSecurity from "./pages/CyberSecurity";
 import Clients from "./pages/Clients";
+import LicenseConnectors from "./pages/LicenseConnectors";
+import LicenseConnectorDetail from "./pages/LicenseConnectorDetail";
 import ClientDetail from "./pages/ClientDetail";
 import ClientSupervision from "./pages/ClientSupervision";
 import Login from "./pages/Login";
@@ -79,6 +81,8 @@ const App = () => (
                     <Route path="/fichiers-serveur" element={<ServerFiles />} />
                     <Route path="/messages-absence" element={<VacationMessages />} />
                     <Route path="/licences" element={<Licenses />} />
+                    <Route path="/connecteurs-licences" element={<LicenseConnectors />} />
+                    <Route path="/connecteurs-licences/:providerId" element={<LicenseConnectorDetail />} />
                     <Route path="/demandes" element={<Requests />} />
                     <Route path="/demandes/:id" element={<RequestDetail />} />
                     <Route path="/sharepoint" element={<SharePointPermissions />} />
